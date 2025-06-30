@@ -1,0 +1,342 @@
+/* ===================================
+   LaralGrape Site Styles
+   =================================== */
+
+/* Global Purple Theme */
+:root {
+    --primary-color: #7c3aed;
+    --primary-dark: #5b21b6;
+    --primary-light: #8b5cf6;
+    --primary-lighter: #a78bfa;
+    --primary-lightest: #c4b5fd;
+    --primary-bg: #f3f4f6;
+    --primary-border: #e5e7eb;
+}
+
+/* Base Styles */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: #374151;
+}
+
+/* Base Layout */
+.laralgrape-container, main {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    line-height: 1.2;
+    margin-bottom: 0.5em;
+}
+
+p {
+    line-height: 1.6;
+    margin-bottom: 1em;
+}
+
+/* Header Styles */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(8px);
+    background-color: rgba(255, 255, 255, 0.95);
+}
+
+/* Navigation */
+nav a {
+    position: relative;
+}
+
+nav a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--primary-color);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+nav a:hover::after {
+    width: 100%;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Cards */
+.card {
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--primary-border);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Section spacing */
+section {
+    padding: 2rem 0;
+}
+
+@media (min-width: 768px) {
+    section {
+        padding: 4rem 0;
+    }
+}
+
+/* GrapesJS Edit Bar */
+.grapejs-nav-margin {
+    margin-top: 48px;
+}
+
+/* Page Content */
+.page-content {
+    min-height: 400px;
+}
+
+/* GrapesJS Frontend Editor */
+#grapejs-frontend-editor {
+    height: 100%;
+    min-height: 600px;
+    background: #fff;
+}
+
+/* GrapesJS Editor Styles */
+.grapesjs-editor {
+    border: 2px solid var(--primary-color);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+/* GrapesJS Block Manager */
+.gjs-block-category {
+    border-bottom: 1px solid var(--primary-border);
+}
+
+.gjs-block-label {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.gjs-block {
+    border: 2px solid var(--primary-border);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.gjs-block:hover {
+    border-color: var(--primary-color);
+    transform: scale(1.02);
+}
+
+/* GrapesJS Style Manager */
+.gjs-sm-sector {
+    border-bottom: 1px solid var(--primary-border);
+}
+
+.gjs-sm-sector__title {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* GrapesJS Layer Manager */
+.gjs-layer-item {
+    border-bottom: 1px solid var(--primary-border);
+}
+
+.gjs-layer-item:hover {
+    background-color: var(--primary-bg);
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 0.5rem;
+    }
+    
+    h1 {
+        font-size: 1.875rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    .grapejs-edit-bar,
+    #grapejs-frontend-editor,
+    .gjs-pn-views-container,
+    .gjs-pn-options {
+        display: none !important;
+    }
+    
+    .laralgrape-container {
+        min-height: auto;
+    }
+}
+
+/* Focus States */
+button:focus,
+a:focus,
+input:focus,
+textarea:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Utility Classes */
+.text-purple {
+    color: var(--primary-color);
+}
+
+.bg-purple {
+    background-color: var(--primary-color);
+}
+
+.border-purple {
+    border-color: var(--primary-color);
+}
+
+/* GrapesJS Custom Styles */
+.gjs-cv-canvas {
+    background-color: #f8fafc;
+}
+
+.gjs-selected {
+    outline: 2px solid var(--primary-color) !important;
+}
+
+.gjs-highlighter {
+    background-color: rgba(124, 58, 237, 0.1) !important;
+    border: 1px solid var(--primary-color) !important;
+}
+
+/* Block Drop Zones */
+[data-gjs-droppable="true"] {
+    min-height: 50px;
+    border: 2px dashed var(--primary-border);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+[data-gjs-droppable="true"]:hover {
+    border-color: var(--primary-color);
+    background-color: rgba(124, 58, 237, 0.05);
+}
+
+/* Empty Drop Zones */
+[data-gjs-droppable="true"]:empty::before {
+    content: 'Drop content here';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--primary-color);
+    font-style: italic;
+    opacity: 0.6;
+}
+
+.grapejs-editor-wrapper {
+    height: 100%;
+    min-height: 600px;
+    background: #fff;
+    flex: 1 1 auto;
+} 

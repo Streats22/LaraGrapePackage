@@ -1,0 +1,2 @@
+{{-- @block id="image" label="Image" description="An image block with customizable styling" --}}
+<img src="{{ $src }}" alt="{{ $alt }}" {{ $attributes->merge(['class' => 'w-full h-auto rounded-lg shadow-md']) }}> 

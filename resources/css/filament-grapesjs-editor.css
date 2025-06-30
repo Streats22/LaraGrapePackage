@@ -1,0 +1,352 @@
+/**
+ * Filament GrapesJS Editor Styles
+ * Styling for the GrapesJS editor integration within Filament admin panel
+ */
+
+/* Editor Wrapper */
+.grapesjs-editor-wrapper {
+    width: 100%;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* Fullscreen Mode */
+.grapesjs-editor-wrapper.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 99999 !important;
+    background: white;
+    box-sizing: border-box;
+    isolation: isolate;
+}
+
+/* Control Buttons */
+.grapesjs-controls {
+    position: absolute;
+    top: 80px; /* Positioned lower */
+    left: 15px; /* Positioned on the left */
+    z-index: 100000 !important;
+    display: flex;
+    gap: 8px;
+}
+
+/* Fullscreen Toggle Button */
+.fullscreen-toggle-btn {
+    background: rgba(59, 130, 246, 0.9);
+    border: 2px solid #3b82f6;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100001 !important;
+    position: relative;
+    min-width: 44px;
+    min-height: 44px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.fullscreen-toggle-btn:hover {
+    background: rgba(59, 130, 246, 1);
+    border-color: #2563eb;
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+}
+
+.fullscreen-toggle-btn svg {
+    color: white;
+    width: 20px;
+    height: 20px;
+}
+
+.fullscreen-toggle-btn:hover svg {
+    color: white;
+}
+
+/* Editor Container */
+.grapesjs-editor {
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100% !important;
+    min-height: 400px;
+    background: #ffffff;
+    transition: height 0.3s ease;
+}
+
+/* Fullscreen Editor */
+.grapesjs-editor-wrapper.fullscreen .grapesjs-editor {
+    height: calc(100vh - 120px) !important;
+    border-radius: 0;
+    border: none;
+    z-index: 99999 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .grapesjs-editor {
+        min-height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .grapesjs-controls {
+        top: 60px;
+        left: 10px;
+    }
+    
+    .fullscreen-toggle-btn {
+        padding: 10px;
+        min-width: 40px;
+        min-height: 40px;
+    }
+    
+    .fullscreen-toggle-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+/* GrapesJS Custom Styling */
+.grapesjs-editor .gjs-cv-canvas {
+    top: 0 !important;
+}
+
+.grapesjs-editor .gjs-pn-views {
+    background: #f8fafc;
+}
+
+.grapesjs-editor .gjs-pn-views-container {
+    background: #f8fafc;
+}
+
+/* Block Manager Styling */
+.grapesjs-editor .gjs-blocks-c {
+    background: #f8fafc;
+}
+
+.grapesjs-editor .gjs-block {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.grapesjs-editor .gjs-block:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+/* Panel Styling */
+.grapesjs-editor .gjs-pn-panel {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.grapesjs-editor .gjs-pn-btn {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    transition: all 0.2s ease;
+}
+
+.grapesjs-editor .gjs-pn-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.grapesjs-editor .gjs-pn-btn.gjs-pn-active {
+    background: #3b82f6;
+    color: white;
+}
+
+/* Style Manager */
+.grapesjs-editor .gjs-sm-sector {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.grapesjs-editor .gjs-sm-sector .gjs-sm-title {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    color: #374151;
+    font-weight: 600;
+}
+
+/* Layer Manager */
+.grapesjs-editor .gjs-layer {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    margin-bottom: 2px;
+}
+
+.grapesjs-editor .gjs-layer:hover {
+    background: #f8fafc;
+}
+
+/* Trait Manager */
+.grapesjs-editor .gjs-trt-trait {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    margin-bottom: 4px;
+}
+
+/* Canvas Styling */
+.grapesjs-editor .gjs-cv-canvas {
+    background: #f8fafc;
+}
+
+/* Component Selection */
+.grapesjs-editor .gjs-selected {
+    outline: 2px solid #3b82f6 !important;
+}
+
+/* Component Highlight */
+.grapesjs-editor .gjs-highlighter {
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: 2px;
+}
+
+/* Toolbar Styling */
+.grapesjs-editor .gjs-toolbar {
+    background: #3b82f6;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.grapesjs-editor .gjs-toolbar-item {
+    color: white;
+    background: transparent;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+}
+
+.grapesjs-editor .gjs-toolbar-item:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Badge Styling */
+.grapesjs-editor .gjs-badge {
+    background: #ef4444;
+    color: white;
+    border-radius: 12px;
+    font-size: 10px;
+    padding: 2px 6px;
+    font-weight: 600;
+}
+
+/* Loading State */
+.grapesjs-editor.loading {
+    position: relative;
+}
+
+.grapesjs-editor.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.grapesjs-editor.loading::before {
+    content: 'Loading...';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1001;
+    color: #3b82f6;
+    font-weight: 600;
+}
+
+/* Error State */
+.grapesjs-editor.error {
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+
+.grapesjs-editor.error::after {
+    content: 'Error loading editor';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: #ef4444;
+    font-weight: 600;
+}
+
+/* Filament Integration Specific Styles */
+.filament-forms-component .grapesjs-editor-wrapper {
+    margin-top: 0.5rem;
+}
+
+.filament-forms-component .grapesjs-editor {
+    border: 1.5px solid #e5e7eb;
+}
+
+/* Dark Mode Support (if Filament is in dark mode) */
+.dark .grapesjs-editor-wrapper {
+    background: #1f2937;
+}
+
+.dark .grapesjs-editor {
+    background: #374151;
+    border-color: #4b5563;
+}
+
+.dark .grapesjs-controls {
+    background: rgba(31, 41, 55, 0.9);
+}
+
+.dark .fullscreen-toggle-btn {
+    background: rgba(59, 130, 246, 0.8);
+    border-color: #60a5fa;
+}
+
+/* Animation Classes */
+.grapesjs-editor-wrapper.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.grapesjs-editor-wrapper.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+} 
