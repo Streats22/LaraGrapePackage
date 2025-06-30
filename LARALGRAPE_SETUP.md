@@ -1,11 +1,11 @@
-# 🍇 LaraGrape Setup Complete!
+# 🍇 LaraGrape Package Setup Complete!
 
-Your LaralGrape boilerplate has been successfully created and configured. Here's what was set up:
+LaraGrape has been successfully installed and configured as a package in your Laravel application. Here's what was set up:
 
 ## 📋 What's Included
 
 ### Core Components
-- ✅ **Laravel 12** - Latest Laravel framework
+- ✅ **Laravel 12+** compatible
 - ✅ **Filament 3** - Modern admin panel
 - ✅ **GrapesJS** - Visual website builder
 - ✅ **Alpine.js** - Lightweight JavaScript framework
@@ -23,7 +23,7 @@ Your LaralGrape boilerplate has been successfully created and configured. Here's
 - ✅ **PageResource** with comprehensive form
 - ✅ **Custom GrapesJS field component**
 - ✅ **Tabbed interface** (Basic Info, Visual Editor, Content, SEO)
-- ✅ **Admin user** created (admin@test.com)
+- ✅ **Admin user** creation
 
 ### Frontend Features
 - ✅ **Responsive page template**
@@ -41,7 +41,7 @@ Your LaralGrape boilerplate has been successfully created and configured. Here's
 
 1. **Access your site**: http://localhost:8000
 2. **Admin panel**: http://localhost:8000/admin
-3. **Login**: admin@test.com (password set during setup)
+3. **Login**: Use the admin user you created during setup
 
 ## 📝 Creating Your First Page
 
@@ -97,18 +97,13 @@ php artisan make:filament-user
 ## 📁 Key Files
 
 ```
-app/
-├── Filament/
-│   ├── Forms/Components/GrapesJsEditor.php
-│   └── Resources/PageResource.php
-├── Http/Controllers/PageController.php
-├── Models/Page.php
-└── Providers/LaralGrapeServiceProvider.php
-
 resources/
 ├── js/
 │   ├── grapesjs-editor.js
 │   └── app.js
+├── css/
+│   ├── app.css
+│   └── site.css
 └── views/
     ├── filament/forms/components/grapesjs-editor.blade.php
     └── pages/show.blade.php
@@ -130,7 +125,7 @@ database/migrations/
 
 ## 🤝 Contributing
 
-Feel free to extend LaralGrape with:
+Feel free to extend LaraGrape with:
 - New GrapesJS blocks and plugins
 - Additional Filament resources
 - Frontend theme variants
@@ -138,6 +133,4 @@ Feel free to extend LaralGrape with:
 
 ---
 
-**Happy building with LaralGrape! 🍇**
-
-Built with ❤️ using Laravel, GrapesJS, and Filament.
+**Happy building with LaraGrape as a package in your Laravel projects! 🍇**

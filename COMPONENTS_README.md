@@ -1,6 +1,6 @@
-# 🧩 Modular Component System
+# 🧩 Modular Component System (LaraGrape Package)
 
-LaralGrape now uses a modular component system with Alpine.js for better organization and maintainability.
+LaraGrape provides a modular component system with Alpine.js for better organization and maintainability in your Laravel application.
 
 ## 📁 Component Structure
 
@@ -40,7 +40,7 @@ Edit controls for authenticated users with:
 - Alpine.js state management
 - Visual feedback for actions
 
-## 🔧 Alpine.js Components
+## 🛠️ Alpine.js Components
 
 ### Site Layout (`siteLayout`)
 Manages global site state:
@@ -120,7 +120,7 @@ All components are mobile-first and responsive:
 - **Accessibility**: Proper ARIA labels and keyboard navigation
 - **Mobile**: Full mobile support with touch interactions
 
-## 🔧 Customization
+## 🛠️ Customization
 
 ### Adding New Components
 1. Create a new `.blade.php` file in the appropriate directory
@@ -138,7 +138,7 @@ All components are mobile-first and responsive:
 
 ---
 
-**The modular system makes LaralGrape more maintainable and extensible! 🎉** 
+**The modular system makes LaraGrape more maintainable and extensible as a Laravel package! 🧩**
 
 blockManager: {
   appendTo: '#gjs-blocks', // This should be a sidebar div

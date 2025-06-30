@@ -1,6 +1,6 @@
-# 🧱 Dynamic Block System
+# 🧑‍🎨 Dynamic Block System (LaraGrape Package)
 
-The LaralGrape boilerplate now includes a dynamic block loading system that automatically scans and loads blocks from the `resources/views/filament/blocks/` directory structure.
+The LaraGrape package includes a dynamic block loading system that automatically scans and loads blocks from the `resources/views/filament/blocks/` directory structure in your Laravel application.
 
 ## 📁 Block Organization
 
@@ -91,7 +91,7 @@ To add a new category:
 
 1. Create a new directory in `resources/views/filament/blocks/`
 2. Add `.blade.php` files with proper metadata
-3. The system will automatically detect and load them
+3. The package will automatically detect and load them
 
 ## 🔄 Block Updates
 
@@ -103,7 +103,7 @@ The block system automatically reloads when:
 ## 🎨 Styling Blocks
 
 - Use Tailwind CSS classes for styling
-- Blocks inherit the global styles from the page template
+- Blocks inherit the global styles from your app's page template
 - Custom CSS can be added to individual blocks if needed
 
 ## 📱 Responsive Considerations
@@ -132,6 +132,6 @@ The block system automatically reloads when:
 
 ---
 
-**Happy block building! 🧱**
+**Happy block building! 🧑‍🎨**
 
-The dynamic block system makes it easy to create, organize, and maintain reusable components for your LaralGrape projects. 
+The dynamic block system makes it easy to create, organize, and maintain reusable components for your Laravel projects using the LaraGrape package. 

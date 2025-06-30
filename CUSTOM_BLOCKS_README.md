@@ -1,10 +1,10 @@
-# 🧱 Custom Block Builder & Site Settings
+# 🧑‍🎨 Custom Block Builder & Site Settings (LaraGrape Package)
 
-LaralGrape now includes a powerful custom block builder and comprehensive site settings management system.
+LaraGrape provides a powerful custom block builder and comprehensive site settings management system as part of the package for your Laravel application.
 
 ## 🎯 **Custom Block Builder**
 
-Create, manage, and use custom blocks directly from the Filament admin panel.
+Create, manage, and use custom blocks directly from the Filament admin panel in your Laravel app.
 
 ### **Features**
 
@@ -93,7 +93,7 @@ Custom blocks automatically appear in the GrapesJS block manager:
 
 ## ⚙️ **Site Settings Management**
 
-Comprehensive site configuration system for header, footer, and general settings.
+LaraGrape provides a comprehensive site configuration system for header, footer, and general settings, all manageable from the Filament admin panel in your Laravel app.
 
 ### **Setting Groups**
 
@@ -139,7 +139,7 @@ Comprehensive site configuration system for header, footer, and general settings
 #### **In Blade Templates**
 ```php
 @php
-    $siteSettings = app(\App\Services\SiteSettingsService::class);
+    $siteSettings = app(\Streats22\LaraGrape\Services\SiteSettingsService::class);
     $headerSettings = $siteSettings->getHeaderSettings();
     $footerSettings = $siteSettings->getFooterSettings();
 @endphp
@@ -152,7 +152,7 @@ Comprehensive site configuration system for header, footer, and general settings
 
 #### **In Controllers**
 ```php
-use App\Services\SiteSettingsService;
+use Streats22\LaraGrape\Services\SiteSettingsService;
 
 public function index(SiteSettingsService $settings)
 {
@@ -165,7 +165,7 @@ public function index(SiteSettingsService $settings)
 
 #### **Dynamic CSS Generation**
 ```php
-$siteSettings = app(\App\Services\SiteSettingsService::class);
+$siteSettings = app(\Streats22\LaraGrape\Services\SiteSettingsService::class);
 $css = $siteSettings->getAllCss();
 ```
 
@@ -188,7 +188,7 @@ Settings are automatically cached for performance:
 
 ---
 
-## 🔧 **Integration Examples**
+## 🛠️ **Integration Examples**
 
 ### **Custom Block with Site Settings**
 ```html
@@ -335,4 +335,4 @@ $icons = CustomBlock::getIcons();
 
 ---
 
-**The custom block builder and site settings system make LaralGrape incredibly flexible and powerful! 🚀** 
+**LaraGrape makes it easy to build, manage, and customize blocks and site settings as a package in your Laravel projects! 🧑‍🎨** 
