@@ -2,7 +2,7 @@
 
 namespace Streats22\LaraGrape\Services;
 
-use App\Models\Page;
+use Streats22\LaraGrape\Models\Page;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Streats22\LaraGrape\Models\Page as GrapePage;

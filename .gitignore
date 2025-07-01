@@ -22,3 +22,9 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Ignore the boilerplate sync script
+sync_boilerplate_to_package.sh
+
+# Ignore the sync exclude file
+.syncExclude

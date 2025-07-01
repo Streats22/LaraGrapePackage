@@ -2,9 +2,9 @@
 
 namespace Streats22\LaraGrape\Filament\Resources;
 
-use App\Filament\Forms\Components\GrapesJsEditor;
-use App\Filament\Resources\PageResource\Pages;
-use App\Filament\Resources\PageResource\RelationManagers;
+use Streats22\LaraGrape\Filament\Forms\Components\GrapesJsEditor;
+use Streats22\LaraGrape\Filament\Resources\PageResource\Pages;
+use Streats22\LaraGrape\Filament\Resources\PageResource\RelationManagers;
 use Streats22\LaraGrape\Models\Page;
 use Filament\Forms;
 use Filament\Forms\Form;
