@@ -25,33 +25,38 @@ class LaraGrapeServiceProvider extends ServiceProvider
         // No need to register additional assets here
 
         if ($this->app->runningInConsole()) {
+            $packageDir = dirname(__DIR__, 2);
             $this->publishes([
-                __DIR__.'/../../../config/LaraGrape.php' => config_path('LaraGrape.php'),
+                $packageDir.'/config/LaraGrape.php' => config_path('LaraGrape.php'),
             ], 'LaraGrape-config');
             $this->publishes([
-                __DIR__.'/../../../resources/views' => resource_path('views/vendor/LaraGrape'),
+                $packageDir.'/resources/views' => resource_path('views/vendor/LaraGrape'),
             ], 'LaraGrape-views');
             $this->publishes([
-                __DIR__.'/../../../database/migrations' => database_path('migrations'),
+                $packageDir.'/database/migrations' => database_path('migrations'),
             ], 'LaraGrape-migrations');
             $this->publishes([
-                __DIR__.'/../../../database/seeders' => database_path('seeders'),
+                $packageDir.'/database/seeders' => database_path('seeders'),
             ], 'LaraGrape-seeders');
             // Publish Filament resources
             $this->publishes([
-                __DIR__.'/../../../src/Filament/Resources' => app_path('Filament/Resources'),
+                $packageDir.'/src/Filament/Resources' => app_path('Filament/Resources'),
             ], 'LaraGrape-filament-resources');
             // Publish Filament pages
             $this->publishes([
-                __DIR__.'/../../../src/Filament/Pages' => app_path('Filament/Pages'),
+                $packageDir.'/src/Filament/Pages' => app_path('Filament/Pages'),
             ], 'LaraGrape-filament-pages');
+            // Publish frontend layout components
+            $this->publishes([
+                $packageDir.'/resources/views/components/layout' => resource_path('views/components/layout'),
+            ], 'LaraGrape-frontend-layout');
             // Publish Filament blocks (Blade views)
             $this->publishes([
-                __DIR__.'/../../../resources/views/components/blocks' => resource_path('views/components/blocks'),
+                $packageDir.'/resources/views/components/blocks' => resource_path('views/components/blocks'),
             ], 'LaraGrape-filament-blocks');
             // Publish AdminPanelProvider stub
             $this->publishes([
-                __DIR__.'/../../../src/Providers/Filament/AdminPanelProvider.php' => app_path('Providers/Filament/AdminPanelProvider.php'),
+                $packageDir.'/src/Providers/Filament/AdminPanelProvider.php' => app_path('Providers/Filament/AdminPanelProvider.php'),
             ], 'LaraGrape-admin-panel-provider');
             $this->commands([
                 \LaraGrape\Console\Commands\LaraGrapeSetupCommand::class,
