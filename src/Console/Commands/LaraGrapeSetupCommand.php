@@ -158,7 +158,7 @@ class LaraGrapeSetupCommand extends Command
                 $contents = str_replace('LaraGrape\\Filament\\Resources\\', 'App\\Filament\\Resources\\', $contents);
                 $contents = str_replace('LaraGrape\\Filament\\Pages\\', 'App\\Filament\\Pages\\', $contents);
                 // Remove any remaining LaraGrape\ references in ->resources() and ->pages()
-                $contents = preg_replace('/,?\s*\\LaraGrape\\[^,\)]+/', '', $contents);
+                $contents = preg_replace('/,?\s*\\\\LaraGrape\\\\[^,\)]+/', '', $contents);
                 file_put_contents($adminPanelProviderPath, $contents);
             }
             $this->info('Publishing Filament forms...');
@@ -206,7 +206,7 @@ class LaraGrapeSetupCommand extends Command
                             $contents = str_replace('LaraGrape\\', 'App\\', $contents);
                             $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
                             // Remove any remaining LaraGrape\ references in ->resources() and ->pages()
-                            $contents = preg_replace('/,?\s*\\LaraGrape\\[^,\)]+/', '', $contents);
+                            $contents = preg_replace('/,?\s*\\\\LaraGrape\\\\[^,\)]+/', '', $contents);
                             file_put_contents($file->getPathname(), $contents);
                         }
                     }
@@ -217,7 +217,7 @@ class LaraGrapeSetupCommand extends Command
                     $contents = str_replace('LaraGrape\\Filament\\', 'App\\Filament\\', $contents);
                     $contents = str_replace('LaraGrape\\', 'App\\', $contents);
                     $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
-                    $contents = preg_replace('/,?\s*\\LaraGrape\\[^,\)]+/', '', $contents);
+                    $contents = preg_replace('/,?\s*\\\\LaraGrape\\\\[^,\)]+/', '', $contents);
                     file_put_contents($path, $contents);
                 }
             }
