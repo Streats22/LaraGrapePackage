@@ -71,12 +71,24 @@ class LaraGrapeSetupCommand extends Command
             // Automatically update namespace and use statements in published resources
             $resourcesPath = base_path('app/Filament/Resources');
             if (is_dir($resourcesPath)) {
+                // Top-level files
                 foreach (glob($resourcesPath . '/*.php') as $filePath) {
                     $contents = file_get_contents($filePath);
                     $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
                     $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
                     $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
                     file_put_contents($filePath, $contents);
+                }
+                // All subdirectories
+                $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($resourcesPath));
+                foreach ($rii as $file) {
+                    if ($file->isFile() && $file->getExtension() === 'php') {
+                        $contents = file_get_contents($file->getPathname());
+                        $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
+                        $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
+                        $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
+                        file_put_contents($file->getPathname(), $contents);
+                    }
                 }
             }
             $this->info('Publishing Filament pages...');
