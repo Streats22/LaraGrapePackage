@@ -68,24 +68,77 @@ class LaraGrapeSetupCommand extends Command
                 '--tag' => 'LaraGrape-filament-resources',
                 '--force' => $this->option('force'),
             ]);
+            // Automatically update namespace and use statements in published resources
+            $resourcesPath = base_path('app/Filament/Resources');
+            if (is_dir($resourcesPath)) {
+                foreach (glob($resourcesPath . '/*.php') as $filePath) {
+                    $contents = file_get_contents($filePath);
+                    $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
+                    $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
+                    $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
+                    file_put_contents($filePath, $contents);
+                }
+            }
             $this->info('Publishing Filament pages...');
             $this->call('vendor:publish', [
                 '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
                 '--tag' => 'LaraGrape-filament-pages',
                 '--force' => $this->option('force'),
             ]);
+            // Automatically update namespace and use statements in published pages
+            $pagesPath = base_path('app/Filament/Pages');
+            if (is_dir($pagesPath)) {
+                $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($pagesPath));
+                foreach ($rii as $file) {
+                    if ($file->isFile() && $file->getExtension() === 'php') {
+                        $contents = file_get_contents($file->getPathname());
+                        $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
+                        $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
+                        $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
+                        file_put_contents($file->getPathname(), $contents);
+                    }
+                }
+            }
             $this->info('Publishing Filament blocks...');
             $this->call('vendor:publish', [
                 '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
                 '--tag' => 'LaraGrape-filament-blocks',
                 '--force' => $this->option('force'),
             ]);
+            // Automatically update namespace and use statements in published blocks (if any PHP files)
+            $blocksPath = base_path('resources/views/components/blocks');
+            if (is_dir($blocksPath)) {
+                $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($blocksPath));
+                foreach ($rii as $file) {
+                    if ($file->isFile() && $file->getExtension() === 'php') {
+                        $contents = file_get_contents($file->getPathname());
+                        $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
+                        $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
+                        $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
+                        file_put_contents($file->getPathname(), $contents);
+                    }
+                }
+            }
             $this->info('Publishing frontend layout components...');
             $this->call('vendor:publish', [
                 '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
                 '--tag' => 'LaraGrape-frontend-layout',
                 '--force' => $this->option('force'),
             ]);
+            // Automatically update namespace and use statements in published frontend layout (if any PHP files)
+            $layoutPath = base_path('resources/views/components/layout');
+            if (is_dir($layoutPath)) {
+                $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($layoutPath));
+                foreach ($rii as $file) {
+                    if ($file->isFile() && $file->getExtension() === 'php') {
+                        $contents = file_get_contents($file->getPathname());
+                        $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
+                        $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
+                        $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
+                        file_put_contents($file->getPathname(), $contents);
+                    }
+                }
+            }
             $adminPanelProviderPath = app_path('Filament/AdminPanelProvider.php');
             if (file_exists($adminPanelProviderPath)) {
                 unlink($adminPanelProviderPath);
@@ -102,14 +155,16 @@ class LaraGrapeSetupCommand extends Command
                 '--tag' => 'LaraGrape-filament-forms',
                 '--force' => $this->option('force'),
             ]);
-            // Automatically update namespace in published forms
-            $formsPath = app_path('Filament/Forms');
+            // Automatically update namespace and use statements in published forms
+            $formsPath = base_path('app/Filament/Forms');
             if (is_dir($formsPath)) {
                 $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($formsPath));
                 foreach ($rii as $file) {
                     if ($file->isFile() && $file->getExtension() === 'php') {
                         $contents = file_get_contents($file->getPathname());
-                        $contents = str_replace('namespace LaraGrape\\Filament\\Forms', 'namespace App\\Filament\\Forms', $contents);
+                        $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
+                        $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
+                        $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
                         file_put_contents($file->getPathname(), $contents);
                     }
                 }
