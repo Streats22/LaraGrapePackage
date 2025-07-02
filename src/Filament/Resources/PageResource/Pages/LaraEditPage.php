@@ -2,14 +2,14 @@
 
 namespace LaraGrape\Filament\Resources\PageResource\Pages;
 
-use LaraGrape\Filament\Resources\LaraPageResource;
+use LaraGrape\Filament\Resources\PageResource;
 use LaraGrape\Services\GrapesJsConverterService;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
 class LaraEditPage extends EditRecord
 {
-    protected static string $resource = LaraPageResource::class;
+    protected static string $resource = PageResource::class;
 
     protected function getHeaderActions(): array
     {

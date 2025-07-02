@@ -20,36 +20,7 @@ class LaraGrapeSetupCommand extends Command
 
     public function handle()
     {
-        $this->info('Publishing LaraGrape config...');
-        if ($this->option('publish-config') || $this->option('all')) {
-            $this->call('vendor:publish', [
-                '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
-                '--tag' => 'LaraGrape-config'
-            ]);
-        }
-
-        $this->info('Publishing LaraGrape views...');
-        if ($this->option('publish-views') || $this->option('all')) {
-            $this->call('vendor:publish', [
-                '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
-                '--tag' => 'LaraGrape-views'
-            ]);
-        }
-        
-  
-        $this->info('Publishing LaraGrape migrations...');
-        if ($this->option('publish-migrations') || $this->option('all')) {
-            $this->call('vendor:publish', [
-                '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
-                '--tag' => 'LaraGrape-migrations'
-            ]);
-        }
-
-        if ($this->option('migrate')) {
-            $this->info('Running migrations...');
-            $this->call('migrate');
-        }
-
+        // 1. Filament install (if confirmed)
         if ($this->confirm('Do you want to install the Filament admin panel now? (Recommended for first-time setup)', true)) {
             $this->info('Running Filament base install...');
             $this->call('filament:install');
@@ -61,6 +32,35 @@ class LaraGrapeSetupCommand extends Command
             $this->warn('You must run "php artisan filament:install" and then "php artisan filament:install --panels" before using the admin panel.');
         }
 
+        // 2. Publish all resources (always, in correct order)
+        $force = $this->option('all') ? true : $this->option('force');
+        $publishTags = [
+            'LaraGrape-config',
+            'LaraGrape-views',
+            'LaraGrape-migrations',
+            'LaraGrape-filament-resources',
+            'LaraGrape-filament-pages',
+            'LaraGrape-filament-blocks',
+            'LaraGrape-frontend-layout',
+            'LaraGrape-filament-forms',
+        ];
+        foreach ($publishTags as $tag) {
+            $this->info("Publishing $tag...");
+            $this->call('vendor:publish', [
+                '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+                '--tag' => $tag,
+                '--force' => $force,
+            ]);
+        }
+        // Always force overwrite for welcome
+        $this->info('Publishing LaraGrape-welcome (always forced)...');
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-welcome',
+            '--force' => true,
+        ]);
+
+        // 3. Post-process all published files (namespace/use/class renaming, file renaming)
         if ($this->option('all')) {
             $this->info('Publishing Filament resources...');
             $this->call('vendor:publish', [
@@ -301,9 +301,12 @@ class LaraGrapeSetupCommand extends Command
             }
         }
 
-        $this->info('LaraGrape setup complete!');
-        $this->info('Re-running php artisan laragrape:setup --all to ensure everything is published and up to date...');
-        \Artisan::call('laragrape:setup', ['--all' => true, '--force' => true]);
+        // 4. Run migrations if requested
+        if ($this->option('migrate')) {
+            $this->info('Running migrations...');
+            $this->call('migrate');
+        }
+
         $this->info('Final publish complete. Your LaraGrape setup is fully up to date.');
     }
 } 

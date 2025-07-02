@@ -2,13 +2,13 @@
 
 namespace LaraGrape\Filament\Resources\PageResource\Pages;
 
-use LaraGrape\Filament\Resources\LaraPageResource;
+use LaraGrape\Filament\Resources\PageResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class LaraCreatePage extends CreateRecord
 {
-    protected static string $resource = LaraPageResource::class;
+    protected static string $resource = PageResource::class;
     
     protected function mutateFormDataBeforeCreate(array $data): array
     {
