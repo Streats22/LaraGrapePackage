@@ -37,6 +37,22 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../../../database/seeders' => database_path('seeders'),
             ], 'LaraGrape-seeders');
+            // Publish Filament resources
+            $this->publishes([
+                __DIR__.'/../../../src/Filament/Resources' => app_path('Filament/Resources'),
+            ], 'LaraGrape-filament-resources');
+            // Publish Filament pages
+            $this->publishes([
+                __DIR__.'/../../../src/Filament/Pages' => app_path('Filament/Pages'),
+            ], 'LaraGrape-filament-pages');
+            // Publish Filament blocks (Blade views)
+            $this->publishes([
+                __DIR__.'/../../../resources/views/components/blocks' => resource_path('views/components/blocks'),
+            ], 'LaraGrape-filament-blocks');
+            // Publish AdminPanelProvider stub
+            $this->publishes([
+                __DIR__.'/../../../src/Providers/Filament/AdminPanelProvider.php' => app_path('Providers/Filament/AdminPanelProvider.php'),
+            ], 'LaraGrape-admin-panel-provider');
             $this->commands([
                 \LaraGrape\Console\Commands\LaraGrapeSetupCommand::class,
             ]);

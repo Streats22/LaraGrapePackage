@@ -61,6 +61,39 @@ class LaraGrapeSetupCommand extends Command
             $this->warn('You must run "php artisan filament:install" and then "php artisan filament:install --panels" before using the admin panel.');
         }
 
+        if ($this->option('all')) {
+            $this->info('Publishing Filament resources...');
+            $this->call('vendor:publish', [
+                '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+                '--tag' => 'LaraGrape-filament-resources',
+                '--force' => $this->option('force'),
+            ]);
+            $this->info('Publishing Filament pages...');
+            $this->call('vendor:publish', [
+                '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+                '--tag' => 'LaraGrape-filament-pages',
+                '--force' => $this->option('force'),
+            ]);
+            $this->info('Publishing Filament blocks...');
+            $this->call('vendor:publish', [
+                '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+                '--tag' => 'LaraGrape-filament-blocks',
+                '--force' => $this->option('force'),
+            ]);
+            $this->info('Publishing frontend layout components...');
+            $this->call('vendor:publish', [
+                '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+                '--tag' => 'LaraGrape-frontend-layout',
+                '--force' => $this->option('force'),
+            ]);
+            $this->info('Publishing AdminPanelProvider stub...');
+            $this->call('vendor:publish', [
+                '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+                '--tag' => 'LaraGrape-admin-panel-provider',
+                '--force' => $this->option('force'),
+            ]);
+        }
+
         $this->info('LaraGrape setup complete!');
     }
 } 
