@@ -57,7 +57,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "LaraGrape\\Providers\\LaralGrapeServiceProvider"
+                "LaraGrape\\Providers\\LaraGrapeServiceProvider"
             ]
         }
     },
