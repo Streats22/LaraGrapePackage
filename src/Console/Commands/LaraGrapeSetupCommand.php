@@ -51,10 +51,14 @@ class LaraGrapeSetupCommand extends Command
         }
 
         if ($this->confirm('Do you want to install the Filament admin panel now? (Recommended for first-time setup)', true)) {
-            $this->info('Installing Filament admin panel...');
+            $this->info('Running Filament base install...');
             $this->call('filament:install');
+            $this->info('Enabling Filament panels support...');
+            $this->call('filament:install', [
+                '--panels' => true,
+            ]);
         } else {
-            $this->warn('You must run "php artisan filament:install" before using the admin panel.');
+            $this->warn('You must run "php artisan filament:install" and then "php artisan filament:install --panels" before using the admin panel.');
         }
 
         $this->info('LaraGrape setup complete!');
