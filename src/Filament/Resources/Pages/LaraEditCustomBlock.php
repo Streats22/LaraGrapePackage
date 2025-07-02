@@ -3,16 +3,16 @@
 namespace LaraGrape\Filament\Resources\CustomBlockResource\Pages;
 
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Pages\EditRecord;
 
-class ListCustomBlocks extends ListRecords
+class LaraEditCustomBlock extends EditRecord
 {
     protected static string $resource = CustomBlockResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\DeleteAction::make(),
         ];
     }
 }

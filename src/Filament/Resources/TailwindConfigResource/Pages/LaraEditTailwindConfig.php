@@ -4,15 +4,15 @@ namespace LaraGrape\Filament\Resources\TailwindConfigResource\Pages;
 
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
-use LaraGrape\Filament\Resources\TailwindConfigResource;
+use LaraGrape\Filament\Resources\LaraTailwindConfigResource;
 use LaraGrape\Models\TailwindConfig;
 use Filament\Notifications\Notification;
 use Filament\Actions\Action;
 use Illuminate\Support\Facades\Artisan;
 
-class EditTailwindConfig extends EditRecord
+class LaraEditTailwindConfig extends EditRecord
 {
-    protected static string $resource = TailwindConfigResource::class;
+    protected static string $resource = LaraTailwindConfigResource::class;
 
     protected function getHeaderActions(): array
     {

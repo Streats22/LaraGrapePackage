@@ -74,7 +74,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->resources([
                 \LaraGrape\Filament\Resources\PageResource::class,
-                \App\Filament\Resources\CustomBlockResource::class,
+                \LaraGrape\Filament\Resources\CustomBlockResource::class,
                 \LaraGrape\Filament\Resources\SiteSettingsResource::class,
                 \LaraGrape\Filament\Resources\TailwindConfigResource::class,
                 // Add your own resources here to override or extend

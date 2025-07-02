@@ -17,7 +17,7 @@ use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Grid;
 
-class PageResource extends Resource
+class LaraPageResource extends Resource
 {
     protected static ?string $model = Page::class;
 

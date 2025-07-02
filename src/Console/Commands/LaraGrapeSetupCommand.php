@@ -250,6 +250,55 @@ class LaraGrapeSetupCommand extends Command
                 '--tag' => 'LaraGrape-welcome',
                 '--force' => $this->option('force'),
             ]);
+            // Remove 'Lara' prefix from class names, references, and filenames in all published PHP files
+            $allPublishedDirs = [
+                base_path('app/Filament/Resources'),
+                base_path('app/Filament/Pages'),
+                base_path('app/Filament/Forms'),
+            ];
+            $allPublishedFiles = [];
+            foreach ($allPublishedDirs as $dir) {
+                if (is_dir($dir)) {
+                    $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir));
+                    foreach ($rii as $file) {
+                        if ($file->isFile() && $file->getExtension() === 'php') {
+                            $allPublishedFiles[] = $file->getPathname();
+                        }
+                    }
+                }
+            }
+            // Add AdminPanelProvider if it exists
+            $adminPanelProviderPath = base_path('app/Filament/AdminPanelProvider.php');
+            if (file_exists($adminPanelProviderPath)) {
+                $allPublishedFiles[] = $adminPanelProviderPath;
+            }
+            foreach ($allPublishedFiles as $filePath) {
+                $contents = file_get_contents($filePath);
+                // Remove 'Lara' prefix from class names
+                $contents = preg_replace('/class Lara([A-Z][A-Za-z0-9_]*)/', 'class $1', $contents, -1, $classCount);
+                if ($classCount > 0) {
+                    $this->info("Updated class name in $filePath");
+                }
+                // Remove 'Lara' prefix from references to these classes
+                $contents = preg_replace('/Lara([A-Z][A-Za-z0-9_]*)/', '$1', $contents, -1, $refCount);
+                if ($refCount > 0) {
+                    $this->info("Updated class references in $filePath");
+                }
+                file_put_contents($filePath, $contents);
+                // Optionally, rename the file itself if it starts with 'Lara'
+                $dir = dirname($filePath);
+                $base = basename($filePath);
+                if (strpos($base, 'Lara') === 0) {
+                    $newBase = substr($base, 4); // Remove 'Lara'
+                    $newPath = $dir . '/' . $newBase;
+                    if (!file_exists($newPath)) {
+                        rename($filePath, $newPath);
+                        $this->info("Renamed file $base to $newBase");
+                    } else {
+                        $this->warn("File $newBase already exists, skipping rename for $base");
+                    }
+                }
+            }
         }
 
         $this->info('LaraGrape setup complete!');

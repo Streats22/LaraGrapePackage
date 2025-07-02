@@ -1,15 +1,15 @@
 <?php
 
-namespace LaraGrape\Filament\Resources\Pages;
+namespace LaraGrape\Filament\Resources\PageResource\Pages;
 
-use LaraGrape\Filament\Resources\PageResource;
+use LaraGrape\Filament\Resources\LaraPageResource;
 use LaraGrape\Services\GrapesJsConverterService;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditPage extends EditRecord
+class LaraEditPage extends EditRecord
 {
-    protected static string $resource = PageResource::class;
+    protected static string $resource = LaraPageResource::class;
 
     protected function getHeaderActions(): array
     {

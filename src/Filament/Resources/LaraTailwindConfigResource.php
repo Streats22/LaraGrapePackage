@@ -18,7 +18,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\KeyValue;
 
-class TailwindConfigResource extends Resource
+class LaraTailwindConfigResource extends Resource
 {
     protected static ?string $model = TailwindConfig::class;
 

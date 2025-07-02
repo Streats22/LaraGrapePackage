@@ -2,13 +2,13 @@
 
 namespace LaraGrape\Filament\Resources\CustomBlockResource\Pages;
 
-use LaraGrape\Filament\Resources\CustomBlockResource;
+use LaraGrape\Filament\Resources\LaraCustomBlockResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
-class ListCustomBlocks extends ListRecords
+class LaraListCustomBlocks extends ListRecords
 {
-    protected static string $resource = CustomBlockResource::class;
+    protected static string $resource = LaraCustomBlockResource::class;
 
     protected function getHeaderActions(): array
     {

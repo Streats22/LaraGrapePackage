@@ -22,7 +22,7 @@ use Filament\Forms\Components\CodeEditor;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\ViewField;
 
-class CustomBlockResource extends Resource
+class LaraCustomBlockResource extends Resource
 {
     protected static ?string $model = CustomBlock::class;
 

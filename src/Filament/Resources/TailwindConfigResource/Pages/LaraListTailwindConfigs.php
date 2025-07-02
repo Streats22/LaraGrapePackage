@@ -2,13 +2,13 @@
 
 namespace LaraGrape\Filament\Resources\TailwindConfigResource\Pages;
 
-use LaraGrape\Filament\Resources\TailwindConfigResource;
+use LaraGrape\Filament\Resources\LaraTailwindConfigResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
-class ListTailwindConfigs extends ListRecords
+class LaraListTailwindConfigs extends ListRecords
 {
-    protected static string $resource = TailwindConfigResource::class;
+    protected static string $resource = LaraTailwindConfigResource::class;
 
     protected function getHeaderActions(): array
     {

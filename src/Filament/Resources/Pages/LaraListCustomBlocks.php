@@ -1,14 +1,13 @@
 <?php
 
-namespace LaraGrape\Filament\Resources\PageResource\Pages;
+namespace LaraGrape\Filament\Resources\CustomBlockResource\Pages;
 
-use LaraGrape\Filament\Resources\PageResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
-class ListPages extends ListRecords
+class LaraListCustomBlocks extends ListRecords
 {
-    protected static string $resource = PageResource::class;
+    protected static string $resource = CustomBlockResource::class;
 
     protected function getHeaderActions(): array
     {

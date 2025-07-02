@@ -2,13 +2,13 @@
 
 namespace LaraGrape\Filament\Resources\SiteSettingsResource\Pages;
 
-use LaraGrape\Filament\Resources\SiteSettingsResource;
+use LaraGrape\Filament\Resources\LaraSiteSettingsResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditSiteSettings extends EditRecord
+class LaraEditSiteSettings extends EditRecord
 {
-    protected static string $resource = SiteSettingsResource::class;
+    protected static string $resource = LaraSiteSettingsResource::class;
 
     protected function getHeaderActions(): array
     {

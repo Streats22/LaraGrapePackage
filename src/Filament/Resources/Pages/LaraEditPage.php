@@ -1,13 +1,13 @@
 <?php
 
-namespace LaraGrape\Filament\Resources\PageResource\Pages;
+namespace LaraGrape\Filament\Resources\Pages;
 
 use LaraGrape\Filament\Resources\PageResource;
 use LaraGrape\Services\GrapesJsConverterService;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditPage extends EditRecord
+class LaraEditPage extends EditRecord
 {
     protected static string $resource = PageResource::class;
 
