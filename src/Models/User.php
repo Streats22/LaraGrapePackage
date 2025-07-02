@@ -1,6 +1,6 @@
 <?php
 
-namespace Streats22\LaraGrape\Models;
+namespace LaraGrape\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

@@ -1,11 +1,11 @@
 <?php
 
-namespace Streats22\LaraGrape\Filament\Resources;
+namespace LaraGrape\Filament\Resources;
 
-use Streats22\LaraGrape\Filament\Forms\Components\GrapesJsEditor;
-use Streats22\LaraGrape\Filament\Resources\PageResource\Pages;
-use Streats22\LaraGrape\Filament\Resources\PageResource\RelationManagers;
-use Streats22\LaraGrape\Models\Page;
+use LaraGrape\Filament\Forms\Components\GrapesJsEditor;
+use LaraGrape\Filament\Resources\PageResource\Pages;
+use LaraGrape\Filament\Resources\PageResource\RelationManagers;
+use LaraGrape\Models\Page;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;

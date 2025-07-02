@@ -1,6 +1,6 @@
 <?php
 
-namespace Streats22\LaraGrape\Filament\Forms\Components;
+namespace LaraGrape\Filament\Forms\Components;
 
 use Filament\Forms\Components\Field;
 

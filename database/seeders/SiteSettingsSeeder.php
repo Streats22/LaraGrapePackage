@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Streats22\LaraGrape\Models\SiteSettings;
+use LaraGrape\Models\SiteSettings;
 
 class SiteSettingsSeeder extends Seeder
 {
@@ -15,7 +15,7 @@ class SiteSettingsSeeder extends Seeder
     {
         $settings = [
             // General Settings
-            ['key' => 'site_name', 'value' => 'LaralGrape', 'type' => 'text', 'group' => 'general', 'label' => 'Site Name', 'description' => 'The name of your website', 'sort_order' => 1],
+            ['key' => 'site_name', 'value' => 'LaraGrape', 'type' => 'text', 'group' => 'general', 'label' => 'Site Name', 'description' => 'The name of your website', 'sort_order' => 1],
             ['key' => 'site_tagline', 'value' => 'Laravel + GrapesJS + Filament', 'type' => 'text', 'group' => 'general', 'label' => 'Site Tagline', 'description' => 'A short description of your site', 'sort_order' => 2],
             ['key' => 'site_description', 'value' => 'A powerful web development boilerplate combining Laravel, GrapesJS, and Filament for building modern websites.', 'type' => 'textarea', 'group' => 'general', 'label' => 'Site Description', 'description' => 'Detailed description for SEO', 'sort_order' => 3],
             ['key' => 'contact_email', 'value' => 'contact@example.com', 'type' => 'text', 'group' => 'general', 'label' => 'Contact Email', 'description' => 'Primary contact email', 'sort_order' => 4],
@@ -24,7 +24,7 @@ class SiteSettingsSeeder extends Seeder
             ['key' => 'timezone', 'value' => 'UTC', 'type' => 'text', 'group' => 'general', 'label' => 'Timezone', 'description' => 'Server timezone', 'sort_order' => 7],
 
             // Header Settings
-            ['key' => 'header_logo_text', 'value' => 'LaralGrape', 'type' => 'text', 'group' => 'header', 'label' => 'Logo Text', 'description' => 'Text to display as logo', 'sort_order' => 1],
+            ['key' => 'header_logo_text', 'value' => 'LaraGrape', 'type' => 'text', 'group' => 'header', 'label' => 'Logo Text', 'description' => 'Text to display as logo', 'sort_order' => 1],
             ['key' => 'header_background_color', 'value' => '#ffffff', 'type' => 'color', 'group' => 'header', 'label' => 'Background Color', 'description' => 'Header background color', 'sort_order' => 2],
             ['key' => 'header_text_color', 'value' => '#1f2937', 'type' => 'color', 'group' => 'header', 'label' => 'Text Color', 'description' => 'Header text color', 'sort_order' => 3],
             ['key' => 'header_sticky', 'value' => true, 'type' => 'boolean', 'group' => 'header', 'label' => 'Sticky Header', 'description' => 'Keep header fixed at top', 'sort_order' => 4],
@@ -32,16 +32,16 @@ class SiteSettingsSeeder extends Seeder
             ['key' => 'header_custom_css', 'value' => '/* Custom header styles */', 'type' => 'textarea', 'group' => 'header', 'label' => 'Custom Header CSS', 'description' => 'Custom CSS for header styling', 'sort_order' => 6],
 
             // Footer Settings
-            ['key' => 'footer_logo_text', 'value' => 'LaralGrape', 'type' => 'text', 'group' => 'footer', 'label' => 'Footer Logo Text', 'description' => 'Text to display in footer', 'sort_order' => 1],
+            ['key' => 'footer_logo_text', 'value' => 'LaraGrape', 'type' => 'text', 'group' => 'footer', 'label' => 'Footer Logo Text', 'description' => 'Text to display in footer', 'sort_order' => 1],
             ['key' => 'footer_background_color', 'value' => '#1f2937', 'type' => 'color', 'group' => 'footer', 'label' => 'Background Color', 'description' => 'Footer background color', 'sort_order' => 2],
             ['key' => 'footer_text_color', 'value' => '#ffffff', 'type' => 'color', 'group' => 'footer', 'label' => 'Text Color', 'description' => 'Footer text color', 'sort_order' => 3],
-            ['key' => 'footer_content', 'value' => '© 2024 LaralGrape. All rights reserved.', 'type' => 'textarea', 'group' => 'footer', 'label' => 'Footer Content', 'description' => 'Main footer content (supports HTML)', 'sort_order' => 4],
+            ['key' => 'footer_content', 'value' => '© 2024 LaraGrape. All rights reserved.', 'type' => 'textarea', 'group' => 'footer', 'label' => 'Footer Content', 'description' => 'Main footer content (supports HTML)', 'sort_order' => 4],
             ['key' => 'footer_show_social', 'value' => true, 'type' => 'boolean', 'group' => 'footer', 'label' => 'Show Social Links', 'description' => 'Display social media links', 'sort_order' => 5],
             ['key' => 'footer_show_newsletter', 'value' => false, 'type' => 'boolean', 'group' => 'footer', 'label' => 'Show Newsletter Signup', 'description' => 'Display newsletter subscription form', 'sort_order' => 6],
             ['key' => 'footer_custom_css', 'value' => '/* Custom footer styles */', 'type' => 'textarea', 'group' => 'footer', 'label' => 'Custom Footer CSS', 'description' => 'Custom CSS for footer styling', 'sort_order' => 7],
 
             // SEO Settings
-            ['key' => 'seo_title', 'value' => 'LaralGrape - Web Development Boilerplate', 'type' => 'text', 'group' => 'seo', 'label' => 'Default Page Title', 'description' => 'Default title for pages without custom title', 'sort_order' => 1],
+            ['key' => 'seo_title', 'value' => 'LaraGrape - Web Development Boilerplate', 'type' => 'text', 'group' => 'seo', 'label' => 'Default Page Title', 'description' => 'Default title for pages without custom title', 'sort_order' => 1],
             ['key' => 'seo_keywords', 'value' => 'laravel, grapesjs, filament, web development', 'type' => 'text', 'group' => 'seo', 'label' => 'Default Keywords', 'description' => 'Comma-separated keywords', 'sort_order' => 2],
             ['key' => 'seo_description', 'value' => 'A powerful web development boilerplate combining Laravel, GrapesJS, and Filament for building modern websites.', 'type' => 'textarea', 'group' => 'seo', 'label' => 'Default Meta Description', 'description' => 'Default meta description for pages', 'sort_order' => 3],
             ['key' => 'seo_auto_generate', 'value' => true, 'type' => 'boolean', 'group' => 'seo', 'label' => 'Auto-generate Meta Tags', 'description' => 'Automatically generate meta tags from content', 'sort_order' => 4],

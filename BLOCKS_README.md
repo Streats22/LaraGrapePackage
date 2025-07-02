@@ -2,6 +2,12 @@
 
 The LaraGrape package includes a dynamic block loading system that automatically scans and loads blocks from the `resources/views/filament/blocks/` directory structure in your Laravel application.
 
+## 📦 Installation
+
+```sh
+composer require laragrape/laragrape
+```
+
 ## 📁 Block Organization
 
 Blocks are organized by category in subdirectories:

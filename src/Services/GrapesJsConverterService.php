@@ -1,11 +1,11 @@
 <?php
 
-namespace Streats22\LaraGrape\Services;
+namespace LaraGrape\Services;
 
-use Streats22\LaraGrape\Models\Page;
+use LaraGrape\Models\Page;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
-use Streats22\LaraGrape\Models\Page as GrapePage;
+use LaraGrape\Models\Page as GrapePage;
 
 class GrapesJsConverterService
 {

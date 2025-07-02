@@ -1,8 +1,8 @@
 <?php
 
-use Streats22\LaraGrape\Http\Controllers\PageController;
+use LaraGrape\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
-use Streats22\LaraGrape\Http\Controllers\AdminPageController;
+use LaraGrape\Http\Controllers\AdminPageController;
 
 // Homepage
 Route::get('/', [PageController::class, 'home'])->name('home');

@@ -2,6 +2,12 @@
 
 LaraGrape has been successfully installed and configured as a package in your Laravel application. Here's what was set up:
 
+## 📦 Installation
+
+```sh
+composer require laragrape/laragrape
+```
+
 ## 📋 What's Included
 
 ### Core Components

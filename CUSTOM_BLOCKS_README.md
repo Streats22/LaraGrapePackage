@@ -2,6 +2,12 @@
 
 LaraGrape provides a powerful custom block builder and comprehensive site settings management system as part of the package for your Laravel application.
 
+## 📦 Installation
+
+```sh
+composer require laragrape/laragrape
+```
+
 ## 🎯 **Custom Block Builder**
 
 Create, manage, and use custom blocks directly from the Filament admin panel in your Laravel app.

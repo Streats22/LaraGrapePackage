@@ -1,6 +1,6 @@
 <?php
 
-namespace Streats22\LaraGrape\Http\Controllers;
+namespace LaraGrape\Http\Controllers;
 
 abstract class Controller
 {

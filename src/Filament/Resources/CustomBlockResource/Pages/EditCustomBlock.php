@@ -1,8 +1,8 @@
 <?php
 
-namespace Streats22\LaraGrape\Filament\Resources\CustomBlockResource\Pages;
+namespace LaraGrape\Filament\Resources\CustomBlockResource\Pages;
 
-use Streats22\LaraGrape\Filament\Resources\CustomBlockResource;
+use LaraGrape\Filament\Resources\CustomBlockResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 

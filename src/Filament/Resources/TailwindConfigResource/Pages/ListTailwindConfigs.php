@@ -1,8 +1,8 @@
 <?php
 
-namespace Streats22\LaraGrape\Filament\Resources\TailwindConfigResource\Pages;
+namespace LaraGrape\Filament\Resources\TailwindConfigResource\Pages;
 
-use Streats22\LaraGrape\Filament\Resources\TailwindConfigResource;
+use LaraGrape\Filament\Resources\TailwindConfigResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 

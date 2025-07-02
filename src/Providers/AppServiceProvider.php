@@ -1,6 +1,6 @@
 <?php
 
-namespace Streats22\LaraGrape\Providers;
+namespace LaraGrape\Providers;
 
 use Illuminate\Support\ServiceProvider;
 

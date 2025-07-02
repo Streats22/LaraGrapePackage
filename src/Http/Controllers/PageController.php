@@ -1,9 +1,9 @@
 <?php
 
-namespace Streats22\LaraGrape\Http\Controllers;
+namespace LaraGrape\Http\Controllers;
 
-use Streats22\LaraGrape\Models\Page;
-use Streats22\LaraGrape\Services\GrapesJsConverterService;
+use LaraGrape\Models\Page;
+use LaraGrape\Services\GrapesJsConverterService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\Response;
@@ -168,9 +168,9 @@ class PageController extends Controller
     private function createDefaultHomepage(): Page
     {
         return Page::create([
-            'title' => 'Welcome to LaralGrape',
+            'title' => 'Welcome to LaraGrape',
             'slug' => 'home',
-            'content' => '<h1>Welcome to LaralGrape</h1><p>This is your new Laravel + GrapesJS + Filament boilerplate!</p>',
+            'content' => '<h1>Welcome to LaraGrape</h1><p>This is your new Laravel + GrapesJS + Filament boilerplate!</p>',
             'is_published' => true,
             'published_at' => now(),
         ]);

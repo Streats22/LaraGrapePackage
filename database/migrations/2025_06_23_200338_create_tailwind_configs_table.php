@@ -67,7 +67,7 @@ return new class extends Migration
             // Advanced settings
             $table->boolean('enable_dark_mode')->default(false);
             $table->boolean('enable_animations')->default(true);
-            $table->string('css_variables_prefix')->default('--laralgrape');
+            $table->string('css_variables_prefix')->default('--LaraGrape');
             $table->boolean('purge_css')->default(true);
             $table->boolean('minify_css')->default(true);
             

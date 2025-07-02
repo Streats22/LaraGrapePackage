@@ -69,7 +69,7 @@
             <div>
                 <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
                 <ul class="space-y-2">
-                    @foreach(\Streats22\LaraGrape\Models\Page::inMenu()->take(5)->get() as $menuPage)
+                    @foreach(\App\Models\Page::inMenu()->take(5)->get() as $menuPage)
                         <li>
                             <a href="{{ route('page.show', $menuPage->slug) }}" 
                                class="text-gray-300 hover:text-white transition-colors">

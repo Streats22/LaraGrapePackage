@@ -2,6 +2,12 @@
 
 LaraGrape provides a modular component system with Alpine.js for better organization and maintainability in your Laravel application.
 
+## 📦 Installation
+
+```sh
+composer require laragrape/laragrape
+```
+
 ## 📁 Component Structure
 
 ```

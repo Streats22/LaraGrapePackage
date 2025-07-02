@@ -1,9 +1,9 @@
 <?php
 
-namespace Streats22\LaraGrape\Http\Controllers;
+namespace LaraGrape\Http\Controllers;
 
-use Streats22\LaraGrape\Models\Page;
-use Streats22\LaraGrape\Services\GrapesJsConverterService;
+use LaraGrape\Models\Page;
+use LaraGrape\Services\GrapesJsConverterService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;

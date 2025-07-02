@@ -1,8 +1,8 @@
 <?php
 
-namespace Streats22\LaraGrape\Filament\Resources\PageResource\Pages;
+namespace LaraGrape\Filament\Resources\Pages;
 
-use Streats22\LaraGrape\Filament\Resources\PageResource;
+use LaraGrape\Filament\Resources\PageResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 

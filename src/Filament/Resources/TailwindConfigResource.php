@@ -1,9 +1,9 @@
 <?php
 
-namespace Streats22\LaraGrape\Filament\Resources;
+namespace LaraGrape\Filament\Resources;
 
-use Streats22\LaraGrape\Filament\Resources\TailwindConfigResource\Pages;
-use Streats22\LaraGrape\Models\TailwindConfig;
+use LaraGrape\Filament\Resources\TailwindConfigResource\Pages;
+use LaraGrape\Models\TailwindConfig;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -267,7 +267,7 @@ class TailwindConfigResource extends Resource
                                         
                                         TextInput::make('css_variables_prefix')
                                             ->label('CSS Variables Prefix')
-                                            ->default('--laralgrape')
+                                            ->default('--LaraGrape')
                                             ->helperText('Prefix for CSS custom properties'),
                                     ]),
                                 

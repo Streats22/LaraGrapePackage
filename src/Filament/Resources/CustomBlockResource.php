@@ -1,10 +1,10 @@
 <?php
 
-namespace Streats22\LaraGrape\Filament\Resources;
+namespace LaraGrape\Filament\Resources;
 
-use Streats22\LaraGrape\Filament\Resources\CustomBlockResource\Pages;
-use Streats22\LaraGrape\Filament\Resources\CustomBlockResource\RelationManagers;
-use Streats22\LaraGrape\Models\CustomBlock;
+use LaraGrape\Filament\Resources\CustomBlockResource\Pages;
+use LaraGrape\Filament\Resources\CustomBlockResource\RelationManagers;
+use LaraGrape\Models\CustomBlock;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;

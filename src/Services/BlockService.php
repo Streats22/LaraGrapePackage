@@ -1,8 +1,8 @@
 <?php
 
-namespace Streats22\LaraGrape\Services;
+namespace LaraGrape\Services;
 
-use Streats22\LaraGrape\Models\CustomBlock;
+use LaraGrape\Models\CustomBlock;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
@@ -12,7 +12,8 @@ class BlockService
     
     public function __construct()
     {
-        $this->blocksPath = resource_path('views/filament/blocks');
+        $userBlocksPath = config('LaraGrape.user_blocks_path');
+        $this->blocksPath = $userBlocksPath ?: config('LaraGrape.blocks_path', resource_path('views/filament/blocks'));
     }
     
     /**
@@ -196,7 +197,7 @@ class BlockService
         }
         
         // // Add form blocks dynamically
-        // $forms = \Streats22\LaraGrape\Models\Form::where('is_active', true)->get();
+        // $forms = \LaraGrape\Models\Form::where('is_active', true)->get();
         // foreach ($forms as $form) {
         //     $grapesJsBlocks[] = [
         //         'id' => 'form-' . $form->id,

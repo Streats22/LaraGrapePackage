@@ -27,7 +27,7 @@
 
             <!-- Desktop Navigation -->
             <nav class="hidden md:flex space-x-8">
-                @foreach(\Streats22\LaraGrape\Models\Page::inMenu()->get() as $menuPage)
+                @foreach(\App\Models\Page::inMenu()->get() as $menuPage)
                     <a href="{{ route('page.show', $menuPage->slug) }}" 
                        class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
                         {{ $menuPage->title }}
@@ -84,7 +84,7 @@
          x-transition:leave-end="opacity-0 transform -translate-y-2"
          class="md:hidden border-t border-gray-200">
         <div class="px-2 pt-2 pb-3 space-y-1">
-            @foreach(\Streats22\LaraGrape\Models\Page::inMenu()->get() as $menuPage)
+            @foreach(\App\Models\Page::inMenu()->get() as $menuPage)
                 <a href="{{ route('page.show', $menuPage->slug) }}" 
                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 transition-colors duration-200">
                     {{ $menuPage->title }}
