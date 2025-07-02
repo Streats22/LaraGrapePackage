@@ -36,11 +36,7 @@ class LaraGrapeSetupCommand extends Command
             ]);
         }
         
-        $this->info('Installing Filament admin panel...');
-        $this->call('php artisan filament:install', [
-            '--panel' => true,
-        ]);
-
+  
         $this->info('Publishing LaraGrape migrations...');
         if ($this->option('publish-migrations') || $this->option('all')) {
             $this->call('vendor:publish', [
@@ -54,7 +50,15 @@ class LaraGrapeSetupCommand extends Command
             $this->call('migrate');
         }
 
-       
+        if ($this->confirm('Do you want to install the Filament admin panel now? (Recommended for first-time setup)', true)) {
+            $this->info('Installing Filament admin panel...');
+            $this->call('filament:install', [
+                '--panel' => true,
+            ]);
+        } else {
+            $this->warn('You must run "php artisan filament:install --panel" before using the admin panel.');
+        }
+
         $this->info('LaraGrape setup complete!');
     }
 } 

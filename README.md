@@ -21,12 +21,16 @@ After installing the package, follow these steps to get up and running:
    php artisan make:filament-user
    ```
    Follow the prompts to set up your admin credentials.
-4. **(Optional) Build frontend assets if your project uses them:**
+4. **Install Filament admin panel:**
+   ```sh
+   php artisan filament:install --panel
+   ```
+5. **(Optional) Build frontend assets if your project uses them:**
    ```sh
    npm install
    npm run build
    ```
-5. **Serve your application:**
+6. **Serve your application:**
    ```sh
    php artisan serve
    ```
@@ -73,7 +77,7 @@ php artisan laragrape:setup [options]
 
 ---
 
-### What’s Next?
+### What's Next?
 
 - **Customize blocks, views, and settings:**  
   All package views and blocks are publishable and can be overridden in your app.
@@ -88,7 +92,7 @@ php artisan laragrape:setup [options]
 - **Frontend & Backend Editing:** Enjoy the flexibility of a true WYSIWYG editor (GrapesJS) for the frontend, and robust content management with Filament on the backend.
 - **Instant CMS Functionality:** Get a full-featured, extensible CMS experience without leaving the Laravel ecosystem.
 - **Rapid Prototyping:** Build, preview, and publish pages in minutes—perfect for agencies, startups, and internal tools.
-- **Custom Blocks & Extensibility:** Easily create and manage custom blocks, layouts, and templates to fit any project’s needs.
+- **Custom Blocks & Extensibility:** Easily create and manage custom blocks, layouts, and templates to fit any project's needs.
 - **SEO & Responsive Ready:** Out-of-the-box SEO features and mobile-friendly design ensure your content looks great everywhere.
 - **Open Source & Actively Maintained:** Built for the community, with regular updates and support.
 
@@ -116,11 +120,15 @@ composer require laragrape/laragrape
    ```sh
    php artisan make:filament-user
    ```
-4. **(Optional) Build frontend assets:**
+4. **Install Filament admin panel:**
+   ```sh
+   php artisan filament:install --panel
+   ```
+5. **(Optional) Build frontend assets:**
    ```sh
    npm install && npm run build
    ```
-5. **Serve your app and visit `/admin` and the frontend!**
+6. **Serve your app and visit `/admin` and the frontend!**
 
 ---
 
