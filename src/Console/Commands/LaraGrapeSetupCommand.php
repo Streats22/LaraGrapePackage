@@ -151,16 +151,16 @@ class LaraGrapeSetupCommand extends Command
                     }
                 }
             }
-            $adminPanelProviderPath = app_path('Filament/AdminPanelProvider.php');
+            $adminPanelProviderPath = base_path('app/Filament/AdminPanelProvider.php');
             if (file_exists($adminPanelProviderPath)) {
-                unlink($adminPanelProviderPath);
+                $contents = file_get_contents($adminPanelProviderPath);
+                // Replace all LaraGrape\Filament\Resources with App\Filament\Resources
+                $contents = str_replace('LaraGrape\\Filament\\Resources\\', 'App\\Filament\\Resources\\', $contents);
+                $contents = str_replace('LaraGrape\\Filament\\Pages\\', 'App\\Filament\\Pages\\', $contents);
+                // Remove any remaining LaraGrape\ references in ->resources() and ->pages()
+                $contents = preg_replace('/,?\s*\\LaraGrape\\[^,\)]+/', '', $contents);
+                file_put_contents($adminPanelProviderPath, $contents);
             }
-            $this->info('Publishing AdminPanelProvider stub...');
-            $this->call('vendor:publish', [
-                '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
-                '--tag' => 'LaraGrape-admin-panel-provider',
-                '--force' => $this->option('force'),
-            ]);
             $this->info('Publishing Filament forms...');
             $this->call('vendor:publish', [
                 '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
@@ -181,8 +181,57 @@ class LaraGrapeSetupCommand extends Command
                     }
                 }
             }
+            $this->info('Publishing Filament resources...');
+            $this->call('vendor:publish', [
+                '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+                '--tag' => 'LaraGrape-filament-resources',
+                '--force' => $this->option('force'),
+            ]);
+            // Remove any remaining LaraGrape\ references in all published PHP files (resources, pages, forms, provider)
+            $pathsToClean = [
+                base_path('app/Filament/Resources'),
+                base_path('app/Filament/Pages'),
+                base_path('app/Filament/Forms'),
+                base_path('app/Filament/AdminPanelProvider.php'),
+            ];
+            foreach ($pathsToClean as $path) {
+                if (is_dir($path)) {
+                    $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path));
+                    foreach ($rii as $file) {
+                        if ($file->isFile() && $file->getExtension() === 'php') {
+                            $contents = file_get_contents($file->getPathname());
+                            $contents = str_replace('LaraGrape\\Filament\\Resources\\', 'App\\Filament\\Resources\\', $contents);
+                            $contents = str_replace('LaraGrape\\Filament\\Pages\\', 'App\\Filament\\Pages\\', $contents);
+                            $contents = str_replace('LaraGrape\\Filament\\', 'App\\Filament\\', $contents);
+                            $contents = str_replace('LaraGrape\\', 'App\\', $contents);
+                            $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
+                            // Remove any remaining LaraGrape\ references in ->resources() and ->pages()
+                            $contents = preg_replace('/,?\s*\\LaraGrape\\[^,\)]+/', '', $contents);
+                            file_put_contents($file->getPathname(), $contents);
+                        }
+                    }
+                } elseif (is_file($path)) {
+                    $contents = file_get_contents($path);
+                    $contents = str_replace('LaraGrape\\Filament\\Resources\\', 'App\\Filament\\Resources\\', $contents);
+                    $contents = str_replace('LaraGrape\\Filament\\Pages\\', 'App\\Filament\\Pages\\', $contents);
+                    $contents = str_replace('LaraGrape\\Filament\\', 'App\\Filament\\', $contents);
+                    $contents = str_replace('LaraGrape\\', 'App\\', $contents);
+                    $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
+                    $contents = preg_replace('/,?\s*\\LaraGrape\\[^,\)]+/', '', $contents);
+                    file_put_contents($path, $contents);
+                }
+            }
+            $this->info('Publishing custom welcome.blade.php...');
+            $this->call('vendor:publish', [
+                '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+                '--tag' => 'LaraGrape-welcome',
+                '--force' => $this->option('force'),
+            ]);
         }
 
         $this->info('LaraGrape setup complete!');
+        $this->info('Re-running php artisan laragrape:setup --all to ensure everything is published and up to date...');
+        \Artisan::call('laragrape:setup', ['--all' => true, '--force' => true]);
+        $this->info('Final publish complete. Your LaraGrape setup is fully up to date.');
     }
 } 

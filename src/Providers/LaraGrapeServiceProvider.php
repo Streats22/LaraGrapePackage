@@ -62,6 +62,10 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/src/Filament/Forms' => app_path('Filament/Forms'),
             ], 'LaraGrape-filament-forms');
+            // Publish and overwrite the default welcome.blade.php
+            $this->publishes([
+                $packageDir.'/resources/views/welcome.blade.php' => base_path('resources/views/welcome.blade.php'),
+            ], 'LaraGrape-welcome');
             $this->commands([
                 \LaraGrape\Console\Commands\LaraGrapeSetupCommand::class,
             ]);
