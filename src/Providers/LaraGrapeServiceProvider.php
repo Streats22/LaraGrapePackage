@@ -56,8 +56,12 @@ class LaraGrapeServiceProvider extends ServiceProvider
             ], 'LaraGrape-filament-blocks');
             // Publish AdminPanelProvider stub
             $this->publishes([
-                $packageDir.'/src/Providers/Filament/AdminPanelProvider.php' => app_path('Providers/Filament/AdminPanelProvider.php'),
+                $packageDir.'/src/Providers/Filament/AdminPanelProvider.php' => app_path('Filament/AdminPanelProvider.php'),
             ], 'LaraGrape-admin-panel-provider');
+            // Publish Filament forms (custom form components)
+            $this->publishes([
+                $packageDir.'/src/Filament/Forms' => app_path('Filament/Forms'),
+            ], 'LaraGrape-filament-forms');
             $this->commands([
                 \LaraGrape\Console\Commands\LaraGrapeSetupCommand::class,
             ]);

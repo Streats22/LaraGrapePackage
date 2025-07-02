@@ -86,12 +86,34 @@ class LaraGrapeSetupCommand extends Command
                 '--tag' => 'LaraGrape-frontend-layout',
                 '--force' => $this->option('force'),
             ]);
+            $adminPanelProviderPath = app_path('Filament/AdminPanelProvider.php');
+            if (file_exists($adminPanelProviderPath)) {
+                unlink($adminPanelProviderPath);
+            }
             $this->info('Publishing AdminPanelProvider stub...');
             $this->call('vendor:publish', [
                 '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
                 '--tag' => 'LaraGrape-admin-panel-provider',
                 '--force' => $this->option('force'),
             ]);
+            $this->info('Publishing Filament forms...');
+            $this->call('vendor:publish', [
+                '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+                '--tag' => 'LaraGrape-filament-forms',
+                '--force' => $this->option('force'),
+            ]);
+            // Automatically update namespace in published forms
+            $formsPath = app_path('Filament/Forms');
+            if (is_dir($formsPath)) {
+                $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($formsPath));
+                foreach ($rii as $file) {
+                    if ($file->isFile() && $file->getExtension() === 'php') {
+                        $contents = file_get_contents($file->getPathname());
+                        $contents = str_replace('namespace LaraGrape\\Filament\\Forms', 'namespace App\\Filament\\Forms', $contents);
+                        file_put_contents($file->getPathname(), $contents);
+                    }
+                }
+            }
         }
 
         $this->info('LaraGrape setup complete!');
