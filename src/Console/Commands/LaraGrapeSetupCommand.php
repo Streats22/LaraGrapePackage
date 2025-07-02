@@ -35,6 +35,11 @@ class LaraGrapeSetupCommand extends Command
                 '--tag' => 'LaraGrape-views'
             ]);
         }
+        
+        $this->info('Installing Filament admin panel...');
+        $this->call('php artisan filament:install', [
+            '--panel' => true,
+        ]);
 
         $this->info('Publishing LaraGrape migrations...');
         if ($this->option('publish-migrations') || $this->option('all')) {
@@ -49,6 +54,7 @@ class LaraGrapeSetupCommand extends Command
             $this->call('migrate');
         }
 
+       
         $this->info('LaraGrape setup complete!');
     }
 } 
