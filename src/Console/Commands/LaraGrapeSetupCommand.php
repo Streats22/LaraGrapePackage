@@ -154,11 +154,34 @@ class LaraGrapeSetupCommand extends Command
             $adminPanelProviderPath = base_path('app/Filament/AdminPanelProvider.php');
             if (file_exists($adminPanelProviderPath)) {
                 $contents = file_get_contents($adminPanelProviderPath);
-                // Replace all LaraGrape\Filament\Resources with App\Filament\Resources
+                // Remove any LaraGrape\ references in ->resources(), ->pages(), ->widgets()
+                $contents = preg_replace('/(->resources\(\[)([^\]]*)\]/s', function ($matches) {
+                    $lines = explode("\n", $matches[2]);
+                    $lines = array_filter($lines, function($line) {
+                        return strpos($line, 'LaraGrape\\') === false;
+                    });
+                    return $matches[1] . implode("\n", $lines) . "]";
+                }, $contents);
+                $contents = preg_replace('/(->pages\(\[)([^\]]*)\]/s', function ($matches) {
+                    $lines = explode("\n", $matches[2]);
+                    $lines = array_filter($lines, function($line) {
+                        return strpos($line, 'LaraGrape\\') === false;
+                    });
+                    return $matches[1] . implode("\n", $lines) . "]";
+                }, $contents);
+                $contents = preg_replace('/(->widgets\(\[)([^\]]*)\]/s', function ($matches) {
+                    $lines = explode("\n", $matches[2]);
+                    $lines = array_filter($lines, function($line) {
+                        return strpos($line, 'LaraGrape\\') === false;
+                    });
+                    return $matches[1] . implode("\n", $lines) . "]";
+                }, $contents);
+                // Also update any namespace/use statements
                 $contents = str_replace('LaraGrape\\Filament\\Resources\\', 'App\\Filament\\Resources\\', $contents);
                 $contents = str_replace('LaraGrape\\Filament\\Pages\\', 'App\\Filament\\Pages\\', $contents);
-                // Remove any remaining LaraGrape\ references in ->resources() and ->pages()
-                $contents = preg_replace('/,?\s*\\\\LaraGrape\\\\[^,\)]+/', '', $contents);
+                $contents = str_replace('LaraGrape\\Filament\\', 'App\\Filament\\', $contents);
+                $contents = str_replace('LaraGrape\\', 'App\\', $contents);
+                $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
                 file_put_contents($adminPanelProviderPath, $contents);
             }
             $this->info('Publishing Filament forms...');
