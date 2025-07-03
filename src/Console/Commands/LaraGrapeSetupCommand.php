@@ -38,6 +38,12 @@ class LaraGrapeSetupCommand extends Command
             '--tag' => 'LaraGrape-models',
             '--force' => true,
         ]);
+        // Remove User.php if it was published by accident
+        $userModelPath = base_path('app/Models/User.php');
+        if (file_exists($userModelPath)) {
+            $this->warn('Removing User.php from published models to avoid overwriting the app User model.');
+            unlink($userModelPath);
+        }
 
         // 2. Publish all resources (always, in correct order)
         $force = $this->option('all') ? true : $this->option('force');
@@ -59,8 +65,8 @@ class LaraGrapeSetupCommand extends Command
                 '--force' => $force,
             ]);
         }
-        // Always force overwrite for welcome
-        $this->info('Publishing LaraGrape-welcome (always forced)...');
+        // Always force overwrite for welcome (must be last to ensure it wins)
+        $this->info('Publishing LaraGrape-welcome (always forced, latest version)...');
         $this->call('vendor:publish', [
             '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
             '--tag' => 'LaraGrape-welcome',
@@ -334,10 +340,13 @@ class LaraGrapeSetupCommand extends Command
                 }
             }
 
-            // Post-process model namespaces
+            // Post-process model namespaces, but skip User.php
             $modelsPath = base_path('app/Models');
             if (is_dir($modelsPath)) {
                 foreach (glob($modelsPath . '/*.php') as $modelFile) {
+                    if (basename($modelFile) === 'User.php') {
+                        continue; // Never touch User.php
+                    }
                     $contents = file_get_contents($modelFile);
                     $contents = str_replace('namespace LaraGrape\\Models;', 'namespace App\\Models;', $contents);
                     file_put_contents($modelFile, $contents);
@@ -353,5 +362,13 @@ class LaraGrapeSetupCommand extends Command
         }
 
         $this->info('Final publish complete. Your LaraGrape setup is fully up to date.');
+
+        // Automatically re-run the setup with --all if not already set, to ensure all steps are completed
+        if (!$this->option('all')) {
+            $this->info('Re-running laragrape:setup with --all to ensure all files are published and post-processed...');
+            $this->call('laragrape:setup', [
+                '--all' => true,
+            ]);
+        }
     }
 } 
