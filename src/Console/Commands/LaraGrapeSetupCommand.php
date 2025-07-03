@@ -373,6 +373,18 @@ class LaraGrapeSetupCommand extends Command
             }
         }
 
+        // Post-process service namespaces (ensure App\Services) and use statements (ensure App\Models)
+        $servicesPath = base_path('app/Services');
+        if (is_dir($servicesPath)) {
+            foreach (glob($servicesPath . '/*.php') as $serviceFile) {
+                $contents = file_get_contents($serviceFile);
+                $contents = str_replace('namespace LaraGrape\\Services;', 'namespace App\\Services;', $contents);
+                $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
+                file_put_contents($serviceFile, $contents);
+                $this->info("Updated service namespace and use statements in " . basename($serviceFile));
+            }
+        }
+
         // 4. Run migrations if requested
         if ($this->option('migrate')) {
             $this->info('Running migrations...');
