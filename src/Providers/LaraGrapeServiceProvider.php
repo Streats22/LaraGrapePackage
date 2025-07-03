@@ -90,6 +90,14 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/routes/web.php' => base_path('routes/web.php'),
             ], 'LaraGrape-web');
+            // Publish Filament form components (grapesjs-editor, etc.)
+            $this->publishes([
+                $packageDir.'/resources/views/filament/forms/components' => resource_path('views/filament/forms/components'),
+            ], 'LaraGrape-filament-form-components');
+            // Publish custom pages views (e.g., pages/show.blade.php)
+            $this->publishes([
+                $packageDir.'/resources/views/pages' => resource_path('views/pages'),
+            ], 'LaraGrape-pages');
         }
     }
 }

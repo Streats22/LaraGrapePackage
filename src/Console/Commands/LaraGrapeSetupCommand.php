@@ -388,5 +388,18 @@ class LaraGrapeSetupCommand extends Command
                 '--all' => true,
             ]);
         }
+
+        // Publish Filament form components (grapesjs-editor, etc.)
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-filament-form-components',
+            '--force' => true,
+        ]);
+        // Publish custom pages views (e.g., pages/show.blade.php)
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-pages',
+            '--force' => true,
+        ]);
     }
 } 

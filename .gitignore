@@ -29,3 +29,5 @@ sync_boilerplate_to_package.sh
 # Ignore the sync exclude file
 .syncExclude
 test_laragrape_install.sh
+
+test-laragrape/
