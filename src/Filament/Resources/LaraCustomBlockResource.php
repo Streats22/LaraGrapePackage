@@ -307,9 +307,9 @@ document.addEventListener("DOMContentLoaded", function() {
     public static function getPages(): array
     {
         return [
-            // 'index' => Pages\ListCustomBlocks::route('/'),
-            // 'create' => Pages\CreateCustomBlock::route('/create'),
-            // 'edit' => Pages\EditCustomBlock::route('/{record}/edit'),
+            'index' => Pages\LaraListCustomBlocks::route('/'),
+            'create' => Pages\LaraCreateCustomBlock::route('/create'),
+            'edit' => Pages\LaraEditCustomBlock::route('/{record}/edit'),
         ];
     }
 }

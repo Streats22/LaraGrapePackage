@@ -335,9 +335,9 @@ class LaraTailwindConfigResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTailwindConfigs::route('/'),
-            'create' => Pages\CreateTailwindConfig::route('/create'),
-            'edit' => Pages\EditTailwindConfig::route('/{record}/edit'),
+            'index' => Pages\LaraListTailwindConfigs::route('/'),
+            'create' => Pages\LaraCreateTailwindConfig::route('/create'),
+            'edit' => Pages\LaraEditTailwindConfig::route('/{record}/edit'),
         ];
     }
 } 

@@ -299,6 +299,33 @@ class LaraGrapeSetupCommand extends Command
                     }
                 }
             }
+
+            // 3b. Ensure every resource page file has the correct use statement for its resource
+            $resourceDirs = glob(base_path('app/Filament/Resources/*Resource'));
+            foreach ($resourceDirs as $resourceDir) {
+                $resourceName = basename($resourceDir); // e.g., TailwindConfigResource
+                $pagesDir = $resourceDir . '/Pages';
+                if (is_dir($pagesDir)) {
+                    foreach (glob($pagesDir . '/*.php') as $pageFile) {
+                        $contents = file_get_contents($pageFile);
+                        // Only add if the file references the resource and doesn't already have the use statement
+                        if (
+                            strpos($contents, "protected static string \$resource = {$resourceName}::class;") !== false &&
+                            strpos($contents, "use App\\Filament\\Resources\\{$resourceName};") === false
+                        ) {
+                            // Insert use statement after namespace
+                            $contents = preg_replace(
+                                '/(namespace [^;]+;)/',
+                                "$1\nuse App\\Filament\\Resources\\{$resourceName};",
+                                $contents,
+                                1
+                            );
+                            file_put_contents($pageFile, $contents);
+                            $this->info("Inserted use statement for {$resourceName} in " . basename($pageFile));
+                        }
+                    }
+                }
+            }
         }
 
         // 4. Run migrations if requested

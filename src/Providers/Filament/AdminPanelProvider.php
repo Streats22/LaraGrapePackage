@@ -1,6 +1,6 @@
 <?php
 
-namespace LaraGrape\Providers\Filament;
+namespace App\Providers\Filament;
 
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -11,27 +11,18 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets;
-use Filament\Support\Facades\FilamentAsset;
-use Filament\Support\Assets\Js;
-use Filament\Support\Assets\Css;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Support\Assets\Js;
+use Filament\Support\Assets\Css;
+use Filament\Support\Facades\FilamentAsset;
 
 class AdminPanelProvider extends PanelProvider
 {
-    public function boot(): void
-    {
-        FilamentAsset::register([
-            // GrapesJS core assets
-            Css::make('grapesjs-css', 'https://unpkg.com/grapesjs@0.22.8/dist/css/grapes.min.css'),
-            Js::make('grapesjs', 'https://unpkg.com/grapesjs@0.22.8/dist/grapes.min.js'),
-        ]);
-    }
-
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -67,28 +58,15 @@ class AdminPanelProvider extends PanelProvider
                     950 => '3, 7, 18',
                 ],
             ])
-            ->font('Inter')
-            ->brandName('LaraGrape')
-            ->brandLogo(asset('images/logo.svg'))
-            ->favicon(asset('images/favicon.svg'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->resources([
-                \LaraGrape\Filament\Resources\PageResource::class,
-                \LaraGrape\Filament\Resources\CustomBlockResource::class,
-                \LaraGrape\Filament\Resources\SiteSettingsResource::class,
-                \LaraGrape\Filament\Resources\TailwindConfigResource::class,
-                // Add your own resources here to override or extend
-            ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                \LaraGrape\Filament\Pages\Dashboard::class,
-                // Add your own pages here to override or extend
+                Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
-                // Add your own widgets here to override or extend
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -103,7 +81,14 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ])
-            ->maxContentWidth('full');
+            ]);
+    }
+
+    public function boot(): void
+    {
+        FilamentAsset::register([
+            Js::make('grapesjs', 'https://unpkg.com/grapesjs@0.22.8/dist/grapes.min.js'),
+            Css::make('grapesjs-css', 'https://unpkg.com/grapesjs@0.22.8/dist/css/grapes.min.css'),
+        ]);
     }
 }
