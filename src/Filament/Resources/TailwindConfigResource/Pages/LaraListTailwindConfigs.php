@@ -15,4 +15,4 @@ class LaraListTailwindConfigs extends ListRecords
             Actions\CreateAction::make(),
         ];
     }
-} 
+}

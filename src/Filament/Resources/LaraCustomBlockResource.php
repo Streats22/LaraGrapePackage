@@ -89,30 +89,23 @@ class LaraCustomBlockResource extends Resource
                                                     ->numeric()
                                                     ->default(0)
                                                     ->helperText('Order in block manager'),
+                                                TagsInput::make('tags')
+                                                    ->label('Tags')
+                                                    ->placeholder('e.g. hero, card, form')
+                                                    ->helperText('Add tags to help search and reuse blocks'),
                                             ]),
                                     ]),
                             ]),
-                        
-                        Tabs\Tab::make('HTML Content')
+                        Tabs\Tab::make('HTML')
                             ->schema([
                                 Section::make('HTML Structure')
                                     ->description('Write the HTML structure for your block. Use data-gjs attributes for GrapesJS integration.')
                                     ->schema([
                                         CodeEditor::make('html_content')
                                             ->label('HTML Content')
-                                            ->language('html')
-                                            ->required()
-                                            ->minHeight(400)
-                                            ->placeholder('<!-- Example block structure -->
-<div class="custom-block bg-white rounded-lg shadow-md p-6">
-    <h3 data-gjs-type="text" data-gjs-name="title">Block Title</h3>
-    <p data-gjs-type="text" data-gjs-name="description">Block description goes here</p>
-    <button class="btn btn-primary" data-gjs-type="text" data-gjs-name="button-text">Click Me</button>
-</div>')
-                                            ->helperText('Use data-gjs-type="text" and data-gjs-name="unique-name" to make elements editable'),
+                                            ->helperText('Only HTML is allowed. Use data-gjs-type="text" and data-gjs-name="unique-name" to make elements editable'),
                                     ]),
                             ]),
-                        
                         Tabs\Tab::make('CSS Styling')
                             ->schema([
                                 Section::make('Custom CSS')
@@ -120,107 +113,32 @@ class LaraCustomBlockResource extends Resource
                                     ->schema([
                                         CodeEditor::make('css_content')
                                             ->label('CSS Content')
-                                            ->language('css')
-                                            ->minHeight(300)
-                                            ->placeholder('/* Custom styles for your block */
-.custom-block {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 12px;
-    transition: transform 0.3s ease;
-}
-
-.custom-block:hover {
-    transform: translateY(-2px);
-}
-
-.custom-block h3 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-}
-
-.custom-block .btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid white;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.custom-block .btn:hover {
-    background: white;
-    color: #667eea;
-}')
                                             ->helperText('CSS will be scoped to this block'),
                                     ]),
                             ]),
-                        
-                        Tabs\Tab::make('JavaScript')
+                        Tabs\Tab::make('PHP')
                             ->schema([
-                                Section::make('Custom JavaScript')
-                                    ->description('Add interactive functionality to your block')
+                                Section::make('Custom PHP')
+                                    ->description('Add custom PHP (Blade) code for advanced use. This will not be executed in the admin preview.')
                                     ->schema([
-                                        CodeEditor::make('js_content')
-                                            ->label('JavaScript Content')
-                                            ->language('javascript')
-                                            ->minHeight(300)
-                                            ->placeholder('// Custom JavaScript for your block
-document.addEventListener("DOMContentLoaded", function() {
-    const block = document.querySelector(".custom-block");
-    
-    if (block) {
-        // Add click event
-        block.addEventListener("click", function() {
-            console.log("Block clicked!");
-        });
-        
-        // Add animation on scroll
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = "1";
-                    entry.target.style.transform = "translateY(0)";
-                }
-            });
-        });
-        
-        observer.observe(block);
-    }
-});')
-                                            ->helperText('JavaScript will be executed when the block is loaded'),
+                                        CodeEditor::make('php_content')
+                                            ->label('PHP Content')
+                                            ->helperText('Write your PHP/Blade code here. This will only be executed on the frontend, not in the admin preview.'),
                                     ]),
                             ]),
-                        
-                        Tabs\Tab::make('GrapesJS Settings')
+                        Tabs\Tab::make('Variables')
                             ->schema([
-                                Section::make('Block Attributes')
-                                    ->description('Configure how this block behaves in GrapesJS')
+                                Section::make('Reusable Variables')
+                                    ->description('Define variables (e.g., title, content) that can be used in your block code as {{ $variable }}.')
                                     ->schema([
-                                        KeyValue::make('attributes')
-                                            ->label('GrapesJS Attributes')
-                                            ->keyLabel('Attribute')
-                                            ->valueLabel('Value')
-                                            ->addActionLabel('Add Attribute')
-                                            ->placeholder('Add GrapesJS attributes like draggable, droppable, etc.')
-                                            ->helperText('Common attributes: draggable, droppable, removable, copyable'),
-                                    ]),
-                                
-                                Section::make('Block Settings')
-                                    ->description('Additional configuration for the block')
-                                    ->schema([
-                                        KeyValue::make('settings')
-                                            ->label('Block Settings')
-                                            ->keyLabel('Setting')
-                                            ->valueLabel('Value')
-                                            ->addActionLabel('Add Setting')
-                                            ->placeholder('Add custom settings for your block')
-                                            ->helperText('These can be used in your JavaScript or CSS'),
+                                        KeyValue::make('variables')
+                                            ->label('Variables')
+                                            ->keyLabel('Variable Name')
+                                            ->valueLabel('Default Value')
+                                            ->addActionLabel('Add Variable')
+                                            ->helperText('Define variables that can be used in your HTML, CSS, or PHP/Blade code.'),
                                     ]),
                             ]),
-                        
                         Tabs\Tab::make('Preview')
                             ->schema([
                                 Section::make('Block Preview')
@@ -229,15 +147,27 @@ document.addEventListener("DOMContentLoaded", function() {
                                         Placeholder::make('preview')
                                             ->content(function ($record) {
                                                 if (!$record || !$record->html_content) {
-                                                    return '<div class="text-gray-500 text-center p-8">No content to preview</div>';
+                                                    return view('filament.components.block-preview-empty');
                                                 }
-                                                
                                                 $content = $record->getCompleteContent();
                                                 return view('filament.components.block-preview', ['content' => $content]);
                                             })
                                             ->columnSpanFull(),
                                     ]),
                             ]),
+                        Tabs\Tab::make('Examples & Help')
+                            ->schema([
+                                Section::make('Block Examples & Conventions')
+                                    ->description('Reference for building custom blocks')
+                                    ->schema([
+                                        Placeholder::make('examples_help')
+                                            ->content(function () {
+                                                return view('filament.components.block-examples-help');
+                                            })
+                                            ->columnSpanFull(),
+                                    ]),
+                            ]),
+                        // Other tabs temporarily removed for debugging
                     ])
                     ->columnSpanFull(),
             ]);
@@ -273,6 +203,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 Tables\Columns\TextColumn::make('sort_order')
                     ->sortable(),
                 
+                Tables\Columns\TagsColumn::make('tags')
+                    ->label('Tags'),
+                
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable(),
@@ -288,10 +221,48 @@ document.addEventListener("DOMContentLoaded", function() {
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+                Tables\Actions\Action::make('clone')
+                    ->label('Clone')
+                    ->icon('heroicon-o-document-duplicate')
+                    ->action(function ($record, $livewire) {
+                        $newBlock = $record->replicate();
+                        $newBlock->name = $record->name . ' (Copy)';
+                        $newBlock->slug = $record->slug . '-copy-' . uniqid();
+                        $newBlock->push();
+                        $livewire->redirect(CustomBlockResource::getUrl('edit', ['record' => $newBlock->getKey()]));
+                    })
+                    ->color('secondary'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\BulkAction::make('export')
+                        ->label('Export as JSON')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->action(function ($records) {
+                            $json = $records->toJson(JSON_PRETTY_PRINT);
+                            return response($json)
+                                ->header('Content-Type', 'application/json')
+                                ->header('Content-Disposition', 'attachment; filename=custom-blocks-export.json');
+                        }),
+                    Tables\Actions\BulkAction::make('import')
+                        ->label('Import from JSON')
+                        ->icon('heroicon-o-arrow-up-tray')
+                        ->form([
+                            Forms\Components\FileUpload::make('import_file')
+                                ->label('JSON File')
+                                ->acceptedFileTypes(['application/json'])
+                                ->required(),
+                        ])
+                        ->action(function ($data, $livewire) {
+                            $file = $data['import_file'];
+                            $json = file_get_contents($file->getRealPath());
+                            $blocks = json_decode($json, true);
+                            foreach ($blocks as $block) {
+                                \App\Models\CustomBlock::create($block);
+                            }
+                            $livewire->notify('success', 'Blocks imported successfully!');
+                        }),
                 ]),
             ])
             ->defaultSort('sort_order', 'asc');
@@ -307,9 +278,9 @@ document.addEventListener("DOMContentLoaded", function() {
     public static function getPages(): array
     {
         return [
-            'index' => Pages\LaraListCustomBlocks::route('/'),
-            'create' => Pages\LaraCreateCustomBlock::route('/create'),
-            'edit' => Pages\LaraEditCustomBlock::route('/{record}/edit'),
+            'index' => Pages\ListCustomBlocks::route('/'),
+            'create' => Pages\CreateCustomBlock::route('/create'),
+            'edit' => Pages\EditCustomBlock::route('/{record}/edit'),
         ];
     }
 }

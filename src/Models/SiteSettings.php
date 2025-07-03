@@ -11,11 +11,11 @@ class SiteSettings extends Model
     use HasFactory;
 
     protected $fillable = [
+        'label',
         'key',
         'value',
         'type',
         'group',
-        'label',
         'description',
         'sort_order',
     ];

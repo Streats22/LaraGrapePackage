@@ -233,9 +233,9 @@ class LaraPageResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\LaraListPages::route('/'),
-            'create' => Pages\LaraCreatePage::route('/create'),
-            'edit' => Pages\LaraEditPage::route('/{record}/edit'),
+            'index' => Pages\ListPages::route('/'),
+            'create' => Pages\CreatePage::route('/create'),
+            'edit' => Pages\EditPage::route('/{record}/edit'),
         ];
     }
 }

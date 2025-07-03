@@ -267,7 +267,7 @@ class LaraTailwindConfigResource extends Resource
                                         
                                         TextInput::make('css_variables_prefix')
                                             ->label('CSS Variables Prefix')
-                                            ->default('--LaraGrape')
+                                            ->default('--laralgrape')
                                             ->helperText('Prefix for CSS custom properties'),
                                     ]),
                                 
@@ -335,9 +335,9 @@ class LaraTailwindConfigResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\LaraListTailwindConfigs::route('/'),
-            'create' => Pages\LaraCreateTailwindConfig::route('/create'),
-            'edit' => Pages\LaraEditTailwindConfig::route('/{record}/edit'),
+            'index' => Pages\ListTailwindConfigs::route('/'),
+            'create' => Pages\CreateTailwindConfig::route('/create'),
+            'edit' => Pages\EditTailwindConfig::route('/{record}/edit'),
         ];
     }
-} 
+}

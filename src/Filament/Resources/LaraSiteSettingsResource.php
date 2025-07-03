@@ -435,9 +435,9 @@ console.log("Site loaded!");')
     public static function getPages(): array
     {
         return [
-            'index' => Pages\LaraListSiteSettings::route('/'),
-            'create' => Pages\LaraCreateSiteSettings::route('/create'),
-            'edit' => Pages\LaraEditSiteSettings::route('/{record}/edit'),
+            'index' => Pages\ListSiteSettings::route('/'),
+            'create' => Pages\CreateSiteSettings::route('/create'),
+            'edit' => Pages\EditSiteSettings::route('/{record}/edit'),
         ];
     }
 

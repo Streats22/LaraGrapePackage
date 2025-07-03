@@ -23,12 +23,16 @@ class CustomBlock extends Model
         'is_active',
         'sort_order',
         'settings',
+        'tags',
+        'variables',
     ];
 
     protected $casts = [
         'attributes' => 'array',
         'settings' => 'array',
         'is_active' => 'boolean',
+        'tags' => 'array',
+        'variables' => 'array',
     ];
 
     protected static function boot()

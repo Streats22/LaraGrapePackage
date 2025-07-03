@@ -9,4 +9,4 @@ use Filament\Resources\Pages\CreateRecord;
 class LaraCreateTailwindConfig extends CreateRecord
 {
     protected static string $resource = TailwindConfigResource::class;
-} 
+}

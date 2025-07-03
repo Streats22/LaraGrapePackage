@@ -31,3 +31,4 @@ sync_boilerplate_to_package.sh
 test_laragrape_install.sh
 
 test-laragrape/
+smart_import_lara.php
