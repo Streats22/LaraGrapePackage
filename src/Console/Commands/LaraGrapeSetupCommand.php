@@ -420,5 +420,12 @@ class LaraGrapeSetupCommand extends Command
             '--tag' => 'LaraGrape-js',
             '--force' => true,
         ]);
+
+        // Publish Filament admin theme CSS
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-filament-admin-css',
+            '--force' => true,
+        ]);
     }
 } 

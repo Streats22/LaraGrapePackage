@@ -102,6 +102,10 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/resources/js/grapesjs-editor.js' => resource_path('js/grapesjs-editor.js'),
             ], 'LaraGrape-js');
+            // Publish Filament admin theme CSS
+            $this->publishes([
+                $packageDir.'/resources/css/filament/admin/theme.css' => resource_path('css/filament/admin/theme.css'),
+            ], 'LaraGrape-filament-admin-css');
         }
     }
 }
