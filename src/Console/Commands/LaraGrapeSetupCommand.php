@@ -32,6 +32,13 @@ class LaraGrapeSetupCommand extends Command
             $this->warn('You must run "php artisan filament:install" and then "php artisan filament:install --panels" before using the admin panel.');
         }
 
+        // Publish models
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-models',
+            '--force' => true,
+        ]);
+
         // 2. Publish all resources (always, in correct order)
         $force = $this->option('all') ? true : $this->option('force');
         $publishTags = [
@@ -324,6 +331,17 @@ class LaraGrapeSetupCommand extends Command
                             $this->info("Inserted use statement for {$resourceName} in " . basename($pageFile));
                         }
                     }
+                }
+            }
+
+            // Post-process model namespaces
+            $modelsPath = base_path('app/Models');
+            if (is_dir($modelsPath)) {
+                foreach (glob($modelsPath . '/*.php') as $modelFile) {
+                    $contents = file_get_contents($modelFile);
+                    $contents = str_replace('namespace LaraGrape\\Models;', 'namespace App\\Models;', $contents);
+                    file_put_contents($modelFile, $contents);
+                    $this->info("Updated model namespace in " . basename($modelFile));
                 }
             }
         }

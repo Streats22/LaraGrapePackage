@@ -66,6 +66,10 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/resources/views/welcome.blade.php' => base_path('resources/views/welcome.blade.php'),
             ], 'LaraGrape-welcome');
+            // Publish models
+            $this->publishes([
+                $packageDir.'/src/Models' => app_path('Models'),
+            ], 'LaraGrape-models');
             $this->commands([
                 \LaraGrape\Console\Commands\LaraGrapeSetupCommand::class,
             ]);
