@@ -73,6 +73,23 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->commands([
                 \LaraGrape\Console\Commands\LaraGrapeSetupCommand::class,
             ]);
+            // Publish CSS assets
+            $this->publishes([
+                $packageDir.'/resources/css/site.css' => resource_path('css/site.css'),
+                $packageDir.'/resources/css/app.css' => resource_path('css/app.css'),
+                $packageDir.'/resources/css/filament-grapesjs-editor.css' => resource_path('css/filament-grapesjs-editor.css'),
+            ], 'LaraGrape-assets');
+            // Publish PHP service/command files
+            $this->publishes([
+                $packageDir.'/src/Console/Commands/RebuildTailwindCommand.php' => app_path('Console/Commands/RebuildTailwindCommand.php'),
+                $packageDir.'/src/Services/BlockService.php' => app_path('Services/BlockService.php'),
+                $packageDir.'/src/Services/GrapesJsConverterService.php' => app_path('Services/GrapesJsConverterService.php'),
+                $packageDir.'/src/Services/SiteSettingsService.php' => app_path('Services/SiteSettingsService.php'),
+            ], 'LaraGrape-commands');
+            // Publish web.php
+            $this->publishes([
+                $packageDir.'/routes/web.php' => base_path('routes/web.php'),
+            ], 'LaraGrape-web');
         }
     }
 }

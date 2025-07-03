@@ -21,15 +21,17 @@ class LaraGrapeSetupCommand extends Command
     public function handle()
     {
         // 1. Filament install (if confirmed)
-        if ($this->confirm('Do you want to install the Filament admin panel now? (Recommended for first-time setup)', true)) {
-            $this->info('Running Filament base install...');
-            $this->call('filament:install');
-            $this->info('Enabling Filament panels support...');
-            $this->call('filament:install', [
-                '--panels' => true,
-            ]);
-        } else {
-            $this->warn('You must run "php artisan filament:install" and then "php artisan filament:install --panels" before using the admin panel.');
+        if (!$this->option('all')) {
+            if ($this->confirm('Do you want to install the Filament admin panel now? (Recommended for first-time setup)', true)) {
+                $this->info('Running Filament base install...');
+                $this->call('filament:install');
+                $this->info('Enabling Filament panels support...');
+                $this->call('filament:install', [
+                    '--panels' => true,
+                ]);
+            } else {
+                $this->warn('You must run "php artisan filament:install" and then "php artisan filament:install --panels" before using the admin panel.');
+            }
         }
 
         // Publish models
@@ -38,12 +40,6 @@ class LaraGrapeSetupCommand extends Command
             '--tag' => 'LaraGrape-models',
             '--force' => true,
         ]);
-        // Remove User.php if it was published by accident
-        $userModelPath = base_path('app/Models/User.php');
-        if (file_exists($userModelPath)) {
-            $this->warn('Removing User.php from published models to avoid overwriting the app User model.');
-            unlink($userModelPath);
-        }
 
         // 2. Publish all resources (always, in correct order)
         $force = $this->option('all') ? true : $this->option('force');
@@ -65,6 +61,24 @@ class LaraGrapeSetupCommand extends Command
                 '--force' => $force,
             ]);
         }
+        // Publish CSS assets
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-assets',
+            '--force' => true,
+        ]);
+        // Publish PHP service/command files
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-commands',
+            '--force' => true,
+        ]);
+        // Publish web.php (always force)
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-web',
+            '--force' => true,
+        ]);
         // Always force overwrite for welcome (must be last to ensure it wins)
         $this->info('Publishing LaraGrape-welcome (always forced, latest version)...');
         $this->call('vendor:publish', [
@@ -72,6 +86,13 @@ class LaraGrapeSetupCommand extends Command
             '--tag' => 'LaraGrape-welcome',
             '--force' => true,
         ]);
+        // Direct copy fallback for welcome.blade.php
+        $packageWelcome = __DIR__ . '/../../../resources/views/welcome.blade.php';
+        $appWelcome = base_path('resources/views/welcome.blade.php');
+        if (file_exists($packageWelcome)) {
+            copy($packageWelcome, $appWelcome);
+            $this->info('welcome.blade.php was directly copied to ensure it is overwritten.');
+        }
 
         // 3. Post-process all published files (namespace/use/class renaming, file renaming)
         if ($this->option('all')) {
