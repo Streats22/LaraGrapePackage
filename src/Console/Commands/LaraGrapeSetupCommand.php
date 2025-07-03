@@ -427,5 +427,24 @@ class LaraGrapeSetupCommand extends Command
             '--tag' => 'LaraGrape-filament-admin-css',
             '--force' => true,
         ]);
+
+        // Publish all layout Blade views
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-layout',
+            '--force' => true,
+        ]);
+        // Publish all block Blade views
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-blocks',
+            '--force' => true,
+        ]);
+        // Publish all Filament form components
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-filament-form-components',
+            '--force' => true,
+        ]);
     }
 } 

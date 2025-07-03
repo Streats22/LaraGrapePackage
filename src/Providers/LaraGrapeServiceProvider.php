@@ -46,10 +46,14 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/src/Filament/Pages' => app_path('Filament/Pages'),
             ], 'LaraGrape-filament-pages');
-            // Publish frontend layout components
+            // Publish all layout Blade views
             $this->publishes([
                 $packageDir.'/resources/views/components/layout' => resource_path('views/components/layout'),
-            ], 'LaraGrape-frontend-layout');
+            ], 'LaraGrape-layout');
+            // Publish all block Blade views
+            $this->publishes([
+                $packageDir.'/resources/views/components/blocks' => resource_path('views/components/blocks'),
+            ], 'LaraGrape-blocks');
             // Publish Filament blocks (Blade views)
             $this->publishes([
                 $packageDir.'/resources/views/components/blocks' => resource_path('views/components/blocks'),
@@ -90,7 +94,7 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/routes/web.php' => base_path('routes/web.php'),
             ], 'LaraGrape-web');
-            // Publish Filament form components (grapesjs-editor, etc.)
+            // Publish all Filament form components
             $this->publishes([
                 $packageDir.'/resources/views/filament/forms/components' => resource_path('views/filament/forms/components'),
             ], 'LaraGrape-filament-form-components');
