@@ -61,10 +61,10 @@ class LaraGrapeSetupCommand extends Command
                 '--force' => $force,
             ]);
         }
-        // Publish CSS assets
+        // Publish CSS assets (site.css, app.css, filament-grapesjs-editor.css)
         $this->call('vendor:publish', [
             '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
-            '--tag' => 'LaraGrape-assets',
+            '--tag' => 'LaraGrape-css',
             '--force' => true,
         ]);
         // Publish PHP service/command files
@@ -411,6 +411,13 @@ class LaraGrapeSetupCommand extends Command
         $this->call('vendor:publish', [
             '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
             '--tag' => 'LaraGrape-pages',
+            '--force' => true,
+        ]);
+
+        // Publish JS assets (grapesjs-editor.js and future JS)
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-js',
             '--force' => true,
         ]);
     }

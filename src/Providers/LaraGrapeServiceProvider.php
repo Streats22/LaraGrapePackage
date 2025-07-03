@@ -73,12 +73,12 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->commands([
                 \LaraGrape\Console\Commands\LaraGrapeSetupCommand::class,
             ]);
-            // Publish CSS assets
+            // Publish CSS assets (site.css, app.css, filament-grapesjs-editor.css)
             $this->publishes([
                 $packageDir.'/resources/css/site.css' => resource_path('css/site.css'),
                 $packageDir.'/resources/css/app.css' => resource_path('css/app.css'),
                 $packageDir.'/resources/css/filament-grapesjs-editor.css' => resource_path('css/filament-grapesjs-editor.css'),
-            ], 'LaraGrape-assets');
+            ], 'LaraGrape-css');
             // Publish PHP service/command files
             $this->publishes([
                 $packageDir.'/src/Console/Commands/RebuildTailwindCommand.php' => app_path('Console/Commands/RebuildTailwindCommand.php'),
@@ -98,6 +98,10 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/resources/views/pages' => resource_path('views/pages'),
             ], 'LaraGrape-pages');
+            // Publish JS assets (grapesjs-editor.js and future JS)
+            $this->publishes([
+                $packageDir.'/resources/js/grapesjs-editor.js' => resource_path('js/grapesjs-editor.js'),
+            ], 'LaraGrape-js');
         }
     }
 }
