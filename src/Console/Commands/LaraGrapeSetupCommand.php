@@ -446,5 +446,13 @@ class LaraGrapeSetupCommand extends Command
             '--tag' => 'LaraGrape-filament-form-components',
             '--force' => true,
         ]);
+
+        // Always directly copy app.js to ensure it is overwritten
+        $packageAppJs = __DIR__ . '/../../../resources/js/app.js';
+        $appAppJs = base_path('resources/js/app.js');
+        if (file_exists($packageAppJs)) {
+            copy($packageAppJs, $appAppJs);
+            $this->info('app.js was directly copied to ensure it is overwritten.');
+        }
     }
 } 
