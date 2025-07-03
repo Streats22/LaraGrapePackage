@@ -344,9 +344,6 @@ class LaraGrapeSetupCommand extends Command
             $modelsPath = base_path('app/Models');
             if (is_dir($modelsPath)) {
                 foreach (glob($modelsPath . '/*.php') as $modelFile) {
-                    if (basename($modelFile) === 'User.php') {
-                        continue; // Never touch User.php
-                    }
                     $contents = file_get_contents($modelFile);
                     $contents = str_replace('namespace LaraGrape\\Models;', 'namespace App\\Models;', $contents);
                     file_put_contents($modelFile, $contents);
