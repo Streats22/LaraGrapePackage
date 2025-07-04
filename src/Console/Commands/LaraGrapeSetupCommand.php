@@ -434,10 +434,10 @@ class LaraGrapeSetupCommand extends Command
             '--tag' => 'LaraGrape-layout',
             '--force' => true,
         ]);
-        // Publish all block Blade views
+        // Publish all block-related Blade views directly to their normal locations (not vendor)
         $this->call('vendor:publish', [
             '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
-            '--tag' => 'LaraGrape-blocks',
+            '--tag' => 'LaraGrape-filament-blocks',
             '--force' => true,
         ]);
         // Publish all Filament form components
@@ -453,6 +453,15 @@ class LaraGrapeSetupCommand extends Command
         if (file_exists($packageAppJs)) {
             copy($packageAppJs, $appAppJs);
             $this->info('app.js was directly copied to ensure it is overwritten.');
+        }
+
+        // Ensure alpinejs is installed in the consuming app
+        $this->info('Ensuring alpinejs is installed via npm...');
+        exec('npm install alpinejs', $output, $resultCode);
+        if ($resultCode === 0) {
+            $this->info('alpinejs installed successfully.');
+        } else {
+            $this->warn('Failed to install alpinejs. Please run "npm install alpinejs" manually.');
         }
     }
 } 

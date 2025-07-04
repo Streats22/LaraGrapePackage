@@ -57,6 +57,10 @@
     ]);
 @endphp
 
+<link rel="stylesheet" href="https://unpkg.com/grapesjs@0.22.8/dist/css/grapes.min.css">
+<script src="https://unpkg.com/grapesjs@0.22.8/dist/grapes.min.js"></script>
+<script type="module" src="{{ Vite::asset('resources/js/grapesjs-editor.js') }}"></script>
+
 <x-dynamic-component :component="$getFieldWrapperView()" :field="$field">
     <div class="grapesjs-editor-wrapper" id="wrapper-{{ $id }}">
         <div class="grapesjs-controls">
@@ -92,7 +96,6 @@
     </div>
     
     @push('scripts')
-        <script type="module" src="{{ Vite::asset('resources/js/grapesjs-editor.js') }}"></script>
         <script>
             window.grapesjsCanvasStyles = [@json($appCss)];
         </script>

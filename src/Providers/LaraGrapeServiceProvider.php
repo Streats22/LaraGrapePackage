@@ -50,13 +50,17 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/resources/views/components/layout' => resource_path('views/components/layout'),
             ], 'LaraGrape-layout');
-            // Publish all block Blade views
+            // Publish all block Blade views directly to the normal location (not vendor)
             $this->publishes([
                 $packageDir.'/resources/views/components/blocks' => resource_path('views/components/blocks'),
             ], 'LaraGrape-blocks');
             // Publish Filament blocks (Blade views)
             $this->publishes([
-                $packageDir.'/resources/views/components/blocks' => resource_path('views/components/blocks'),
+                $packageDir.'/resources/views/filament/blocks/components' => resource_path('views/filament/blocks/components'),
+                $packageDir.'/resources/views/filament/blocks/content' => resource_path('views/filament/blocks/content'),
+                $packageDir.'/resources/views/filament/blocks/forms' => resource_path('views/filament/blocks/forms'),
+                $packageDir.'/resources/views/filament/blocks/layouts' => resource_path('views/filament/blocks/layouts'),
+                $packageDir.'/resources/views/filament/blocks/media' => resource_path('views/filament/blocks/media'),
             ], 'LaraGrape-filament-blocks');
             // Publish AdminPanelProvider stub
             $this->publishes([
