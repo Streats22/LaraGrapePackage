@@ -13,6 +13,10 @@ After installing the package, follow these steps to get up and running:
 1. **Install the package:**
    ```sh
    composer require laragrape/laragrape
+   ``` 
+    if that doesn't work try.
+    ```sh
+   composer require streats22/laragrape
    ```
 2. **Run the setup command to publish config, views, migrations, and (optionally) run migrations:**
    ```sh
