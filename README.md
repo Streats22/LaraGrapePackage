@@ -6,6 +6,8 @@
 
 ## 🚀 Getting Started with LaraGrape
 
+# LaraGrape requires laravel follow the steps below after you have a default laravel setup.
+
 After installing the package, follow these steps to get up and running:
 
 1. **Install the package:**
