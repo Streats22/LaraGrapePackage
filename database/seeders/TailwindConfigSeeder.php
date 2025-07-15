@@ -57,6 +57,7 @@ class TailwindConfigSeeder extends Seeder
                 'css_variables_prefix' => '--LaraGrape',
                 'purge_css' => true,
                 'minify_css' => true,
+                'enable_custom_vars' => true,
             ]
         );
 
@@ -104,6 +105,7 @@ class TailwindConfigSeeder extends Seeder
                 'css_variables_prefix' => '--LaraGrape',
                 'purge_css' => true,
                 'minify_css' => true,
+                'enable_custom_vars' => true,
             ]
         );
     }

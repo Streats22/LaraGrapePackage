@@ -59,6 +59,7 @@
 
 <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.22.8/dist/css/grapes.min.css">
 <script src="https://unpkg.com/grapesjs@0.22.8/dist/grapes.min.js"></script>
+<script src="https://unpkg.com/grapesjs-parser-postcss@1.0.2/dist/grapesjs-parser-postcss.min.js"></script>
 <script type="module" src="{{ Vite::asset('resources/js/grapesjs-editor.js') }}"></script>
 
 <x-dynamic-component :component="$getFieldWrapperView()" :field="$field">

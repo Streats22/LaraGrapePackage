@@ -70,6 +70,7 @@ return new class extends Migration
             $table->string('css_variables_prefix')->default('--LaraGrape');
             $table->boolean('purge_css')->default(true);
             $table->boolean('minify_css')->default(true);
+            $table->boolean('enable_custom_vars')->default(true);
             
             $table->timestamps();
         });

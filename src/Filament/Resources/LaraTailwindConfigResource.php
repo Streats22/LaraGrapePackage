@@ -257,7 +257,7 @@ class LaraTailwindConfigResource extends Resource
                                     ->schema([
                                         Toggle::make('enable_dark_mode')
                                             ->label('Enable Dark Mode')
-                                            ->default(false)
+                                            ->default(true)
                                             ->helperText('Enable dark mode support'),
                                         
                                         Toggle::make('enable_animations')
@@ -282,6 +282,40 @@ class LaraTailwindConfigResource extends Resource
                                             ->label('Minify CSS')
                                             ->default(true)
                                             ->helperText('Minify CSS in production'),
+                                    ]),
+                                
+                                // Dark Mode Colors Section
+                                Section::make('Dark Mode Colors')
+                                    ->visible(fn ($get) => $get('enable_dark_mode'))
+                                    ->schema([
+                                        Grid::make(2)
+                                            ->schema([
+                                                ColorPicker::make('dark_primary_50')->label('Dark Primary 50'),
+                                                ColorPicker::make('dark_primary_100')->label('Dark Primary 100'),
+                                                ColorPicker::make('dark_primary_200')->label('Dark Primary 200'),
+                                                ColorPicker::make('dark_primary_300')->label('Dark Primary 300'),
+                                                ColorPicker::make('dark_primary_400')->label('Dark Primary 400'),
+                                                ColorPicker::make('dark_primary_500')->label('Dark Primary 500'),
+                                                ColorPicker::make('dark_primary_600')->label('Dark Primary 600'),
+                                                ColorPicker::make('dark_primary_700')->label('Dark Primary 700'),
+                                                ColorPicker::make('dark_primary_800')->label('Dark Primary 800'),
+                                                ColorPicker::make('dark_primary_900')->label('Dark Primary 900'),
+                                                ColorPicker::make('dark_primary_950')->label('Dark Primary 950'),
+                                            ]),
+                                        Section::make('Additional Dark Colors')
+                                            ->description('Accent, status, and link colors for dark mode')
+                                            ->schema([
+                                                Grid::make(2)
+                                                    ->schema([
+                                                        ColorPicker::make('dark_secondary_color')->label('Dark Secondary Color'),
+                                                        ColorPicker::make('dark_accent_color')->label('Dark Accent Color'),
+                                                        ColorPicker::make('dark_success_color')->label('Dark Success Color'),
+                                                        ColorPicker::make('dark_warning_color')->label('Dark Warning Color'),
+                                                        ColorPicker::make('dark_error_color')->label('Dark Error Color'),
+                                                        ColorPicker::make('dark_info_color')->label('Dark Info Color'),
+                                                        ColorPicker::make('dark_link_color')->label('Dark Link Color'),
+                                                    ]),
+                                            ]),
                                     ]),
                             ]),
                     ])

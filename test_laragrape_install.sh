@@ -9,8 +9,9 @@ echo "[1/6] Creating fresh Laravel project..."
 composer create-project laravel/laravel test-laragrape
 cd test-laragrape || exit 1
 
-# 2. Require the LaraGrape package
-echo "[2/6] Requiring streats22/laragrape package..."
+# 2. Require the LaraGrape package from local path
+echo "[2/6] Requiring LaraGrape package from local path..."
+composer config repositories.laragrape-local path .
 composer require streats22/laragrape:dev-main
 
 # 3. Run the setup command
@@ -32,4 +33,3 @@ fi
 
 # 6. Serve the application
 echo "[6/6] Serving the application at http://localhost:8000 ..."
-php artisan serve 

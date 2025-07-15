@@ -10,6 +10,19 @@ class LaraCreatePage extends CreateRecord
 {
     protected static string $resource = PageResource::class;
     
+    protected function getFormActions(): array
+    {
+        return [
+            Action::make('create')
+                ->label('Create page')
+                ->submit('create')
+                ->color('primary')
+                ->extraAttributes([
+                    'onclick' => 'if(window.syncGrapesJsData) window.syncGrapesJsData(); return true;'
+                ]),
+        ];
+    }
+    
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Debug logging
@@ -23,20 +36,31 @@ class LaraCreatePage extends CreateRecord
         if (isset($data['grapesjs_data']) && is_array($data['grapesjs_data'])) {
             $grapesjsData = $data['grapesjs_data'];
             
-            // Extract HTML and CSS from GrapesJS data
-            $data['grapesjs_html'] = $grapesjsData['html'] ?? null;
-            $data['grapesjs_css'] = $grapesjsData['css'] ?? null;
+            // Get the converter service
+            $converterService = app(\App\Services\GrapesJsConverterService::class);
             
-            // Keep the full data structure for future use
-            $data['grapesjs_data'] = $grapesjsData;
+            // Process the data for saving (convert to Blade components)
+            $processedData = $converterService->processForSaving($grapesjsData);
             
-            \Log::info('GrapesJS data processed', [
+            // Extract HTML and CSS from processed data
+            $data['grapesjs_html'] = $processedData['html'] ?? null;
+            $data['grapesjs_css'] = $processedData['css'] ?? null;
+            
+            // Keep the full processed data structure
+            $data['grapesjs_data'] = $processedData;
+            
+            // Also save Blade content
+            $data['blade_content'] = $converterService->convertToBlade($processedData);
+            
+            \Log::info('GrapesJS data processed for create', [
+                'original_data' => $grapesjsData,
+                'processed_data' => $processedData,
                 'html' => $data['grapesjs_html'],
                 'css' => $data['grapesjs_css'],
-                'full_data' => $data['grapesjs_data']
+                'blade_content' => $data['blade_content'],
             ]);
         } else {
-            \Log::warning('GrapesJS data not found or not array', [
+            \Log::warning('GrapesJS data not found or not array for create', [
                 'grapesjs_data' => $data['grapesjs_data'] ?? 'not set'
             ]);
         }

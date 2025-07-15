@@ -17,6 +17,19 @@ class LaraEditPage extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    protected function getFormActions(): array
+    {
+        return [
+            Action::make('save')
+                ->label('Save changes')
+                ->submit('save')
+                ->color('primary')
+                ->extraAttributes([
+                    'onclick' => 'if(window.syncGrapesJsData) window.syncGrapesJsData(); return true;'
+                ]),
+        ];
+    }
     
     protected function mutateFormDataBeforeSave(array $data): array
     {
@@ -44,38 +57,19 @@ class LaraEditPage extends EditRecord
             // Keep the full processed data structure
             $data['grapesjs_data'] = $processedData;
             
-            \Log::info('GrapesJS data processed', [
+            // Also save Blade content
+            $data['blade_content'] = $converterService->convertToBlade($processedData);
+            
+            \Log::info('GrapesJS data processed for edit', [
+                'original_data' => $grapesjsData,
+                'processed_data' => $processedData,
                 'html' => $data['grapesjs_html'],
                 'css' => $data['grapesjs_css'],
-                'full_data' => $data['grapesjs_data']
+                'blade_content' => $data['blade_content'],
             ]);
         } else {
-            \Log::warning('GrapesJS data not found or not array', [
+            \Log::warning('GrapesJS data not found or not array for edit', [
                 'grapesjs_data' => $data['grapesjs_data'] ?? 'not set'
-            ]);
-        }
-        
-        return $data;
-    }
-    
-    protected function mutateFormDataBeforeFill(array $data): array
-    {
-        // When loading data for editing, convert back to GrapesJS format if needed
-        if (isset($data['grapesjs_data']) && is_array($data['grapesjs_data'])) {
-            $savedData = $data['grapesjs_data'];
-            
-            // Get the converter service
-            $converterService = app(GrapesJsConverterService::class);
-            
-            // Process the data for editing (convert back to GrapesJS format)
-            $editingData = $converterService->processForEditing($savedData);
-            
-            // Update the data for the form
-            $data['grapesjs_data'] = $editingData;
-            
-            \Log::info('GrapesJS data prepared for editing', [
-                'original_data' => $savedData,
-                'editing_data' => $editingData
             ]);
         }
         
