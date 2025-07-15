@@ -442,6 +442,13 @@ class LaraGrapeSetupCommand extends Command
             '--force' => true,
         ]);
 
+        // Publish and overwrite vite.config.js
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-vite-config',
+            '--force' => true,
+        ]);
+
         // Publish all layout Blade views
         $this->call('vendor:publish', [
             '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',

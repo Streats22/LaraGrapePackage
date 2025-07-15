@@ -118,6 +118,10 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/resources/css/filament/admin/theme.css' => resource_path('css/filament/admin/theme.css'),
             ], 'LaraGrape-filament-admin-css');
+            // Publish and overwrite vite.config.js
+            $this->publishes([
+                $packageDir.'/vite.config.js' => base_path('vite.config.js'),
+            ], 'LaraGrape-vite-config');
         }
     }
 }
