@@ -5,6 +5,7 @@ namespace LaraGrape\Filament\Resources\PageResource\Pages;
 use LaraGrape\Filament\Resources\PageResource;
 use LaraGrape\Services\GrapesJsConverterService;
 use Filament\Actions;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\EditRecord;
 
 class LaraEditPage extends EditRecord

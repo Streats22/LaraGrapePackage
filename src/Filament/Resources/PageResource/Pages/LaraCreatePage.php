@@ -4,6 +4,7 @@ namespace LaraGrape\Filament\Resources\PageResource\Pages;
 
 use LaraGrape\Filament\Resources\PageResource;
 use Filament\Actions;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
 
 class LaraCreatePage extends CreateRecord
@@ -37,7 +38,7 @@ class LaraCreatePage extends CreateRecord
             $grapesjsData = $data['grapesjs_data'];
             
             // Get the converter service
-            $converterService = app(\App\Services\GrapesJsConverterService::class);
+            $converterService = app(GrapesJsConverterService::class);
             
             // Process the data for saving (convert to Blade components)
             $processedData = $converterService->processForSaving($grapesjsData);

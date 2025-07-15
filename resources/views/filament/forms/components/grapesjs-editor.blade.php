@@ -6,7 +6,7 @@
     $state = $getState();
     
     // Load blocks dynamically from BlockService
-    $blockService = app(\App\Services\BlockService::class);
+    $blockService = app(\LaraGrape\Services\BlockService::class);
     $blocks = $blockService->getGrapesJsBlocks();
 
     $appCss = Vite::asset('resources/css/app.css');
@@ -34,7 +34,7 @@
     }
     // If $record is a string (slug), look up the page
     elseif (is_string($record)) {
-        $page = \App\Models\Page::where('slug', $record)->first();
+        $page = \LaraGrape\Models\Page::where('slug', $record)->first();
         if ($page) {
             $pageId = $page->id;
             $isCreate = false;
@@ -58,7 +58,7 @@
     ]);
 @endphp
 @php
-    $tailwindConfig = \App\Models\TailwindConfig::getActive();
+    $tailwindConfig = \LaraGrape\Models\TailwindConfig::getActive();
     $tailwindCssVars = $tailwindConfig ? $tailwindConfig->generateCss() : '';
     $appCss = Vite::asset('resources/css/app.css');
     $adminCss = Vite::asset('resources/css/filament/admin/theme.css');

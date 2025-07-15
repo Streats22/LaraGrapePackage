@@ -4,6 +4,7 @@ namespace LaraGrape\Http\Controllers;
 
 use LaraGrape\Models\Page;
 use LaraGrape\Services\GrapesJsConverterService;
+use LaraGrape\Services\BlockService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -88,7 +89,7 @@ class AdminPageController extends Controller
      */
     public function blockPreview($blockId)
     {
-        $html = app(\App\Services\BlockService::class)->renderBlockPreview($blockId);
+        $html = app(BlockService::class)->renderBlockPreview($blockId);
         return response($html, 200, ['Content-Type' => 'text/html']);
     }
 }

@@ -21,6 +21,7 @@ use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\CodeEditor;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\ViewField;
+use Filament\Forms\Components\TagsInput;
 
 class LaraCustomBlockResource extends Resource
 {
@@ -259,7 +260,7 @@ class LaraCustomBlockResource extends Resource
                             $json = file_get_contents($file->getRealPath());
                             $blocks = json_decode($json, true);
                             foreach ($blocks as $block) {
-                                \App\Models\CustomBlock::create($block);
+                                CustomBlock::create($block);
                             }
                             $livewire->notify('success', 'Blocks imported successfully!');
                         }),

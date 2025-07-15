@@ -449,6 +449,13 @@ class LaraGrapeSetupCommand extends Command
             '--force' => true,
         ]);
 
+        // Publish utilities CSS
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-utilities-css',
+            '--force' => true,
+        ]);
+
         // Publish all layout Blade views
         $this->call('vendor:publish', [
             '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',

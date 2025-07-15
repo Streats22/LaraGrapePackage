@@ -122,6 +122,10 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/vite.config.js' => base_path('vite.config.js'),
             ], 'LaraGrape-vite-config');
+            // Publish utilities CSS
+            $this->publishes([
+                $packageDir.'/public/css/laralgrape-utilities.css' => public_path('css/laralgrape-utilities.css'),
+            ], 'LaraGrape-utilities-css');
         }
     }
 }
