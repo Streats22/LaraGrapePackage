@@ -58,12 +58,12 @@ class AdminPanelProvider extends PanelProvider
                     950 => '3, 7, 18',
                 ],
             ])
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'LaraGrape\\Filament\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'LaraGrape\\Filament\\Pages')
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'LaraGrape\\Filament\\Widgets')
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
