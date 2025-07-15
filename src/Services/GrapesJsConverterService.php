@@ -435,4 +435,24 @@ class GrapesJsConverterService
         // Otherwise, convert Blade components back to GrapesJS format
         return $this->convertToGrapesJs($savedData);
     }
-} 
+
+    /**
+     * Convert processed GrapesJS data to Blade code for live rendering.
+     * Recognized blocks are mapped to Blade components, unknown blocks fallback to raw HTML.
+     */
+    public function convertToBlade(array $processedData): string
+    {
+        // Example: If you have a block mapping system, you would parse $processedData['html']
+        // and replace recognized blocks with Blade component calls.
+        // For now, just wrap the HTML in a Blade comment and return as fallback.
+        $html = $processedData['html'] ?? '';
+        $css = $processedData['css'] ?? '';
+        $blade = '';
+        if (!empty($css)) {
+            $blade .= "<style>{$css}</style>\n";
+        }
+        $blade .= "{{-- GrapesJS raw HTML fallback --}}\n";
+        $blade .= $html;
+        return $blade;
+    }
+}

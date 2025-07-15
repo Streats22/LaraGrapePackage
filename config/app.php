@@ -165,7 +165,7 @@ return [
 
         // Filament Panel Provider
         App\Providers\Filament\AdminPanelProvider::class,
-        App\Providers\LaraGrapeServiceProvider::class,
+        App\Providers\BoilerplateServiceProvider::class,
     ],
 
 ];

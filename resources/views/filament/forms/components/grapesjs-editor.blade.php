@@ -13,6 +13,7 @@
     $siteCss = Vite::asset('resources/css/site.css');
     $grapesCss = Vite::asset('resources/css/filament-grapesjs-editor.css');
     $adminCss = Vite::asset('resources/css/filament/admin/theme.css');
+    $utilitiesCss = asset('css/laralgrape-utilities.css');
     
     // Try to get the record (could be a model or a slug)
     $record = null;
@@ -56,11 +57,18 @@
         'route_parameters' => request()->route()->parameters() ?? []
     ]);
 @endphp
-
-<link rel="stylesheet" href="https://unpkg.com/grapesjs@0.22.8/dist/css/grapes.min.css">
-<script src="https://unpkg.com/grapesjs@0.22.8/dist/grapes.min.js"></script>
-<script src="https://unpkg.com/grapesjs-parser-postcss@1.0.2/dist/grapesjs-parser-postcss.min.js"></script>
-<script type="module" src="{{ Vite::asset('resources/js/grapesjs-editor.js') }}"></script>
+@php
+    $tailwindConfig = \App\Models\TailwindConfig::getActive();
+    $tailwindCssVars = $tailwindConfig ? $tailwindConfig->generateCss() : '';
+    $appCss = Vite::asset('resources/css/app.css');
+    $adminCss = Vite::asset('resources/css/filament/admin/theme.css');
+    $utilitiesCssContent = file_exists(public_path('css/laralgrape-utilities.css')) ? file_get_contents(public_path('css/laralgrape-utilities.css')) : '';
+@endphp
+@if($tailwindConfig)
+    <style>
+        {!! $tailwindConfig->generateCss() !!}
+    </style>
+@endif
 
 <x-dynamic-component :component="$getFieldWrapperView()" :field="$field">
     <div class="grapesjs-editor-wrapper" id="wrapper-{{ $id }}">
@@ -97,12 +105,32 @@
     </div>
     
     @push('scripts')
+        <script type="module" src="{{ Vite::asset('resources/js/grapesjs-editor.js') }}"></script>
         <script>
-            window.grapesjsCanvasStyles = [@json($appCss)];
+            window.grapesjsCanvasStyles = [
+                @json($appCss),
+                @json($adminCss),
+                `<style>{!! $utilitiesCssContent !!}</style>`,
+                `<style>{{ $tailwindCssVars }}</style>`
+            ];
+            // Debug: Log the styles array before GrapesJS loads
+            console.log('grapesjsCanvasStyles (backend):', window.grapesjsCanvasStyles);
         </script>
         <script>
+            // Global function to sync GrapesJS data - can be called from anywhere
+            window.syncGrapesJsData = function() {
+                if (window.grapesjsEditorInstance) {
+                    console.log('Global sync function called');
+                    window.grapesjsEditorInstance.syncToFormBeforeSubmit();
+                    return true;
+                }
+                return false;
+            };
+
             document.addEventListener('DOMContentLoaded', function() {
-                new window.LaraGrapeGrapesJsEditor({
+                console.log('GrapesJS Editor initial data:', @json($state));
+                
+                const editor = new window.LaraGrapeGrapesJsEditor({
                     containerId: '{{ $id }}',
                     mode: 'backend',
                     statePath: '{{ $statePath }}',
@@ -111,6 +139,112 @@
                     isDisabled: {{ $isDisabled ? 'true' : 'false' }},
                     height: '{{ $height }}'
                 });
+
+                // Store the editor instance globally for access
+                window.grapesjsEditorInstance = editor;
+
+                // Additional Filament form submission handling
+                const form = document.querySelector('form[wire\\:submit]');
+                if (form) {
+                    console.log('Filament form found, setting up additional handlers...');
+
+                    // Method 1: Listen for Livewire events
+                    document.addEventListener('livewire:load', function () {
+                        if (window.Livewire) {
+                            window.Livewire.on('form-submit', function () {
+                                console.log('Livewire form-submit event detected');
+                                if (window.grapesjsEditorInstance) {
+                                    window.grapesjsEditorInstance.syncToFormBeforeSubmit();
+                                }
+                            });
+                        }
+                    });
+
+                    // Method 2: Listen for Filament's wire:submit events
+                    form.addEventListener('wire:submit', function (e) {
+                        console.log('Wire submit event detected');
+                        if (window.grapesjsEditorInstance) {
+                            window.grapesjsEditorInstance.syncToFormBeforeSubmit();
+                        }
+                    });
+
+                    // Method 3: Intercept all form submissions
+                    const originalSubmit = form.submit;
+                    form.submit = function(e) {
+                        console.log('Form submit intercepted (original method)');
+                        if (window.grapesjsEditorInstance) {
+                            window.grapesjsEditorInstance.syncToFormBeforeSubmit();
+                        }
+                        return originalSubmit.call(this, e);
+                    };
+
+                    // Method 4: Listen for button clicks more aggressively
+                    document.addEventListener('click', function(e) {
+                        const target = e.target;
+                        if (target && (
+                            target.type === 'submit' ||
+                            target.getAttribute('wire:click')?.includes('save') ||
+                            target.getAttribute('wire:click')?.includes('create') ||
+                            target.getAttribute('wire:click')?.includes('update') ||
+                            target.textContent?.toLowerCase().includes('save') ||
+                            target.textContent?.toLowerCase().includes('create') ||
+                            target.textContent?.toLowerCase().includes('update')
+                        )) {
+                            const buttonForm = target.closest('form');
+                            if (buttonForm === form) {
+                                console.log('Save button clicked (enhanced detection)');
+                                setTimeout(() => {
+                                    if (window.grapesjsEditorInstance) {
+                                        window.grapesjsEditorInstance.syncToFormBeforeSubmit();
+                                    }
+                                }, 50);
+                            }
+                        }
+                    });
+
+                    // Method 5: Use MutationObserver to detect form state changes
+                    const observer = new MutationObserver(function(mutations) {
+                        mutations.forEach(function(mutation) {
+                            if (mutation.type === 'attributes') {
+                                const element = mutation.target;
+                                if (element.getAttribute('data-loading') === 'true' || 
+                                    element.classList.contains('fi-loading') ||
+                                    element.getAttribute('wire:loading') === 'true') {
+                                    console.log('Loading state detected, syncing content...');
+                                    if (window.grapesjsEditorInstance) {
+                                        window.grapesjsEditorInstance.syncToFormBeforeSubmit();
+                                    }
+                                }
+                            }
+                        });
+                    });
+
+                    observer.observe(form, {
+                        attributes: true,
+                        attributeFilter: ['data-loading', 'wire:loading', 'class']
+                    });
+
+                    // Method 6: Periodic sync as backup
+                    setInterval(function() {
+                        if (window.grapesjsEditorInstance) {
+                            window.grapesjsEditorInstance.updateFilamentFormState();
+                        }
+                    }, 3000);
+
+                    // Method 7: Override Filament's form submission
+                    if (window.Filament) {
+                        const originalFormSubmit = window.Filament.forms?.submit;
+                        if (originalFormSubmit) {
+                            window.Filament.forms.submit = function(...args) {
+                                console.log('Filament form submit intercepted');
+                                if (window.grapesjsEditorInstance) {
+                                    window.grapesjsEditorInstance.syncToFormBeforeSubmit();
+                                }
+                                return originalFormSubmit.apply(this, args);
+                            };
+                        }
+                    }
+                }
             });
         </script>
     @endpush
@@ -129,7 +263,7 @@
             width: 100vw;
             height: 100vh;
             z-index: 99999 !important;
-            background: white;
+            background: var(--grapey-primary-50, #fff);
             box-sizing: border-box;
             isolation: isolate;
         }
@@ -144,8 +278,8 @@
         }
         
         .fullscreen-toggle-btn {
-            background: rgba(59, 130, 246, 0.9);
-            border: 2px solid #3b82f6;
+            background: var(--grapey-primary-500, #3b82f6);
+            border: 2px solid var(--grapey-primary-500, #3b82f6);
             border-radius: 8px;
             padding: 12px;
             cursor: pointer;
@@ -162,20 +296,20 @@
         }
         
         .fullscreen-toggle-btn:hover {
-            background: rgba(59, 130, 246, 1);
-            border-color: #2563eb;
+            background: var(--grapey-primary-600, #2563eb);
+            border-color: var(--grapey-primary-600, #2563eb);
             box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
             transform: translateY(-1px);
         }
         
         .fullscreen-toggle-btn svg {
-            color: white;
+            color: var(--grapey-primary-50, #fff);
             width: 20px;
             height: 20px;
         }
         
         .fullscreen-toggle-btn:hover svg {
-            color: white;
+            color: var(--grapey-primary-50, #fff);
         }
         
         .grapesjs-editor {
@@ -183,7 +317,8 @@
             overflow: hidden;
             width: 100% !important;
             min-height: 400px;
-            background: #ffffff;
+            background: var(--grapey-primary-50, #ffffff);
+            border: 1.5px solid var(--grapey-primary-200, #e5e7eb);
             transition: height 0.3s ease;
         }
         

@@ -44,14 +44,19 @@ class AdminPageController extends Controller
             // Process the data for saving (convert to Blade components if needed)
             $processedData = $this->converterService->processForSaving($grapesjsData);
             
+            // Convert to Blade content for frontend rendering
+            $bladeContent = $this->converterService->convertToBlade($processedData);
+            
             Log::info('Saving admin GrapesJS data', [
                 'page_id' => $page->id,
-                'grapesjs_data' => $processedData
+                'grapesjs_data' => $processedData,
+                'blade_content' => $bladeContent
             ]);
             
-            // Update the page with the processed data
+            // Update the page with both processed data and Blade content
             $page->update([
                 'grapesjs_data' => $processedData,
+                'blade_content' => $bladeContent,
                 'updated_at' => now(),
             ]);
             
@@ -75,5 +80,15 @@ class AdminPageController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Serve a rendered block preview for GrapesJS/editor
+     * GET /admin/block-preview/{blockId}
+     */
+    public function blockPreview($blockId)
+    {
+        $html = app(\App\Services\BlockService::class)->renderBlockPreview($blockId);
+        return response($html, 200, ['Content-Type' => 'text/html']);
     }
 }

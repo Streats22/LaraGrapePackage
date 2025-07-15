@@ -12,7 +12,7 @@ cd test-laragrape || exit 1
 # 2. Require the LaraGrape package from local path
 echo "[2/6] Requiring LaraGrape package from local path..."
 composer config repositories.laragrape-local path .
-composer require streats22/laragrape:dev-main
+composer require streats22/laragrape:dev-Development
 
 # 3. Run the setup command
 echo "[3/6] Running LaraGrape setup command..."

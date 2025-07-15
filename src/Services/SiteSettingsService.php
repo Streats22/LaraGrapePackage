@@ -60,7 +60,7 @@ class SiteSettingsService
     public function getHeaderSettings(): array
     {
         return [
-            'logo_text' => $this->get('header_logo_text', 'LaraGrape'),
+            'logo_text' => $this->get('header_logo_text', 'LaralGrape'),
             'logo_image' => $this->get('header_logo_image'),
             'background_color' => $this->get('header_background_color', '#ffffff'),
             'text_color' => $this->get('header_text_color', '#1f2937'),
@@ -76,11 +76,11 @@ class SiteSettingsService
     public function getFooterSettings(): array
     {
         return [
-            'logo_text' => $this->get('footer_logo_text', 'LaraGrape'),
+            'logo_text' => $this->get('footer_logo_text', 'LaralGrape'),
             'logo_image' => $this->get('footer_logo_image'),
             'background_color' => $this->get('footer_background_color', '#1f2937'),
             'text_color' => $this->get('footer_text_color', '#ffffff'),
-            'content' => $this->get('footer_content', '© 2024 LaraGrape. All rights reserved.'),
+            'content' => $this->get('footer_content', '© 2024 LaralGrape. All rights reserved.'),
             'show_social' => $this->get('footer_show_social', true),
             'show_newsletter' => $this->get('footer_show_newsletter', false),
             'custom_css' => $this->get('footer_custom_css', ''),
@@ -108,7 +108,7 @@ class SiteSettingsService
     public function getSeoSettings(): array
     {
         return [
-            'title' => $this->get('seo_title', 'LaraGrape - Web Development Boilerplate'),
+            'title' => $this->get('seo_title', 'LaralGrape - Web Development Boilerplate'),
             'keywords' => $this->get('seo_keywords', 'laravel, grapesjs, filament, web development'),
             'description' => $this->get('seo_description', 'A powerful web development boilerplate combining Laravel, GrapesJS, and Filament for building modern websites.'),
             'auto_generate' => $this->get('seo_auto_generate', true),
@@ -123,7 +123,7 @@ class SiteSettingsService
     public function getGeneralSettings(): array
     {
         return [
-            'site_name' => $this->get('site_name', 'LaraGrape'),
+            'site_name' => $this->get('site_name', 'LaralGrape'),
             'site_tagline' => $this->get('site_tagline', 'Laravel + GrapesJS + Filament'),
             'site_description' => $this->get('site_description', 'A powerful web development boilerplate combining Laravel, GrapesJS, and Filament for building modern websites.'),
             'contact_email' => $this->get('contact_email', 'contact@example.com'),
@@ -224,4 +224,4 @@ class SiteSettingsService
         $this->loaded = false;
         $this->loadSettings();
     }
-} 
+}

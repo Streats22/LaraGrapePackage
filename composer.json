@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laragrape/laragrape",
+    "name": "streats22/laragrape",
     "type": "library",
     "description": "A Laravel package for GrapesJS + Filament block builder integration.",
     "keywords": ["laravel", "grapesjs", "filament", "cms", "page builder"],
