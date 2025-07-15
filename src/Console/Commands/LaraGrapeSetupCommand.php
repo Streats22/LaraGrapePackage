@@ -52,6 +52,7 @@ class LaraGrapeSetupCommand extends Command
             'LaraGrape-filament-blocks',
             'LaraGrape-frontend-layout',
             'LaraGrape-filament-forms',
+            'LaraGrape-controllers',
         ];
         foreach ($publishTags as $tag) {
             $this->info("Publishing $tag...");
@@ -369,6 +370,19 @@ class LaraGrapeSetupCommand extends Command
                     $contents = str_replace('namespace LaraGrape\\Models;', 'namespace App\\Models;', $contents);
                     file_put_contents($modelFile, $contents);
                     $this->info("Updated model namespace in " . basename($modelFile));
+                }
+            }
+            
+            // Post-process controller namespaces
+            $controllersPath = base_path('app/Http/Controllers');
+            if (is_dir($controllersPath)) {
+                foreach (glob($controllersPath . '/*.php') as $controllerFile) {
+                    $contents = file_get_contents($controllerFile);
+                    $contents = str_replace('namespace LaraGrape\\Http\\Controllers;', 'namespace App\\Http\\Controllers;', $contents);
+                    $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
+                    $contents = str_replace('use LaraGrape\\Services\\', 'use App\\Services\\', $contents);
+                    file_put_contents($controllerFile, $contents);
+                    $this->info("Updated controller namespace and use statements in " . basename($controllerFile));
                 }
             }
         }

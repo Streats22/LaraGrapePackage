@@ -78,6 +78,10 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/src/Models' => app_path('Models'),
             ], 'LaraGrape-models');
+            // Publish controllers
+            $this->publishes([
+                $packageDir.'/src/Http/Controllers' => app_path('Http/Controllers'),
+            ], 'LaraGrape-controllers');
             $this->commands([
                 \LaraGrape\Console\Commands\LaraGrapeSetupCommand::class,
             ]);
