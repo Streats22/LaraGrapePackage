@@ -14,10 +14,7 @@ After installing the package, follow these steps to get up and running:
    ```sh
    composer require streats22/laragrape
    ``` 
-    if that doesn't work try.
-    ```sh
-   composer require streats22/laragrape
-   ```
+    
 2. **Run the setup command to publish config, views, migrations, and (optionally) run migrations:**
    ```sh
    php artisan laragrape:setup --migrate
