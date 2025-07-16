@@ -12,7 +12,7 @@ After installing the package, follow these steps to get up and running:
 
 1. **Install the package:**
    ```sh
-   composer require laragrape/laragrape
+   composer require streats22/laragrape
    ``` 
     if that doesn't work try.
     ```sh
