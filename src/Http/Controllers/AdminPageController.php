@@ -89,7 +89,15 @@ class AdminPageController extends Controller
      */
     public function blockPreview($blockId)
     {
-        $html = app(BlockService::class)->renderBlockPreview($blockId);
-        return response($html, 200, ['Content-Type' => 'text/html']);
+        try {
+            $viewPath = 'filament.blocks.' . str_replace('/', '.', $blockId);
+            if (!view()->exists($viewPath)) {
+                return response()->json(['error' => 'Block view not found'], 404);
+            }
+            $html = view($viewPath)->render();
+            return response($html);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to load preview: ' . $e->getMessage()], 500);
+        }
     }
 }

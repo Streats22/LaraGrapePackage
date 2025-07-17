@@ -54,6 +54,13 @@ class LaraGrapeSetupCommand extends Command
             'LaraGrape-filament-forms',
             'LaraGrape-controllers',
             'laragrape-seeders',
+            'laragrape-filament-customblock',
+            'laragrape-filament-page',
+            'laragrape-customblock-resource',
+            'laragrape-page-resource',
+            'laragrape-sitesettings-resource',
+            'laragrape-tailwindconfig-resource',
+            'laragrape-admin-controller',
         ];
         foreach ($publishTags as $tag) {
             $this->info("Publishing $tag...");
@@ -298,6 +305,10 @@ class LaraGrapeSetupCommand extends Command
                 base_path('app/Filament/Resources'),
                 base_path('app/Filament/Pages'),
                 base_path('app/Filament/Forms'),
+                base_path('app/Filament/Resources/CustomBlockResource/Pages'),
+                base_path('app/Filament/Resources/PageResource/Pages'),
+                base_path('app/Filament/Resources/SiteSettingsResource/Pages'),
+                base_path('app/Filament/Resources/TailwindConfigResource/Pages'),
             ];
             $allPublishedFiles = [];
             foreach ($allPublishedDirs as $dir) {
@@ -409,8 +420,10 @@ class LaraGrapeSetupCommand extends Command
                         $contents = str_replace('namespace LaraGrape\\Http\\Controllers;', 'namespace App\\Http\\Controllers;', $contents);
                         $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
                         $contents = str_replace('use LaraGrape\\Services\\', 'use App\\Services\\', $contents);
+                        // Remove 'Lara' from class names if needed
+                        $contents = preg_replace('/class Lara([A-Z][A-Za-z0-9_]*)/', 'class $1', $contents);
                         file_put_contents($controllerFile, $contents);
-                        $this->info("Updated controller namespace and use statements in " . basename($controllerFile));
+                        $this->info("Updated controller: " . basename($controllerFile));
                     }
                 }
             }
@@ -554,6 +567,16 @@ class LaraGrapeSetupCommand extends Command
             $this->info('alpinejs installed successfully.');
         } else {
             $this->warn('Failed to install alpinejs. Please run "npm install alpinejs" manually.');
+        }
+
+        // Post-process web.php to update controller namespaces
+        $webPath = base_path('routes/web.php');
+        if (file_exists($webPath)) {
+            $contents = file_get_contents($webPath);
+            $contents = str_replace('LaraGrape\\Http\\Controllers\\', 'App\\Http\\Controllers\\', $contents);
+            $contents = str_replace('AdminPageController', 'AdminPageController', $contents); // Adjust if class was renamed
+            file_put_contents($webPath, $contents);
+            $this->info('Updated routes/web.php for controller namespaces');
         }
     }
 } 
