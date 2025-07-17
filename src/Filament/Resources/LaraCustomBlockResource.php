@@ -18,9 +18,10 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\KeyValue;
-use Filament\Forms\Components\CodeEditor;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\ViewField;
+use Wiebenieuwenhuis\FilamentCodeEditor\Components\CodeEditor;
+use Filament\Forms\Components\TagsInput;
 
 class LaraCustomBlockResource extends Resource
 {

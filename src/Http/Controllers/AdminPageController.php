@@ -4,6 +4,7 @@ namespace LaraGrape\Http\Controllers;
 
 use LaraGrape\Models\Page;
 use LaraGrape\Services\GrapesJsConverterService;
+use LaraGrape\Services\BlockService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -44,14 +45,19 @@ class AdminPageController extends Controller
             // Process the data for saving (convert to Blade components if needed)
             $processedData = $this->converterService->processForSaving($grapesjsData);
             
+            // Convert to Blade content for frontend rendering
+            $bladeContent = $this->converterService->convertToBlade($processedData);
+            
             Log::info('Saving admin GrapesJS data', [
                 'page_id' => $page->id,
-                'grapesjs_data' => $processedData
+                'grapesjs_data' => $processedData,
+                'blade_content' => $bladeContent
             ]);
             
-            // Update the page with the processed data
+            // Update the page with both processed data and Blade content
             $page->update([
                 'grapesjs_data' => $processedData,
+                'blade_content' => $bladeContent,
                 'updated_at' => now(),
             ]);
             
@@ -74,6 +80,61 @@ class AdminPageController extends Controller
                 'error' => 'Failed to save page content',
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Serve a rendered block preview for GrapesJS/editor
+     * GET /admin/block-preview/{blockId}
+     */
+    public function blockPreview($blockId)
+    {
+        try {
+            Log::info('Block preview request', ['blockId' => $blockId]);
+            
+            // Handle new block ID format: 'category/blockname' (e.g., 'components/button')
+            $viewPath = null;
+            
+            if (strpos($blockId, '/') !== false) {
+                // New format: category/blockname
+                $viewPath = 'filament.blocks.' . str_replace('/', '.', $blockId);
+            } else {
+                // Simple block ID format: try to find the block in all categories
+                $possiblePaths = [
+                    'filament.blocks.components.' . $blockId, // components subdirectory
+                    'filament.blocks.content.' . $blockId, // content subdirectory
+                    'filament.blocks.forms.' . $blockId, // forms subdirectory
+                    'filament.blocks.layouts.' . $blockId, // layouts subdirectory
+                    'filament.blocks.media.' . $blockId, // media subdirectory
+                ];
+                
+                foreach ($possiblePaths as $path) {
+                    if (view()->exists($path)) {
+                        $viewPath = $path;
+                        break;
+                    }
+                }
+            }
+            
+            if (!$viewPath) {
+                Log::warning('Block view not found', [
+                    'blockId' => $blockId,
+                    'attempted_path' => $viewPath
+                ]);
+                return response()->json(['error' => 'Block view not found: ' . $blockId], 404);
+            }
+            
+            Log::info('Rendering block preview', ['viewPath' => $viewPath]);
+            $html = view($viewPath)->render();
+            return response($html);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to load block preview', [
+                'blockId' => $blockId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Failed to load preview: ' . $e->getMessage()], 500);
         }
     }
 }

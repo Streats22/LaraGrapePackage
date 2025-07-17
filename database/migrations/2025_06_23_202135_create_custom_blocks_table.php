@@ -25,6 +25,8 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
             $table->json('settings')->nullable(); // Block-specific settings
+            $table->json('tags')->nullable();
+            $table->json('variables')->nullable();
             $table->timestamps();
         });
     }

@@ -4,6 +4,7 @@ namespace LaraGrape\Services;
 
 use LaraGrape\Models\CustomBlock;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class BlockService
@@ -12,8 +13,7 @@ class BlockService
     
     public function __construct()
     {
-        $userBlocksPath = config('LaraGrape.user_blocks_path');
-        $this->blocksPath = $userBlocksPath ?: config('LaraGrape.blocks_path', resource_path('views/filament/blocks'));
+        $this->blocksPath = resource_path('views/filament/blocks');
     }
     
     /**
@@ -99,6 +99,7 @@ class BlockService
     {
         $content = File::get($file->getPathname());
         $filename = $file->getBasename('.blade.php');
+        $category = basename($file->getPath()); // e.g., 'components', 'content', etc.
         
         // Extract block metadata from comments
         $metadata = $this->extractMetadata($content);
@@ -110,10 +111,15 @@ class BlockService
             return null;
         }
         
+        // Create block ID that includes category for proper view path resolution
+        $blockId = $metadata['id'] ?? $filename;
+        $fullBlockId = $category . '/' . $blockId; // e.g., 'components/button'
+        
         return [
-            'id' => $metadata['id'] ?? $filename,
+            'id' => $blockId, // Use simple ID for backward compatibility with frontend
+            'fullId' => $fullBlockId, // Keep full path for internal use
             'label' => $metadata['label'] ?? Str::title(str_replace(['-', '_'], ' ', $filename)),
-            'category' => basename($file->getPath()),
+            'category' => $category,
             'content' => $htmlContent,
             'attributes' => $metadata['attributes'] ?? [],
             'description' => $metadata['description'] ?? '',
@@ -197,7 +203,7 @@ class BlockService
         }
         
         // // Add form blocks dynamically
-        // $forms = \LaraGrape\Models\Form::where('is_active', true)->get();
+        // $forms = \App\Models\Form::where('is_active', true)->get();
         // foreach ($forms as $form) {
         //     $grapesJsBlocks[] = [
         //         'id' => 'form-' . $form->id,
@@ -287,4 +293,55 @@ class BlockService
         
         return $blocks;
     }
-} 
+
+    /**
+     * Render a block preview as HTML (for GrapesJS editor)
+     */
+    public function renderBlockPreview(string $blockId): ?string
+    {
+        // Find the block file by id
+        $blockFile = $this->findBlockFileById($blockId);
+        if (!$blockFile) {
+            return null;
+        }
+        $lastModified = filemtime($blockFile);
+        $cacheKey = 'block_preview_' . $blockId . '_' . $lastModified;
+        return Cache::rememberForever($cacheKey, function () use ($blockFile) {
+            $viewName = $this->bladeViewNameFromPath($blockFile);
+            try {
+                return view($viewName, ['isEditorPreview' => true])->render();
+            } catch (\Throwable $e) {
+                return '<div style="color:red;">Block preview error: ' . e($e->getMessage()) . '</div>';
+            }
+        });
+    }
+
+    /**
+     * Find the Blade file path for a block by id
+     */
+    protected function findBlockFileById(string $blockId): ?string
+    {
+        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->blocksPath));
+        foreach ($iterator as $file) {
+            if ($file->isFile() && str_ends_with($file->getFilename(), '.blade.php')) {
+                $content = File::get($file->getPathname());
+                $metadata = $this->extractMetadata($content);
+                $id = $metadata['id'] ?? $file->getBasename('.blade.php');
+                // Check both the simple ID and the filename
+                if ($id === $blockId || $file->getBasename('.blade.php') === $blockId) {
+                    return $file->getPathname();
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Convert a Blade file path to a view name
+     */
+    protected function bladeViewNameFromPath(string $path): string
+    {
+        $relative = str_replace(resource_path('views') . '/', '', $path);
+        return str_replace(['/', '.blade.php'], ['.', ''], $relative);
+    }
+}

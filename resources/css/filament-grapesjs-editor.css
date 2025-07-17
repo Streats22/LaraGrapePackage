@@ -350,3 +350,20 @@
         opacity: 1;
     }
 } 
+.dark .grapesjs-editor-wrapper {
+    background: #1f2937;
+}
+
+.dark .grapesjs-editor {
+    background: #374151;
+    border-color: #4b5563;
+}
+
+.dark .grapesjs-controls {
+    background: rgba(31, 41, 55, 0.9);
+}
+
+.dark .fullscreen-toggle-btn {
+    background: rgba(59, 130, 246, 0.8);
+    border-color: #60a5fa;
+}

@@ -31,6 +31,26 @@ return new class extends Migration
             $table->string('primary_800')->nullable();
             $table->string('primary_900')->nullable();
             $table->string('primary_950')->nullable();
+
+            // Dark mode color fields
+            $table->string('dark_primary_50')->nullable();
+            $table->string('dark_primary_100')->nullable();
+            $table->string('dark_primary_200')->nullable();
+            $table->string('dark_primary_300')->nullable();
+            $table->string('dark_primary_400')->nullable();
+            $table->string('dark_primary_500')->nullable();
+            $table->string('dark_primary_600')->nullable();
+            $table->string('dark_primary_700')->nullable();
+            $table->string('dark_primary_800')->nullable();
+            $table->string('dark_primary_900')->nullable();
+            $table->string('dark_primary_950')->nullable();
+            $table->string('dark_secondary_color')->nullable();
+            $table->string('dark_accent_color')->nullable();
+            $table->string('dark_success_color')->nullable();
+            $table->string('dark_warning_color')->nullable();
+            $table->string('dark_error_color')->nullable();
+            $table->string('dark_info_color')->nullable();
+            $table->string('dark_link_color')->nullable();
             
             // Additional colors
             $table->string('secondary_color')->nullable();
@@ -65,9 +85,9 @@ return new class extends Migration
             $table->longText('custom_css')->nullable();
             
             // Advanced settings
-            $table->boolean('enable_dark_mode')->default(false);
+            $table->boolean('enable_dark_mode')->default(true);
             $table->boolean('enable_animations')->default(true);
-            $table->string('css_variables_prefix')->default('--LaraGrape');
+            $table->string('css_variables_prefix')->default('--laragrape');
             $table->boolean('purge_css')->default(true);
             $table->boolean('minify_css')->default(true);
             

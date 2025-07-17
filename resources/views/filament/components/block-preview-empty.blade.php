@@ -1,1 +1,1 @@
-<div class="text-gray-500 text-center p-8">No content to preview</div> 
+<div class="text-primary-700 text-center p-8 border-l-4 border-accent shadow">No content to preview</div> 

@@ -1,3 +1,6 @@
+@php
+        use Illuminate\Support\Facades\Blade;
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -41,14 +44,28 @@
         'resources/js/app.js'
     ])
     
+    @php
+        $tailwindConfig = \App\Models\TailwindConfig::getActive();
+        $tailwindCssVars = $tailwindConfig ? $tailwindConfig->generateCss() : '';
+        $appCss = Vite::asset('resources/css/app.css');
+        $utilitiesCss = asset('css/laralgrape-utilities.css');
+        $utilitiesCssContent = file_exists(public_path('css/laralgrape-utilities.css')) ? file_get_contents(public_path('css/laralgrape-utilities.css')) : '';
+    @endphp
+    @if($tailwindConfig)
+        <style>
+            {!! $tailwindCssVars !!}
+        </style>
+    @endif
+    
     <style>
         /* Only set min-height for the editor wrapper */
         .grapejs-editor-wrapper {
             min-height: 700px;
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/laralgrape-utilities.css') }}">
 </head>
-<body class="bg-white text-gray-900 antialiased" x-data="siteLayout()">
+<body class="bg-gradient-to-br from-primary-50 via-white to-secondary/10 text-primary-900 antialiased min-h-screen flex flex-col dark:bg-black dark:text-primary-50" x-data="siteLayout()">
     @if(auth()->check())
         @include('components.layout.grapejs-edit-bar')
     @endif
@@ -56,10 +73,13 @@
     @include('components.layout.header')
 
     <!-- Main Content -->
-    <main class="laralgrape-container min-h-screen flex flex-col">
+    <main class="flex-1 flex flex-col bg-primary-50 dark:bg-primary-900 px-4">
         <!-- Page Content -->
-        <div class="page-content flex-1">
-            {!! $renderedHtml !!}
+        <div class="page-content flex-1 py-8 bg-primary-50 dark:bg-primary-900 transition-colors">
+            @if (!empty($page->blade_content))
+                {!! Blade::render($page->blade_content, ['page' => $page]) !!}
+           
+            @endif
         </div>
         
         @if(auth()->check())
@@ -72,11 +92,14 @@
 
     @include('components.layout.footer')
 
-    @php
-        $appCss = Vite::asset('resources/css/app.css');
-    @endphp
     <script>
-        window.grapesjsCanvasStyles = [@json($appCss)];
+        window.grapesjsCanvasStyles = [
+            @json($appCss),
+            `<style>{!! $utilitiesCssContent !!}</style>`,
+            `<style>{!! $tailwindCssVars !!}</style>`
+        ];
+        // Debug: Log the styles array before GrapesJS loads
+        console.log('grapesjsCanvasStyles:', window.grapesjsCanvasStyles);
     </script>
     @if(auth()->check())
         @php

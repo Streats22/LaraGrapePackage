@@ -78,6 +78,10 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/src/Models' => app_path('Models'),
             ], 'LaraGrape-models');
+            // Publish controllers
+            $this->publishes([
+                $packageDir.'/src/Http/Controllers' => app_path('Http/Controllers'),
+            ], 'LaraGrape-controllers');
             $this->commands([
                 \LaraGrape\Console\Commands\LaraGrapeSetupCommand::class,
             ]);
@@ -94,6 +98,11 @@ class LaraGrapeServiceProvider extends ServiceProvider
                 $packageDir.'/src/Services/GrapesJsConverterService.php' => app_path('Services/GrapesJsConverterService.php'),
                 $packageDir.'/src/Services/SiteSettingsService.php' => app_path('Services/SiteSettingsService.php'),
             ], 'LaraGrape-commands');
+            
+            // Publish Console Kernel for command registration
+            $this->publishes([
+                $packageDir.'/src/Console/Kernel.php' => app_path('Console/Kernel.php'),
+            ], 'LaraGrape-console-kernel');
             // Publish web.php
             $this->publishes([
                 $packageDir.'/routes/web.php' => base_path('routes/web.php'),
@@ -114,6 +123,100 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/resources/css/filament/admin/theme.css' => resource_path('css/filament/admin/theme.css'),
             ], 'LaraGrape-filament-admin-css');
+            // Publish and overwrite vite.config.js
+            $this->publishes([
+                $packageDir.'/vite.config.js' => base_path('vite.config.js'),
+            ], 'LaraGrape-vite-config');
+            // Publish utilities CSS
+            $this->publishes([
+                $packageDir.'/public/css/laralgrape-utilities.css' => public_path('css/laralgrape-utilities.css'),
+            ], 'LaraGrape-utilities-css');
+
+            // Add publishing for full Filament resources and pages
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources' => app_path('Filament/Resources'),
+            ], 'laragrape-filament-resources');
+
+            $this->publishes([
+                $packageDir.'/src/Filament/Pages' => app_path('Filament/Pages'),
+            ], 'laragrape-filament-pages');
+
+            $this->publishes([
+                $packageDir.'/src/Filament/Forms' => app_path('Filament/Forms'),
+            ], 'laragrape-filament-forms');
+
+            // Publish tests if needed (optional, as per user)
+            $this->publishes([
+                $packageDir.'/tests' => base_path('tests'),
+            ], 'laragrape-tests');
+
+            // Ensure AdminPanelProvider is published (already there, but confirm)
+            $this->publishes([
+                $packageDir.'/src/Providers/Filament/AdminPanelProvider.php' => app_path('Providers/Filament/AdminPanelProvider.php'),
+            ], 'laragrape-admin-panel-provider');
+
+            // Add publishing for seeders
+            $this->publishes([
+                $packageDir.'/database/seeders' => database_path('seeders'),
+            ], 'laragrape-seeders');
+
+            // Standardize and enhance Filament resources publishing
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/CustomBlockResource.php' => app_path('Filament/Resources/CustomBlockResource.php'),
+                $packageDir.'/src/Filament/Resources/CustomBlockResource/Pages' => app_path('Filament/Resources/CustomBlockResource/Pages'),
+            ], 'laragrape-filament-customblock');
+
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/PageResource.php' => app_path('Filament/Resources/PageResource.php'),
+                $packageDir.'/src/Filament/Resources/PageResource/Pages' => app_path('Filament/Resources/PageResource/Pages'),
+            ], 'laragrape-filament-page');
+
+            // Similarly for other resources like SiteSettings, TailwindConfig
+            // ... add as needed ...
+
+            // Publishing for CustomBlockResource with all Pages
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/LaraCustomBlockResource.php' => app_path('Filament/Resources/CustomBlockResource.php'),
+                $packageDir.'/src/Filament/Resources/CustomBlockResource/Pages/LaraCreateCustomBlock.php' => app_path('Filament/Resources/CustomBlockResource/Pages/CreateCustomBlock.php'),
+                $packageDir.'/src/Filament/Resources/CustomBlockResource/Pages/LaraEditCustomBlock.php' => app_path('Filament/Resources/CustomBlockResource/Pages/EditCustomBlock.php'),
+                $packageDir.'/src/Filament/Resources/CustomBlockResource/Pages/LaraListCustomBlocks.php' => app_path('Filament/Resources/CustomBlockResource/Pages/ListCustomBlocks.php'),
+            ], 'laragrape-customblock-resource');
+
+            // Publishing for PageResource with all Pages
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/LaraPageResource.php' => app_path('Filament/Resources/PageResource.php'),
+                $packageDir.'/src/Filament/Resources/PageResource/Pages/LaraCreatePage.php' => app_path('Filament/Resources/PageResource/Pages/CreatePage.php'),
+                $packageDir.'/src/Filament/Resources/PageResource/Pages/LaraEditPage.php' => app_path('Filament/Resources/PageResource/Pages/EditPage.php'),
+                $packageDir.'/src/Filament/Resources/PageResource/Pages/LaraListPages.php' => app_path('Filament/Resources/PageResource/Pages/ListPages.php'),
+            ], 'laragrape-page-resource');
+
+            // Publishing for SiteSettingsResource with all Pages
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/LaraSiteSettingsResource.php' => app_path('Filament/Resources/SiteSettingsResource.php'),
+                $packageDir.'/src/Filament/Resources/SiteSettingsResource/Pages/LaraCreateSiteSettings.php' => app_path('Filament/Resources/SiteSettingsResource/Pages/CreateSiteSettings.php'),
+                $packageDir.'/src/Filament/Resources/SiteSettingsResource/Pages/LaraEditSiteSettings.php' => app_path('Filament/Resources/SiteSettingsResource/Pages/EditSiteSettings.php'),
+                $packageDir.'/src/Filament/Resources/SiteSettingsResource/Pages/LaraListSiteSettings.php' => app_path('Filament/Resources/SiteSettingsResource/Pages/ListSiteSettings.php'),
+            ], 'laragrape-sitesettings-resource');
+
+            // Publishing for TailwindConfigResource with all Pages
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/LaraTailwindConfigResource.php' => app_path('Filament/Resources/TailwindConfigResource.php'),
+                $packageDir.'/src/Filament/Resources/TailwindConfigResource/Pages/LaraCreateTailwindConfig.php' => app_path('Filament/Resources/TailwindConfigResource/Pages/CreateTailwindConfig.php'),
+                $packageDir.'/src/Filament/Resources/TailwindConfigResource/Pages/LaraEditTailwindConfig.php' => app_path('Filament/Resources/TailwindConfigResource/Pages/EditTailwindConfig.php'),
+                $packageDir.'/src/Filament/Resources/TailwindConfigResource/Pages/LaraListTailwindConfigs.php' => app_path('Filament/Resources/TailwindConfigResource/Pages/ListTailwindConfigs.php'),
+            ], 'laragrape-tailwindconfig-resource');
+
+            // Publish AdminPageController for block previews
+            $this->publishes([
+                $packageDir.'/src/Http/Controllers/AdminPageController.php' => app_path('Http/Controllers/AdminPageController.php'),
+            ], 'laragrape-admin-controller');
+
+            // Publish Filament components for block previews
+            $this->publishes([
+                $packageDir.'/resources/views/filament/components' => resource_path('views/filament/components'),
+            ], 'laragrape-filament-components');
+
+            // Ensure routes include the preview route (already in web.php publish)
         }
     }
 }

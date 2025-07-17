@@ -1,0 +1,202 @@
+/* LaraGrape Utilities CSS */
+
+/* GrapesJS Editor Utilities */
+.grapesjs-editor-wrapper {
+    position: relative;
+    min-height: 600px;
+}
+
+.grapesjs-editor-wrapper.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background: white;
+}
+
+.grapesjs-controls {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.fullscreen-toggle-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.fullscreen-toggle-btn:hover {
+    background: #5a6268;
+}
+
+.grapesjs-save-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.grapesjs-save-btn:hover {
+    background: #218838;
+}
+
+.grapesjs-save-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Block Preview Styles */
+.block-preview {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin: 5px 0;
+    background: white;
+}
+
+.block-preview:hover {
+    border-color: #007bff;
+}
+
+/* Frontend Editor Bar */
+.grapejs-edit-bar {
+    background: #007bff;
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.grapejs-edit-bar button {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.grapejs-edit-bar button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.save-status {
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-weight: 600;
+    margin-left: 10px;
+}
+
+.save-status.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.save-status.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Hide page content when editing */
+.page-content.editing {
+    display: none;
+}
+
+/* GrapesJS iframe styles */
+.gjs-frame {
+    border: none !important;
+}
+
+/* Custom block styles */
+.custom-block {
+    border: 2px dashed #007bff;
+    padding: 20px;
+    margin: 10px 0;
+    background: #f8f9fa;
+    text-align: center;
+}
+
+.custom-block:hover {
+    border-color: #0056b3;
+    background: #e9ecef;
+} 
+
+.bg-primary-50 { background-color: var(--laralgrape-primary-50) !important; }
+.text-primary-50 { color: var(--laralgrape-primary-50) !important; }
+.border-primary-50 { border-color: var(--laralgrape-primary-50) !important; }
+.bg-primary-100 { background-color: var(--laralgrape-primary-100) !important; }
+.text-primary-100 { color: var(--laralgrape-primary-100) !important; }
+.border-primary-100 { border-color: var(--laralgrape-primary-100) !important; }
+.bg-primary-200 { background-color: var(--laralgrape-primary-200) !important; }
+.text-primary-200 { color: var(--laralgrape-primary-200) !important; }
+.border-primary-200 { border-color: var(--laralgrape-primary-200) !important; }
+.bg-primary-300 { background-color: var(--laralgrape-primary-300) !important; }
+.text-primary-300 { color: var(--laralgrape-primary-300) !important; }
+.border-primary-300 { border-color: var(--laralgrape-primary-300) !important; }
+.bg-primary-400 { background-color: var(--laralgrape-primary-400) !important; }
+.text-primary-400 { color: var(--laralgrape-primary-400) !important; }
+.border-primary-400 { border-color: var(--laralgrape-primary-400) !important; }
+.bg-primary-500 { background-color: var(--laralgrape-primary-500) !important; }
+.text-primary-500 { color: var(--laralgrape-primary-500) !important; }
+.border-primary-500 { border-color: var(--laralgrape-primary-500) !important; }
+.bg-primary-600 { background-color: var(--laralgrape-primary-600) !important; }
+.text-primary-600 { color: var(--laralgrape-primary-600) !important; }
+.border-primary-600 { border-color: var(--laralgrape-primary-600) !important; }
+.bg-primary-700 { background-color: var(--laralgrape-primary-700) !important; }
+.text-primary-700 { color: var(--laralgrape-primary-700) !important; }
+.border-primary-700 { border-color: var(--laralgrape-primary-700) !important; }
+.bg-primary-800 { background-color: var(--laralgrape-primary-800) !important; }
+.text-primary-800 { color: var(--laralgrape-primary-800) !important; }
+.border-primary-800 { border-color: var(--laralgrape-primary-800) !important; }
+.bg-primary-900 { background-color: var(--laralgrape-primary-900) !important; }
+.text-primary-900 { color: var(--laralgrape-primary-900) !important; }
+.border-primary-900 { border-color: var(--laralgrape-primary-900) !important; }
+.bg-primary-950 { background-color: var(--laralgrape-primary-950) !important; }
+.text-primary-950 { color: var(--laralgrape-primary-950) !important; }
+.border-primary-950 { border-color: var(--laralgrape-primary-950) !important; }
+.bg-secondary { background-color: var(--laralgrape-secondary) !important; }
+.text-secondary { color: var(--laralgrape-secondary) !important; }
+.border-secondary { border-color: var(--laralgrape-secondary) !important; }
+.bg-accent { background-color: var(--laralgrape-accent) !important; }
+.text-accent { color: var(--laralgrape-accent) !important; }
+.border-accent { border-color: var(--laralgrape-accent) !important; }
+.bg-success { background-color: var(--laralgrape-success) !important; }
+.text-success { color: var(--laralgrape-success) !important; }
+.border-success { border-color: var(--laralgrape-success) !important; }
+.bg-warning { background-color: var(--laralgrape-warning) !important; }
+.text-warning { color: var(--laralgrape-warning) !important; }
+.border-warning { border-color: var(--laralgrape-warning) !important; }
+.bg-error { background-color: var(--laralgrape-error) !important; }
+.text-error { color: var(--laralgrape-error) !important; }
+.border-error { border-color: var(--laralgrape-error) !important; }
+.bg-info { background-color: var(--laralgrape-info) !important; }
+.text-info { color: var(--laralgrape-info) !important; }
+.border-info { border-color: var(--laralgrape-info) !important; }
+.bg-link { background-color: var(--laralgrape-link) !important; }
+.text-link { color: var(--laralgrape-link) !important; }
+.border-link { border-color: var(--laralgrape-link) !important; }
+.rounded { border-radius: var(--laralgrape-border-radius) !important; }
+.rounded-lg { border-radius: var(--laralgrape-border-radius-lg) !important; }
+.font-sans { font-family: var(--laralgrape-font-sans) !important; }
+.font-serif { font-family: var(--laralgrape-font-serif) !important; }
+.font-mono { font-family: var(--laralgrape-font-mono) !important; } 

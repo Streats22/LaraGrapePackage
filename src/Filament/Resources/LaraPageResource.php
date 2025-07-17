@@ -95,7 +95,8 @@ class LaraPageResource extends Resource
                                     ->schema([
                                         GrapesJsEditor::make('grapesjs_data')
                                             ->label('Page Content')
-                                            ->height('800px'),
+                                            ->height('800px')
+                                            ->columnSpanFull(),
                                     ]),
                             ]),
                         

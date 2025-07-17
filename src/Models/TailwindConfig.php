@@ -24,12 +24,32 @@ class TailwindConfig extends Model
         'primary_800',
         'primary_900',
         'primary_950',
+        // Dark mode color fields
+        'dark_primary_50',
+        'dark_primary_100',
+        'dark_primary_200',
+        'dark_primary_300',
+        'dark_primary_400',
+        'dark_primary_500',
+        'dark_primary_600',
+        'dark_primary_700',
+        'dark_primary_800',
+        'dark_primary_900',
+        'dark_primary_950',
+        'dark_secondary_color',
+        'dark_accent_color',
+        'dark_success_color',
+        'dark_warning_color',
+        'dark_error_color',
+        'dark_info_color',
+        'dark_link_color',
         'secondary_color',
         'accent_color',
         'success_color',
         'warning_color',
         'error_color',
         'info_color',
+        'link_color',
         'font_family_sans',
         'font_family_serif',
         'font_family_mono',
@@ -86,7 +106,7 @@ class TailwindConfig extends Model
     /**
      * Generate CSS variables from configuration
      */
-    public function generateCssVariables(): string
+    public function generateCssVariables(bool $dark = false): string
     {
         $variables = [];
         $prefix = $this->css_variables_prefix ?? '--laralgrape';
@@ -94,7 +114,7 @@ class TailwindConfig extends Model
         // Primary colors
         $colors = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950'];
         foreach ($colors as $shade) {
-            $color = $this->{"primary_{$shade}"};
+            $color = $dark ? $this->{"dark_primary_{$shade}"} : $this->{"primary_{$shade}"};
             if ($color) {
                 $variables[] = "{$prefix}-primary-{$shade}: {$color};";
             }
@@ -102,14 +122,14 @@ class TailwindConfig extends Model
 
         // Additional colors
         $additionalColors = [
-            'secondary' => $this->secondary_color,
-            'accent' => $this->accent_color,
-            'success' => $this->success_color,
-            'warning' => $this->warning_color,
-            'error' => $this->error_color,
-            'info' => $this->info_color,
+            'secondary' => $dark ? $this->dark_secondary_color : $this->secondary_color,
+            'accent' => $dark ? $this->dark_accent_color : $this->accent_color,
+            'success' => $dark ? $this->dark_success_color : $this->success_color,
+            'warning' => $dark ? $this->dark_warning_color : $this->warning_color,
+            'error' => $dark ? $this->dark_error_color : $this->error_color,
+            'info' => $dark ? $this->dark_info_color : $this->info_color,
+            'link' => $dark ? $this->dark_link_color : $this->link_color,
         ];
-
         foreach ($additionalColors as $name => $color) {
             if ($color) {
                 $variables[] = "{$prefix}-{$name}: {$color};";
@@ -150,11 +170,15 @@ class TailwindConfig extends Model
     public function generateCss(): string
     {
         $css = ":root {\n    " . $this->generateCssVariables() . "\n}\n\n";
-
+        if ($this->enable_dark_mode) {
+            $darkVars = $this->generateCssVariables(true);
+            if (trim($darkVars)) {
+                $css .= ".dark {\n    $darkVars\n}\n\n";
+            }
+        }
         if ($this->enable_custom_css && $this->custom_css) {
             $css .= "/* Custom CSS */\n" . $this->custom_css . "\n\n";
         }
-
         return $css;
     }
 
@@ -203,5 +227,120 @@ class TailwindConfig extends Model
         }
 
         return $config;
+    }
+
+    /**
+     * Generate utility classes for all themeable properties using CSS variables.
+     * Example: .bg-primary-500 { background-color: var(--laralgrape-primary-500); }
+     */
+    public function generateUtilityClassesCss(): string
+    {
+        $prefix = $this->css_variables_prefix ?? '--laralgrape';
+        $shades = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950'];
+        $utilityCss = [];
+
+        // Background, text, and border color utilities for primary shades
+        foreach ($shades as $shade) {
+            $var = $prefix . "-primary-{$shade}";
+            $utilityCss[] = ".bg-primary-{$shade} { background-color: var({$var}) !important; }";
+            $utilityCss[] = ".text-primary-{$shade} { color: var({$var}) !important; }";
+            $utilityCss[] = ".border-primary-{$shade} { border-color: var({$var}) !important; }";
+        }
+
+        // Additional color variables
+        $additional = ['secondary', 'accent', 'success', 'warning', 'error', 'info', 'link'];
+        foreach ($additional as $name) {
+            $var = $prefix . "-{$name}";
+            $utilityCss[] = ".bg-{$name} { background-color: var({$var}) !important; }";
+            $utilityCss[] = ".text-{$name} { color: var({$var}) !important; }";
+            $utilityCss[] = ".border-{$name} { border-color: var({$var}) !important; }";
+        }
+
+        // Border radius utilities
+        if ($this->border_radius_default) {
+            $utilityCss[] = ".rounded { border-radius: var({$prefix}-border-radius) !important; }";
+        }
+        if ($this->border_radius_lg) {
+            $utilityCss[] = ".rounded-lg { border-radius: var({$prefix}-border-radius-lg) !important; }";
+        }
+
+        // Font family utilities
+        $utilityCss[] = ".font-sans { font-family: var({$prefix}-font-sans) !important; }";
+        $utilityCss[] = ".font-serif { font-family: var({$prefix}-font-serif) !important; }";
+        $utilityCss[] = ".font-mono { font-family: var({$prefix}-font-mono) !important; }";
+
+        return implode("\n", $utilityCss) . "\n";
+    }
+
+    /**
+     * Generate dynamic themeable CSS for site.css
+     */
+    public function generateSiteThemeCss(): string
+    {
+        $prefix = $this->css_variables_prefix ?? '--laralgrape';
+        $css = <<<CSS
+/* Dynamic themeable rules for site.css */
+:root {
+    /* Example: focus outline color */
+    --site-focus-outline: var({$prefix}-primary-500);
+    --site-link: var({$prefix}-link);
+}
+
+a, a:link {
+    color: var(--site-link, #3b82f6);
+    text-decoration: underline;
+}
+a:hover, a:focus {
+    color: var(--site-link, #2563eb);
+    text-decoration: underline;
+}
+
+button:focus,
+a:focus,
+input:focus,
+textarea:focus {
+    outline: 2px solid var({$prefix}-primary-500);
+    outline-offset: 2px;
+}
+CSS;
+        if ($this->enable_dark_mode) {
+            $darkVars = $this->generateCssVariables(true);
+            if (trim($darkVars)) {
+                $css .= "\n.dark {\n    $darkVars\n}\n";
+            }
+        }
+        return $css;
+    }
+
+    /**
+     * Generate dynamic themeable CSS for admin/theme.css
+     */
+    public function generateAdminThemeCss(): string
+    {
+        $prefix = $this->css_variables_prefix ?? '--laralgrape';
+        $css = <<<CSS
+/* Dynamic themeable rules for admin/theme.css */
+.fi-sidebar {
+    background: linear-gradient(135deg, var({$prefix}-primary-600), var({$prefix}-primary-700));
+}
+.fi-btn-primary {
+    background: linear-gradient(135deg, var({$prefix}-primary-500), var({$prefix}-primary-600));
+}
+.fi-btn-primary:hover {
+    background: linear-gradient(135deg, var({$prefix}-primary-600), var({$prefix}-primary-700));
+}
+.fi-tabs-tab.is-active {
+    background: var({$prefix}-primary-500);
+    color: white;
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+}
+CSS;
+        if ($this->enable_dark_mode) {
+            $darkVars = $this->generateCssVariables(true);
+            if (trim($darkVars)) {
+                $css .= "\n.dark {\n    $darkVars\n}\n";
+            }
+        }
+        return $css;
     }
 }

@@ -26,6 +26,7 @@ class Page extends Model
         'show_in_menu',
         'sort_order',
         'published_at',
+        'blade_content',
     ];
 
     protected $casts = [
