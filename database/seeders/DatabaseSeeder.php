@@ -16,15 +16,6 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
 
-        User::firstOrCreate(
-            ['email' => 'admin@test.com'],
-            [
-                'name' => 'Test admin',
-                'password' => \Illuminate\Support\Facades\Hash::make('admin01'),
-                'email_verified_at' => now(),
-                'remember_token' => \Illuminate\Support\Str::random(10),
-            ]
-        );
 
         // Call the improved TailwindConfigSeeder
         $this->call([
