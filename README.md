@@ -218,7 +218,7 @@ This package is open-sourced software licensed under the [MIT license](LICENSE).
 
 ## 🆘 Support
 
-- **Documentation**: Check our [Wiki](docs/README.md)
+- **Documentation**: Check our [Wiki](https://github.com/Streats22/LaraGrapePackage/wiki)
 - **Issues**: Report bugs on [GitHub]((https://github.com/Streats22/LaraGrapePackage/issues)
 - **Discussions**: Join our community discussions
 
