@@ -20,7 +20,7 @@ jobs:
 
       - name: Clone wiki repository
         run: |
-          git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Streats22/LaraGrapePackage.wiki.git wiki
+          git clone https://x-access-token:${{ secrets.WIKI_TOKEN }}@github.com/Streats22/LaraGrapePackage.wiki.git wiki
 
       - name: Sync docs to wiki
         run: |
@@ -34,6 +34,6 @@ jobs:
             echo "No changes to commit."
           else
             git commit -m "Sync docs from main repo [skip ci]"
-            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Streats22/LaraGrapePackage.wiki.git
+            git remote set-url origin https://x-access-token:${{ secrets.WIKI_TOKEN }}@github.com/Streats22/LaraGrapePackage.wiki.git
             git push origin main
           fi 
