@@ -4,141 +4,213 @@
 
 ---
 
-## 🚀 Getting Started with LaraGrape
+## 🚀 Quick Start
 
-After installing the package, follow these steps to get up and running:
-
-1. **Install the package:**
-   ```sh
-   composer require laragrape/laragrape
-   ```
-2. **Run the setup command to publish config, views, migrations, and (optionally) run migrations:**
-   ```sh
-   php artisan laragrape:setup --migrate
-   ```
-3. **Create a Filament admin user:**
-   ```sh
-   php artisan make:filament-user
-   ```
-   Follow the prompts to set up your admin credentials.
-4. **Install Filament admin panel:**
-   ```sh
-   php artisan filament:install --panel
-   ```
-5. **(Optional) Build frontend assets if your project uses them:**
-   ```sh
-   npm install
-   npm run build
-   ```
-6. **Serve your application:**
-   ```sh
-   php artisan serve
-   ```
-   - Visit `/admin` to access the Filament admin panel.
-   - Visit the frontend (e.g., `/`) to see your site.
-
----
-
-## 🛠️ LaraGrape Setup Command Options
-
-The `laragrape:setup` command provides several options for customizing your setup process:
-
-**Usage:**
-```sh
-php artisan laragrape:setup [options]
-```
-
-**Available options:**
-
-| Option                | Description                                      |
-|----------------------|--------------------------------------------------|
-| --migrate            | Run migrations after publishing                  |
-| --seed               | Run seeders after publishing                     |
-| --force              | Overwrite existing published files               |
-| --publish-config     | Only publish config                              |
-| --publish-views      | Only publish views                               |
-| --publish-migrations | Only publish migrations                          |
-| --publish-seeders    | Only publish seeders                             |
-| --all                | Publish everything, migrate, and seed            |
-
-**Examples:**
-- Publish everything and run migrations:
-  ```sh
-  php artisan laragrape:setup --all
-  ```
-- Only publish views:
-  ```sh
-  php artisan laragrape:setup --publish-views
-  ```
-- Publish config and run migrations:
-  ```sh
-  php artisan laragrape:setup --publish-config --migrate
-  ```
-
----
-
-### What's Next?
-
-- **Customize blocks, views, and settings:**  
-  All package views and blocks are publishable and can be overridden in your app.
-- **Check the published config file at `config/laragrape.php`** for customization options.
-- **Explore the admin panel** to create and manage pages, blocks, and site settings.
-
----
-
-## 🚀 Why Add LaraGrape to Your Laravel Project?
-
-- **No More Static Pages:** Empower your users (or yourself) to visually build and manage pages with drag-and-drop ease—no code required!
-- **Frontend & Backend Editing:** Enjoy the flexibility of a true WYSIWYG editor (GrapesJS) for the frontend, and robust content management with Filament on the backend.
-- **Instant CMS Functionality:** Get a full-featured, extensible CMS experience without leaving the Laravel ecosystem.
-- **Rapid Prototyping:** Build, preview, and publish pages in minutes—perfect for agencies, startups, and internal tools.
-- **Custom Blocks & Extensibility:** Easily create and manage custom blocks, layouts, and templates to fit any project's needs.
-- **SEO & Responsive Ready:** Out-of-the-box SEO features and mobile-friendly design ensure your content looks great everywhere.
-- **Open Source & Actively Maintained:** Built for the community, with regular updates and support.
-
----
-
-## 📦 Installation
-
-```sh
+### 1. Install the Package
+```bash
 composer require laragrape/laragrape
 ```
 
+### 2. Run the Setup Command
+```bash
+php artisan laragrape:setup --all
+```
+
+### 3. Create Admin User
+```bash
+php artisan make:filament-user
+```
+
+### 4. Build Frontend Assets
+```bash
+npm install
+npm run build
+```
+
+### 5. Start Your Application
+```bash
+php artisan serve
+```
+
+- **Admin Panel**: Visit `/admin` to access Filament
+- **Frontend**: Visit `/` to see your site
+
 ---
 
-## ⚡ Quick Start
+## ✨ Features
 
-1. **Install the package:**
-   ```sh
-   composer require laragrape/laragrape
-   ```
-2. **Run the setup command:**
-   ```sh
-   php artisan laragrape:setup --migrate
-   ```
-3. **Create a Filament admin user:**
-   ```sh
-   php artisan make:filament-user
-   ```
-4. **Install Filament admin panel:**
-   ```sh
-   php artisan filament:install --panel
-   ```
-5. **(Optional) Build frontend assets:**
-   ```sh
-   npm install && npm run build
-   ```
-6. **Serve your app and visit `/admin` and the frontend!**
+### 🎨 Visual Page Builder
+- **GrapesJS Integration**: Drag-and-drop page building
+- **Pre-built Blocks**: Hero sections, cards, forms, and more
+- **Responsive Design**: Mobile-first approach with Tailwind CSS
+- **Live Preview**: See changes in real-time
+
+### 🛠️ Admin Panel
+- **Filament 3**: Modern, responsive admin interface
+- **Page Management**: Create, edit, and publish pages
+- **Custom Blocks**: Build and manage reusable components
+- **Site Settings**: Configure header, footer, and general settings
+- **Tailwind Config**: Dynamic theme management
+
+### 🔧 Developer Experience
+- **Laravel 12+ Compatible**: Built for modern Laravel
+- **Alpine.js**: Lightweight JavaScript framework
+- **Modular Architecture**: Clean, maintainable code structure
+- **Extensible**: Easy to customize and extend
+
+---
+
+## 📦 What's Included
+
+### Core Components
+- ✅ **Pages System**: Full CRUD with GrapesJS integration
+- ✅ **Custom Blocks**: Visual block builder with live preview
+- ✅ **Site Settings**: Comprehensive configuration management
+- ✅ **Tailwind Config**: Dynamic theme system
+- ✅ **Admin Panel**: Filament-based administration
+- ✅ **Frontend Layout**: Responsive, SEO-optimized templates
+
+### Database Tables
+- `pages` - Page content and metadata
+- `custom_blocks` - User-created blocks
+- `site_settings` - Site configuration
+- `tailwind_configs` - Theme configurations
+
+### Filament Resources
+- **PageResource**: Page management with visual editor
+- **CustomBlockResource**: Block builder and management
+- **SiteSettingsResource**: Site configuration
+- **TailwindConfigResource**: Theme management
+
+---
+
+## 🛠️ Setup Command Options
+
+The `laragrape:setup` command provides comprehensive setup with error handling:
+
+```bash
+php artisan laragrape:setup [options]
+```
+
+### Available Options
+
+| Option | Description |
+|--------|-------------|
+| `--all` | Complete setup (publish, migrate, seed) |
+| `--migrate` | Run migrations after publishing |
+| `--seed` | Run seeders after publishing |
+| `--force` | Overwrite existing files |
+
+### Examples
+```bash
+# Complete setup
+php artisan laragrape:setup --all
+
+# Publish only
+php artisan laragrape:setup
+
+# Publish and migrate
+php artisan laragrape:setup --migrate
+```
+
+---
+
+## 🎯 Key Features
+
+### Visual Page Builder
+- **Drag & Drop**: Intuitive block-based editing
+- **Pre-built Blocks**: 20+ ready-to-use components
+- **Custom Blocks**: Create your own reusable components
+- **Responsive**: Mobile-first design approach
+- **Live Preview**: Real-time editing experience
+
+### Admin Panel
+- **Modern Interface**: Filament 3 admin panel
+- **Page Management**: Full CRUD operations
+- **Block Builder**: Visual custom block creation
+- **Site Settings**: Comprehensive configuration
+- **Theme Management**: Dynamic Tailwind configuration
+
+### Developer Tools
+- **Error Handling**: Robust setup with fallbacks
+- **Namespace Management**: Automatic App namespace conversion
+- **Asset Management**: CSS, JS, and view publishing
+- **Command Line**: Artisan commands for management
 
 ---
 
 ## 📚 Documentation
 
-- [Package Setup Guide](LARAGRAPE_SETUP.md)
-- [Dynamic Block System](BLOCKS_README.md)
-- [Modular Component System](COMPONENTS_README.md)
-- [Custom Block Builder & Site Settings](CUSTOM_BLOCKS_README.md)
+- **[Setup Guide](LARALGRAPE_SETUP.md)** - Complete installation and configuration
+- **[Block System](BLOCKS_README.md)** - Dynamic block loading and management
+- **[Component System](COMPONENTS_README.md)** - Modular component architecture
+- **[Custom Blocks](CUSTOM_BLOCKS_README.md)** - Visual block builder guide
+- **[API Documentation](API_README.md)** - Service classes and methods
+- **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 
 ---
 
-**LaraGrape**: The easiest way to add a modern, visual CMS to your Laravel project—without sacrificing developer control.
+## 🎨 Customization
+
+### Adding Custom Blocks
+1. Use the visual block builder in the admin panel
+2. Or create `.blade.php` files in `resources/views/filament/blocks/`
+3. Add metadata comments for automatic loading
+
+### Styling
+- **Global Styles**: Edit `resources/css/site.css`
+- **Tailwind Config**: Use the admin panel for dynamic themes
+- **Component Styles**: Add custom CSS to blocks
+
+### Extending
+- **New Resources**: Add custom Filament resources
+- **Custom Services**: Extend the service classes
+- **Frontend**: Modify the layout components
+
+---
+
+## 🚀 Why Choose LaraGrape?
+
+- **No Code Required**: Visual page building for non-developers
+- **Developer Friendly**: Clean, maintainable Laravel code
+- **Modern Stack**: Built with Laravel 12, Filament 3, and Tailwind CSS
+- **Extensible**: Easy to customize and extend
+- **Production Ready**: Robust error handling and fallbacks
+- **Active Development**: Regular updates and improvements
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
+```bash
+# Clone the repository
+git clone https://github.com/your-org/laragrape.git
+
+# Install dependencies
+composer install
+npm install
+
+# Run tests
+php artisan test
+```
+
+---
+
+## 📄 License
+
+This package is open-sourced software licensed under the [MIT license](LICENSE).
+
+---
+
+## 🆘 Support
+
+- **Documentation**: Check the docs in this repository
+- **Issues**: Report bugs on GitHub
+- **Discussions**: Join our community discussions
+
+---
+
+**LaraGrape**: The easiest way to add a modern, visual CMS to your Laravel project—without sacrificing developer control. 🍇

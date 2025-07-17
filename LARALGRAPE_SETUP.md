@@ -1,14 +1,53 @@
-# 🍇 LaraGrape Package Setup Complete!
+# 🍇 LaraGrape Package Setup Guide
 
-LaraGrape has been successfully installed and configured as a package in your Laravel application. Here's what was set up:
+Complete guide for setting up LaraGrape in your Laravel application with comprehensive error handling and fallbacks.
 
 ## 📦 Installation
 
-```sh
+### 1. Install the Package
+```bash
 composer require laragrape/laragrape
 ```
 
-## 📋 What's Included
+### 2. Run the Setup Command
+```bash
+php artisan laragrape:setup --all
+```
+
+The setup command will:
+- ✅ Publish all resources with error handling
+- ✅ Update namespaces to App namespace
+- ✅ Register commands and services
+- ✅ Create necessary directories
+- ✅ Run migrations and seeders
+- ✅ Provide clear feedback and next steps
+
+## 🛠️ Setup Command Options
+
+### Available Options
+| Option | Description |
+|--------|-------------|
+| `--all` | Complete setup (publish, migrate, seed) |
+| `--migrate` | Run migrations after publishing |
+| `--seed` | Run seeders after publishing |
+| `--force` | Overwrite existing files |
+
+### Examples
+```bash
+# Complete setup (recommended)
+php artisan laragrape:setup --all
+
+# Publish only
+php artisan laragrape:setup
+
+# Publish and migrate
+php artisan laragrape:setup --migrate
+
+# Force overwrite existing files
+php artisan laragrape:setup --force
+```
+
+## 📋 What Gets Published
 
 ### Core Components
 - ✅ **Laravel 12+** compatible
@@ -18,71 +57,100 @@ composer require laragrape/laragrape
 - ✅ **Tailwind CSS** - Utility-first CSS framework
 
 ### Database Structure
-- ✅ **Pages table** with fields for:
-  - Basic info (title, slug, content)
-  - GrapesJS data storage (JSON fields)
-  - SEO metadata
-  - Publishing controls
-  - Template system
+- ✅ **Pages table** - Page content and metadata
+- ✅ **Custom Blocks table** - User-created blocks
+- ✅ **Site Settings table** - Site configuration
+- ✅ **Tailwind Configs table** - Theme configurations
 
-### Filament Integration
-- ✅ **PageResource** with comprehensive form
-- ✅ **Custom GrapesJS field component**
-- ✅ **Tabbed interface** (Basic Info, Visual Editor, Content, SEO)
-- ✅ **Admin user** creation
+### Filament Resources
+- ✅ **PageResource** - Page management with visual editor
+- ✅ **CustomBlockResource** - Block builder and management
+- ✅ **SiteSettingsResource** - Site configuration
+- ✅ **TailwindConfigResource** - Theme management
 
-### Frontend Features
-- ✅ **Responsive page template**
-- ✅ **Navigation with admin link**
-- ✅ **SEO optimization**
-- ✅ **Mobile-friendly design**
+### Frontend Components
+- ✅ **Responsive layouts** - Mobile-first design
+- ✅ **GrapesJS integration** - Visual page builder
+- ✅ **Alpine.js components** - Interactive functionality
+- ✅ **SEO optimization** - Meta tags and structure
 
-### GrapesJS Editor
-- ✅ **Pre-built blocks** (Hero, Columns, Cards, etc.)
-- ✅ **Responsive design tools**
-- ✅ **Style manager**
-- ✅ **Alpine.js integration**
+### Assets
+- ✅ **CSS files** - Site styles and utilities
+- ✅ **JavaScript files** - Editor and frontend logic
+- ✅ **Blade views** - Templates and components
+- ✅ **Configuration files** - Package settings
 
-## 🚀 Getting Started
+## 🚀 Post-Setup Steps
 
-1. **Access your site**: http://localhost:8000
-2. **Admin panel**: http://localhost:8000/admin
-3. **Login**: Use the admin user you created during setup
+### 1. Create Admin User
+```bash
+php artisan make:filament-user
+```
 
-## 📝 Creating Your First Page
+### 2. Build Frontend Assets
+```bash
+npm install
+npm run build
+```
 
-1. Go to admin panel → Pages → Create Page
-2. Fill in title and basic info
-3. Switch to "Visual Editor" tab
-4. Drag & drop components to build your page
-5. Publish when ready!
+### 3. Start Your Application
+```bash
+php artisan serve
+```
+
+### 4. Access Your Application
+- **Admin Panel**: http://localhost:8000/admin
+- **Frontend**: http://localhost:8000
+
+## 🎯 Creating Your First Page
+
+### 1. Access Admin Panel
+- Go to `/admin`
+- Login with your admin credentials
+
+### 2. Create a Page
+- Navigate to **Pages** → **Create Page**
+- Fill in basic information (title, slug, etc.)
+
+### 3. Use Visual Editor
+- Switch to **Visual Editor** tab
+- Drag and drop blocks from the sidebar
+- Customize content and styling
+- Save and publish
+
+### 4. View Your Page
+- Visit the frontend to see your published page
+- Use the edit bar for authenticated users
 
 ## 🎨 Customizing Components
 
 ### Adding New GrapesJS Blocks
-Edit `resources/js/grapesjs-editor.js` and add to the `blocks` array:
+Blocks are automatically loaded from `resources/views/filament/blocks/`:
 
-```javascript
-{
-    id: 'my-block',
-    label: 'My Custom Block',
-    content: '<div class="my-custom-class">Content here</div>'
-}
+```blade
+{{-- @block id="my-block" label="My Custom Block" description="A description" --}}
+<div class="my-custom-class">
+    <h3 data-gjs-type="text" data-gjs-name="title">Block Title</h3>
+    <p data-gjs-type="text" data-gjs-name="content">Content here</p>
+</div>
 ```
 
-### Styling
-- **Global styles**: Edit `resources/views/pages/show.blade.php`
-- **Component styles**: Use Tailwind classes in GrapesJS
-- **Admin styles**: Customize via Filament theming
+### Using the Visual Block Builder
+1. Go to **Custom Blocks** in admin panel
+2. Click **Create Custom Block**
+3. Use the visual builder with HTML, CSS, and JS tabs
+4. Preview your block in real-time
+5. Save and use in pages
 
-### Templates
-Add new page templates in:
-1. `PageResource` template dropdown
-2. Create corresponding blade views
-3. Update `PageController` logic
+### Styling
+- **Global styles**: Edit `resources/css/site.css`
+- **Component styles**: Use Tailwind classes in blocks
+- **Admin styles**: Customize via Filament theming
+- **Dynamic themes**: Use Tailwind Config resource
 
 ## 🛠️ Development Commands
 
+### Essential Commands
 ```bash
 # Start development server
 php artisan serve
@@ -100,34 +168,134 @@ php artisan optimize:clear
 php artisan make:filament-user
 ```
 
-## 📁 Key Files
+### LaraGrape Commands
+```bash
+# Rebuild Tailwind CSS
+php artisan tailwind:rebuild
+
+# Setup LaraGrape
+php artisan laragrape:setup --all
+
+# Clear LaraGrape cache
+php artisan cache:clear
+```
+
+## 📁 Key File Structure
 
 ```
+app/
+├── Filament/
+│   ├── Resources/
+│   │   ├── PageResource.php
+│   │   ├── CustomBlockResource.php
+│   │   ├── SiteSettingsResource.php
+│   │   └── TailwindConfigResource.php
+│   └── Forms/
+│       └── Components/
+│           └── GrapesJsEditor.php
+├── Http/Controllers/
+│   ├── PageController.php
+│   └── AdminPageController.php
+├── Models/
+│   ├── Page.php
+│   ├── CustomBlock.php
+│   ├── SiteSettings.php
+│   └── TailwindConfig.php
+└── Services/
+    ├── BlockService.php
+    ├── SiteSettingsService.php
+    └── GrapesJsConverterService.php
+
 resources/
 ├── js/
 │   ├── grapesjs-editor.js
 │   └── app.js
 ├── css/
 │   ├── app.css
-│   └── site.css
+│   ├── site.css
+│   └── laralgrape-utilities.css
 └── views/
-    ├── filament/forms/components/grapesjs-editor.blade.php
+    ├── filament/blocks/
+    ├── components/layout/
     └── pages/show.blade.php
 
-database/migrations/
-└── *_create_pages_table.php
+database/
+├── migrations/
+│   ├── create_pages_table.php
+│   ├── create_custom_blocks_table.php
+│   ├── create_site_settings_table.php
+│   └── create_tailwind_configs_table.php
+└── seeders/
+    ├── PageSeeder.php
+    ├── CustomBlockSeeder.php
+    ├── SiteSettingsSeeder.php
+    └── TailwindConfigSeeder.php
 ```
 
 ## 🎯 Next Steps
 
+### Immediate Actions
 1. **Customize the blocks** in GrapesJS editor
-2. **Add more page templates** for different layouts
-3. **Implement user roles** and permissions
-4. **Add media management** for images/files
-5. **Create a blog system** using the same pattern
-6. **Add form handling** for contact forms
-7. **Implement SEO sitemap** generation
-8. **Add caching** for better performance
+2. **Configure site settings** in admin panel
+3. **Set up Tailwind themes** for dynamic styling
+4. **Create custom blocks** using the visual builder
+
+### Advanced Customization
+1. **Add user roles** and permissions
+2. **Implement media management** for images/files
+3. **Create a blog system** using the same pattern
+4. **Add form handling** for contact forms
+5. **Implement SEO sitemap** generation
+6. **Add caching** for better performance
+7. **Create custom page templates**
+8. **Extend with additional Filament resources**
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Setup Command Fails
+```bash
+# Clear all caches
+php artisan optimize:clear
+
+# Try setup again
+php artisan laragrape:setup --all
+```
+
+#### Blocks Not Loading
+```bash
+# Clear block cache
+php artisan cache:clear
+
+# Check block files exist
+ls resources/views/filament/blocks/
+```
+
+#### Admin Panel Issues
+```bash
+# Reinstall Filament
+php artisan filament:install --panels
+
+# Create admin user
+php artisan make:filament-user
+```
+
+#### Frontend Assets
+```bash
+# Rebuild assets
+npm run build
+
+# Clear browser cache
+# Hard refresh (Ctrl+F5)
+```
+
+### Error Handling
+The setup command includes comprehensive error handling:
+- ✅ Continues if individual steps fail
+- ✅ Provides clear error messages
+- ✅ Suggests manual steps when needed
+- ✅ Shows progress and success counts
 
 ## 🤝 Contributing
 
@@ -136,7 +304,18 @@ Feel free to extend LaraGrape with:
 - Additional Filament resources
 - Frontend theme variants
 - Performance optimizations
+- Documentation improvements
+
+## 📚 Additional Resources
+
+- [Block System Documentation](BLOCKS_README.md)
+- [Component System Documentation](COMPONENTS_README.md)
+- [Custom Blocks Documentation](CUSTOM_BLOCKS_README.md)
+- [API Documentation](API_README.md)
+- [Troubleshooting Guide](TROUBLESHOOTING.md)
 
 ---
 
-**Happy building with LaraGrape as a package in your Laravel projects! 🍇**
+**Happy building with LaraGrape! 🍇**
+
+The setup process is designed to be robust and user-friendly, with comprehensive error handling and clear guidance for next steps.

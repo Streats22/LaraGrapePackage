@@ -12,19 +12,28 @@ class RebuildTailwindCommand extends Command
 
     public function handle()
     {
-        $config = TailwindConfig::where('is_active', true)->first();
-        if (!$config) {
-            $this->error('No active Tailwind config found.');
-            return 1;
-        }
+        $this->info('🎨 Rebuilding Tailwind CSS with dynamic configuration...');
 
-        // Write config to JS file
-        file_put_contents(
-            base_path('tailwind.config.js'),
-            $config->config_json // Adjust if your config is stored differently
-        );
+        try {
+            $config = TailwindConfig::where('is_active', true)->first();
+            if (!$config) {
+                $this->error('❌ No active Tailwind config found.');
+                $this->warn('💡 Please create and activate a Tailwind configuration in the admin panel first.');
+                return 1;
+            }
 
-        $this->info('Exported Tailwind config.');
+            $this->info("📋 Using configuration: {$config->name}");
+
+            // Write config to JS file
+            try {
+                file_put_contents(
+                    base_path('tailwind.config.js'),
+                    $config->config_json
+                );
+                $this->info('✅ Exported Tailwind config to tailwind.config.js.');
+            } catch (\Exception $e) {
+                $this->warn('⚠️  Failed to write tailwind.config.js: ' . $e->getMessage());
+            }
 
         // Generate dynamic utility classes CSS
         $utilityCss = $config->generateUtilityClassesCss();
@@ -95,8 +104,17 @@ class RebuildTailwindCommand extends Command
         copy($utilityCssPath, $publicCssPath);
         $this->info('Copied laralgrape-utilities.css to public/css.');
 
-        $this->info('Theme files and utilities updated. Please run `npm run build` on the server to rebuild frontend assets.');
+        $this->info('🎉 Theme files and utilities updated successfully!');
+        $this->info('📋 Next steps:');
+        $this->info('   1. Run `npm run build` to rebuild frontend assets');
+        $this->info('   2. Clear browser cache to see changes');
+        $this->info('   3. Restart your development server if needed');
 
         return 0;
+        } catch (\Exception $e) {
+            $this->error('❌ Tailwind rebuild failed: ' . $e->getMessage());
+            $this->warn('💡 Please check your configuration and try again.');
+            return 1;
+        }
     }
 }
