@@ -617,24 +617,38 @@ class LaraGrapeSetupCommand extends Command
         $files = glob($pagesDir . '/Lara*.php');
         foreach ($files as $oldFilePath) {
             if (file_exists($oldFilePath)) {
+                $this->info('Processing page file: ' . basename($oldFilePath));
                 $contents = file_get_contents($oldFilePath);
-                // Update namespace
-                $contents = str_replace('namespace LaraGrape\\\\Filament\\\\Resources', 'namespace App\\\\Filament\\\\Resources', $contents);
+                // General namespace replacement
+                $contents = str_replace('namespace LaraGrape\\\\', 'namespace App\\\\', $contents);
                 // Update class name: remove 'Lara' prefix
                 $contents = preg_replace('/class Lara(\\w+)/', 'class $1', $contents);
-                // Update resource reference if needed
-                $contents = str_replace('LaraCustomBlockResource::class', 'CustomBlockResource::class', $contents); // repeat for others
+                // Update resource references
+                $contents = str_replace('LaraCustomBlockResource::class', 'CustomBlockResource::class', $contents);
                 $contents = str_replace('LaraPageResource::class', 'PageResource::class', $contents);
                 $contents = str_replace('LaraSiteSettingsResource::class', 'SiteSettingsResource::class', $contents);
                 $contents = str_replace('LaraTailwindConfigResource::class', 'TailwindConfigResource::class', $contents);
                 file_put_contents($oldFilePath, $contents);
                 
-                // Rename file: remove 'Lara' prefix
+                // Rename file
                 $newFileName = preg_replace('/Lara(\\w+)\\.php/', '$1.php', basename($oldFilePath));
                 $newFilePath = $pagesDir . '/' . $newFileName;
-                if ($oldFilePath !== $newFilePath && !file_exists($newFilePath)) {
+                if ($oldFilePath !== $newFilePath) {
+                    if (file_exists($newFilePath)) {
+                        unlink($newFilePath);
+                        $this->warn('Deleted existing ' . $newFileName . ' before renaming');
+                    }
                     rename($oldFilePath, $newFilePath);
+                    $this->info('Renamed ' . basename($oldFilePath) . ' to ' . $newFileName);
                 }
+            }
+        }
+        // Clean up any remaining Lara* files
+        $remainingLaraFiles = glob($pagesDir . '/Lara*.php');
+        foreach ($remainingLaraFiles as $laraFile) {
+            if (file_exists($laraFile)) {
+                unlink($laraFile);
+                $this->info('Cleaned up remaining ' . basename($laraFile));
             }
         }
     }
