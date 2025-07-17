@@ -29,6 +29,13 @@ class RebuildTailwindCommand extends Command
         // Generate dynamic utility classes CSS
         $utilityCss = $config->generateUtilityClassesCss();
         $utilityCssPath = resource_path('css/laralgrape-utilities.css');
+        
+        // Ensure the CSS directory exists
+        $cssDir = dirname($utilityCssPath);
+        if (!is_dir($cssDir)) {
+            mkdir($cssDir, 0755, true);
+        }
+        
         file_put_contents($utilityCssPath, $utilityCss);
         $this->info('Generated laralgrape-utilities.css.');
 
@@ -44,13 +51,26 @@ class RebuildTailwindCommand extends Command
         $siteCssContent = rtrim($siteCssContent) . "\n/* DYNAMIC THEME START */\n" . $siteThemeCss . "\n/* DYNAMIC THEME END */\n";
         file_put_contents($siteCssPath, $siteCssContent);
         $this->info('Wrote dynamic themeable rules to site.css.');
+        
+        // Ensure the public CSS directory exists
         $publicSiteCssPath = public_path('css/site.css');
+        $publicCssDir = dirname($publicSiteCssPath);
+        if (!is_dir($publicCssDir)) {
+            mkdir($publicCssDir, 0755, true);
+        }
         copy($siteCssPath, $publicSiteCssPath);
         $this->info('Copied site.css to public/css.');
 
         // Generate dynamic admin/theme.css themeable rules
         $adminThemeCss = $config->generateAdminThemeCss();
         $adminCssPath = resource_path('css/filament/admin/theme.css');
+        
+        // Ensure the admin CSS directory exists
+        $adminCssDir = dirname($adminCssPath);
+        if (!is_dir($adminCssDir)) {
+            mkdir($adminCssDir, 0755, true);
+        }
+        
         $adminCssContent = file_exists($adminCssPath) ? file_get_contents($adminCssPath) : '';
         $adminCssContent = preg_replace(
             '/\/\* DYNAMIC THEME START \*\/(.*?)\/\* DYNAMIC THEME END \*\//s',
@@ -60,7 +80,13 @@ class RebuildTailwindCommand extends Command
         $adminCssContent = rtrim($adminCssContent) . "\n/* DYNAMIC THEME START */\n" . $adminThemeCss . "\n/* DYNAMIC THEME END */\n";
         file_put_contents($adminCssPath, $adminCssContent);
         $this->info('Wrote dynamic themeable rules to admin/theme.css.');
+        
+        // Ensure the public admin CSS directory exists
         $publicAdminCssPath = public_path('css/filament/admin/theme.css');
+        $publicAdminCssDir = dirname($publicAdminCssPath);
+        if (!is_dir($publicAdminCssDir)) {
+            mkdir($publicAdminCssDir, 0755, true);
+        }
         copy($adminCssPath, $publicAdminCssPath);
         $this->info('Copied admin/theme.css to public/css/filament/admin.');
 
