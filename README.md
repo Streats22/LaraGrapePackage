@@ -198,7 +198,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ### Development Setup
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/laragrape.git
+git clone https://github.com/Streats22/LaraGrapePackage
 
 # Install dependencies
 composer install
@@ -219,7 +219,7 @@ This package is open-sourced software licensed under the [MIT license](LICENSE).
 ## 🆘 Support
 
 - **Documentation**: Check our [Wiki](docs/README.md)
-- **Issues**: Report bugs on [GitHub](https://github.com/your-org/laragrape/issues)
+- **Issues**: Report bugs on [GitHub]((https://github.com/Streats22/LaraGrapePackage/issues)
 - **Discussions**: Join our community discussions
 
 ---
