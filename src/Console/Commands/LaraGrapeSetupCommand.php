@@ -598,35 +598,6 @@ class LaraGrapeSetupCommand extends Command
             }
         }
 
-        // Function to process and rename page files
-        function processPageFiles($pagesDir) {
-            if (!is_dir($pagesDir)) return;
-            
-            $files = glob($pagesDir . '/Lara*.php');
-            foreach ($files as $oldFilePath) {
-                if (file_exists($oldFilePath)) {
-                    $contents = file_get_contents($oldFilePath);
-                    // Update namespace
-                    $contents = str_replace('namespace LaraGrape\\\\Filament\\\\Resources', 'namespace App\\\\Filament\\\\Resources', $contents);
-                    // Update class name: remove 'Lara' prefix
-                    $contents = preg_replace('/class Lara(\\w+)/', 'class $1', $contents);
-                    // Update resource reference if needed
-                    $contents = str_replace('LaraCustomBlockResource::class', 'CustomBlockResource::class', $contents); // repeat for others
-                    $contents = str_replace('LaraPageResource::class', 'PageResource::class', $contents);
-                    $contents = str_replace('LaraSiteSettingsResource::class', 'SiteSettingsResource::class', $contents);
-                    $contents = str_replace('LaraTailwindConfigResource::class', 'TailwindConfigResource::class', $contents);
-                    file_put_contents($oldFilePath, $contents);
-                    
-                    // Rename file: remove 'Lara' prefix
-                    $newFileName = preg_replace('/Lara(\\w+)\\.php/', '$1.php', basename($oldFilePath));
-                    $newFilePath = $pagesDir . '/' . $newFileName;
-                    if ($oldFilePath !== $newFilePath && !file_exists($newFilePath)) {
-                        rename($oldFilePath, $newFilePath);
-                    }
-                }
-            }
-        }
-
         // Call for each resource Pages dir after publishing
         $resourcePagesDirs = [
             base_path('app/Filament/Resources/CustomBlockResource/Pages'),
@@ -635,7 +606,36 @@ class LaraGrapeSetupCommand extends Command
             base_path('app/Filament/Resources/TailwindConfigResource/Pages'),
         ];
         foreach ($resourcePagesDirs as $dir) {
-            processPageFiles($dir);
+            $this->processPageFiles($dir);
+        }
+    }
+
+    protected function processPageFiles($pagesDir)
+    {
+        if (!is_dir($pagesDir)) return;
+        
+        $files = glob($pagesDir . '/Lara*.php');
+        foreach ($files as $oldFilePath) {
+            if (file_exists($oldFilePath)) {
+                $contents = file_get_contents($oldFilePath);
+                // Update namespace
+                $contents = str_replace('namespace LaraGrape\\\\Filament\\\\Resources', 'namespace App\\\\Filament\\\\Resources', $contents);
+                // Update class name: remove 'Lara' prefix
+                $contents = preg_replace('/class Lara(\\w+)/', 'class $1', $contents);
+                // Update resource reference if needed
+                $contents = str_replace('LaraCustomBlockResource::class', 'CustomBlockResource::class', $contents); // repeat for others
+                $contents = str_replace('LaraPageResource::class', 'PageResource::class', $contents);
+                $contents = str_replace('LaraSiteSettingsResource::class', 'SiteSettingsResource::class', $contents);
+                $contents = str_replace('LaraTailwindConfigResource::class', 'TailwindConfigResource::class', $contents);
+                file_put_contents($oldFilePath, $contents);
+                
+                // Rename file: remove 'Lara' prefix
+                $newFileName = preg_replace('/Lara(\\w+)\\.php/', '$1.php', basename($oldFilePath));
+                $newFilePath = $pagesDir . '/' . $newFileName;
+                if ($oldFilePath !== $newFilePath && !file_exists($newFilePath)) {
+                    rename($oldFilePath, $newFilePath);
+                }
+            }
         }
     }
 } 
