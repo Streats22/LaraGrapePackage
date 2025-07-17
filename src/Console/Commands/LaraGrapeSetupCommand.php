@@ -579,7 +579,7 @@ class LaraGrapeSetupCommand extends Command
             $this->info('Updated routes/web.php for controller namespaces');
         }
 
-        // Update getPages() in resource files
+        // Update getPages() in resource files to use the correct page class names
         $resourceFiles = [
             base_path('app/Filament/Resources/CustomBlockResource.php'),
             base_path('app/Filament/Resources/PageResource.php'),
@@ -589,66 +589,21 @@ class LaraGrapeSetupCommand extends Command
         foreach ($resourceFiles as $resourceFile) {
             if (file_exists($resourceFile)) {
                 $contents = file_get_contents($resourceFile);
-                // Update Pages references in getPages()
-                $contents = preg_replace("/Pages\\\\Lara([A-Z][A-Za-z0-9_]*)::/", 'Pages\\$1::', $contents);
-                // Also fix any use statements if needed
-                $contents = str_replace('use LaraGrape\\Filament\\Resources\\.*Resource\\Pages;', 'use App\\Filament\\Resources\\.*Resource\\Pages;', $contents);
+                // Update Pages references in getPages() to use correct class names
+                $contents = str_replace('Pages\\LaraListCustomBlocks::', 'Pages\\ListCustomBlocks::', $contents);
+                $contents = str_replace('Pages\\LaraCreateCustomBlock::', 'Pages\\CreateCustomBlock::', $contents);
+                $contents = str_replace('Pages\\LaraEditCustomBlock::', 'Pages\\EditCustomBlock::', $contents);
+                $contents = str_replace('Pages\\LaraListPages::', 'Pages\\ListPages::', $contents);
+                $contents = str_replace('Pages\\LaraCreatePage::', 'Pages\\CreatePage::', $contents);
+                $contents = str_replace('Pages\\LaraEditPage::', 'Pages\\EditPage::', $contents);
+                $contents = str_replace('Pages\\LaraListSiteSettings::', 'Pages\\ListSiteSettings::', $contents);
+                $contents = str_replace('Pages\\LaraCreateSiteSettings::', 'Pages\\CreateSiteSettings::', $contents);
+                $contents = str_replace('Pages\\LaraEditSiteSettings::', 'Pages\\EditSiteSettings::', $contents);
+                $contents = str_replace('Pages\\LaraListTailwindConfigs::', 'Pages\\ListTailwindConfigs::', $contents);
+                $contents = str_replace('Pages\\LaraCreateTailwindConfig::', 'Pages\\CreateTailwindConfig::', $contents);
+                $contents = str_replace('Pages\\LaraEditTailwindConfig::', 'Pages\\EditTailwindConfig::', $contents);
                 file_put_contents($resourceFile, $contents);
                 $this->info("Updated getPages() in " . basename($resourceFile));
-            }
-        }
-
-        // Call for each resource Pages dir after publishing
-        $resourcePagesDirs = [
-            base_path('app/Filament/Resources/CustomBlockResource/Pages'),
-            base_path('app/Filament/Resources/PageResource/Pages'),
-            base_path('app/Filament/Resources/SiteSettingsResource/Pages'),
-            base_path('app/Filament/Resources/TailwindConfigResource/Pages'),
-        ];
-        foreach ($resourcePagesDirs as $dir) {
-            $this->processPageFiles($dir);
-        }
-    }
-
-    protected function processPageFiles($pagesDir)
-    {
-        if (!is_dir($pagesDir)) return;
-        
-        $files = glob($pagesDir . '/Lara*.php');
-        foreach ($files as $oldFilePath) {
-            if (file_exists($oldFilePath)) {
-                $this->info('Processing page file: ' . basename($oldFilePath));
-                $contents = file_get_contents($oldFilePath);
-                // General namespace replacement
-                $contents = str_replace('namespace LaraGrape\\\\', 'namespace App\\\\', $contents);
-                // Update class name: remove 'Lara' prefix
-                $contents = preg_replace('/class Lara(\\w+)/', 'class $1', $contents);
-                // Update resource references
-                $contents = str_replace('LaraCustomBlockResource::class', 'CustomBlockResource::class', $contents);
-                $contents = str_replace('LaraPageResource::class', 'PageResource::class', $contents);
-                $contents = str_replace('LaraSiteSettingsResource::class', 'SiteSettingsResource::class', $contents);
-                $contents = str_replace('LaraTailwindConfigResource::class', 'TailwindConfigResource::class', $contents);
-                file_put_contents($oldFilePath, $contents);
-                
-                // Rename file
-                $newFileName = preg_replace('/Lara(\\w+)\\.php/', '$1.php', basename($oldFilePath));
-                $newFilePath = $pagesDir . '/' . $newFileName;
-                if ($oldFilePath !== $newFilePath) {
-                    if (file_exists($newFilePath)) {
-                        unlink($newFilePath);
-                        $this->warn('Deleted existing ' . $newFileName . ' before renaming');
-                    }
-                    rename($oldFilePath, $newFilePath);
-                    $this->info('Renamed ' . basename($oldFilePath) . ' to ' . $newFileName);
-                }
-            }
-        }
-        // Clean up any remaining Lara* files
-        $remainingLaraFiles = glob($pagesDir . '/Lara*.php');
-        foreach ($remainingLaraFiles as $laraFile) {
-            if (file_exists($laraFile)) {
-                unlink($laraFile);
-                $this->info('Cleaned up remaining ' . basename($laraFile));
             }
         }
     }

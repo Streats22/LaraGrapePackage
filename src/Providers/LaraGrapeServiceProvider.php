@@ -169,28 +169,36 @@ class LaraGrapeServiceProvider extends ServiceProvider
             // Similarly for other resources like SiteSettings, TailwindConfig
             // ... add as needed ...
 
-            // Publishing for CustomBlockResource
+            // Publishing for CustomBlockResource with all Pages
             $this->publishes([
                 $packageDir.'/src/Filament/Resources/LaraCustomBlockResource.php' => app_path('Filament/Resources/CustomBlockResource.php'),
-                $packageDir.'/src/Filament/Resources/CustomBlockResource/Pages' => app_path('Filament/Resources/CustomBlockResource/Pages'),
+                $packageDir.'/src/Filament/Resources/CustomBlockResource/Pages/LaraCreateCustomBlock.php' => app_path('Filament/Resources/CustomBlockResource/Pages/CreateCustomBlock.php'),
+                $packageDir.'/src/Filament/Resources/CustomBlockResource/Pages/LaraEditCustomBlock.php' => app_path('Filament/Resources/CustomBlockResource/Pages/EditCustomBlock.php'),
+                $packageDir.'/src/Filament/Resources/CustomBlockResource/Pages/LaraListCustomBlocks.php' => app_path('Filament/Resources/CustomBlockResource/Pages/ListCustomBlocks.php'),
             ], 'laragrape-customblock-resource');
 
-            // Publishing for PageResource
+            // Publishing for PageResource with all Pages
             $this->publishes([
                 $packageDir.'/src/Filament/Resources/LaraPageResource.php' => app_path('Filament/Resources/PageResource.php'),
-                $packageDir.'/src/Filament/Resources/PageResource/Pages' => app_path('Filament/Resources/PageResource/Pages'),
+                $packageDir.'/src/Filament/Resources/PageResource/Pages/LaraCreatePage.php' => app_path('Filament/Resources/PageResource/Pages/CreatePage.php'),
+                $packageDir.'/src/Filament/Resources/PageResource/Pages/LaraEditPage.php' => app_path('Filament/Resources/PageResource/Pages/EditPage.php'),
+                $packageDir.'/src/Filament/Resources/PageResource/Pages/LaraListPages.php' => app_path('Filament/Resources/PageResource/Pages/ListPages.php'),
             ], 'laragrape-page-resource');
 
-            // Publishing for SiteSettingsResource
+            // Publishing for SiteSettingsResource with all Pages
             $this->publishes([
                 $packageDir.'/src/Filament/Resources/LaraSiteSettingsResource.php' => app_path('Filament/Resources/SiteSettingsResource.php'),
-                $packageDir.'/src/Filament/Resources/SiteSettingsResource/Pages' => app_path('Filament/Resources/SiteSettingsResource/Pages'),
+                $packageDir.'/src/Filament/Resources/SiteSettingsResource/Pages/LaraCreateSiteSettings.php' => app_path('Filament/Resources/SiteSettingsResource/Pages/CreateSiteSettings.php'),
+                $packageDir.'/src/Filament/Resources/SiteSettingsResource/Pages/LaraEditSiteSettings.php' => app_path('Filament/Resources/SiteSettingsResource/Pages/EditSiteSettings.php'),
+                $packageDir.'/src/Filament/Resources/SiteSettingsResource/Pages/LaraListSiteSettings.php' => app_path('Filament/Resources/SiteSettingsResource/Pages/ListSiteSettings.php'),
             ], 'laragrape-sitesettings-resource');
 
-            // Publishing for TailwindConfigResource
+            // Publishing for TailwindConfigResource with all Pages
             $this->publishes([
                 $packageDir.'/src/Filament/Resources/LaraTailwindConfigResource.php' => app_path('Filament/Resources/TailwindConfigResource.php'),
-                $packageDir.'/src/Filament/Resources/TailwindConfigResource/Pages' => app_path('Filament/Resources/TailwindConfigResource/Pages'),
+                $packageDir.'/src/Filament/Resources/TailwindConfigResource/Pages/LaraCreateTailwindConfig.php' => app_path('Filament/Resources/TailwindConfigResource/Pages/CreateTailwindConfig.php'),
+                $packageDir.'/src/Filament/Resources/TailwindConfigResource/Pages/LaraEditTailwindConfig.php' => app_path('Filament/Resources/TailwindConfigResource/Pages/EditTailwindConfig.php'),
+                $packageDir.'/src/Filament/Resources/TailwindConfigResource/Pages/LaraListTailwindConfigs.php' => app_path('Filament/Resources/TailwindConfigResource/Pages/ListTailwindConfigs.php'),
             ], 'laragrape-tailwindconfig-resource');
 
             // Publish AdminPageController for block previews
