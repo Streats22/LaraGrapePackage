@@ -578,5 +578,24 @@ class LaraGrapeSetupCommand extends Command
             file_put_contents($webPath, $contents);
             $this->info('Updated routes/web.php for controller namespaces');
         }
+
+        // Update getPages() in resource files
+        $resourceFiles = [
+            base_path('app/Filament/Resources/CustomBlockResource.php'),
+            base_path('app/Filament/Resources/PageResource.php'),
+            base_path('app/Filament/Resources/SiteSettingsResource.php'),
+            base_path('app/Filament/Resources/TailwindConfigResource.php'),
+        ];
+        foreach ($resourceFiles as $resourceFile) {
+            if (file_exists($resourceFile)) {
+                $contents = file_get_contents($resourceFile);
+                // Update Pages references in getPages()
+                $contents = preg_replace("/Pages\\\\Lara([A-Z][A-Za-z0-9_]*)::/", 'Pages\\$1::', $contents);
+                // Also fix any use statements if needed
+                $contents = str_replace('use LaraGrape\\Filament\\Resources\\.*Resource\\Pages;', 'use App\\Filament\\Resources\\.*Resource\\Pages;', $contents);
+                file_put_contents($resourceFile, $contents);
+                $this->info("Updated getPages() in " . basename($resourceFile));
+            }
+        }
     }
 } 
