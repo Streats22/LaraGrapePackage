@@ -1,0 +1,38 @@
+name: Sync Docs to Wiki
+
+on:
+  push:
+    branches:
+      - main
+      - Development
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Clone wiki repository
+        run: |
+          git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Streats22/LaraGrapePackage.wiki.git wiki
+
+      - name: Sync docs to wiki
+        run: |
+          rsync -av --delete docs/ wiki/
+
+      - name: Commit and push changes
+        run: |
+          cd wiki
+          git add .
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Sync docs from main repo [skip ci]"
+            git push
+          fi 

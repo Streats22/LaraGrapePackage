@@ -5,7 +5,7 @@ LaraGrape provides a robust modular component system with Alpine.js for better o
 ## 📦 Installation
 
 ```bash
-composer require laragrape/laragrape
+composer require streats22/laragrape
 php artisan laragrape:setup --all
 ```
 

@@ -5,7 +5,7 @@ LaraGrape provides a powerful custom block builder and comprehensive site settin
 ## 📦 Installation
 
 ```bash
-composer require laragrape/laragrape
+composer require streats22/laragrape
 php artisan laragrape:setup --all
 ```
 

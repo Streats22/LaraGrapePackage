@@ -1,15 +1,27 @@
-# 🍇 LaraGrape Package Setup Guide
+# 🚀 Installation & Setup
 
 Complete guide for setting up LaraGrape in your Laravel application with comprehensive error handling and fallbacks.
 
-## 📦 Installation
+## 📦 Prerequisites
+
+Before installing LaraGrape, ensure you have:
+
+- **PHP**: 8.2 or higher
+- **Laravel**: 12.0 or higher
+- **Composer**: 2.0 or higher
+- **Node.js**: 18.0 or higher (for frontend assets)
+- **Database**: MySQL 8.0+, PostgreSQL 13+, or SQLite 3.35+
+
+## 🛠️ Installation Steps
 
 ### 1. Install the Package
+
 ```bash
 composer require streats22/laragrape
 ```
 
 ### 2. Run the Setup Command
+
 ```bash
 php artisan laragrape:setup --all
 ```
@@ -25,6 +37,7 @@ The setup command will:
 ## 🛠️ Setup Command Options
 
 ### Available Options
+
 | Option | Description |
 |--------|-------------|
 | `--all` | Complete setup (publish, migrate, seed) |
@@ -33,6 +46,7 @@ The setup command will:
 | `--force` | Overwrite existing files |
 
 ### Examples
+
 ```bash
 # Complete setup (recommended)
 php artisan laragrape:setup --all
@@ -83,22 +97,26 @@ php artisan laragrape:setup --force
 ## 🚀 Post-Setup Steps
 
 ### 1. Create Admin User
+
 ```bash
 php artisan make:filament-user
 ```
 
 ### 2. Build Frontend Assets
+
 ```bash
 npm install
 npm run build
 ```
 
 ### 3. Start Your Application
+
 ```bash
 php artisan serve
 ```
 
 ### 4. Access Your Application
+
 - **Admin Panel**: http://localhost:8000/admin
 - **Frontend**: http://localhost:8000
 
@@ -125,6 +143,7 @@ php artisan serve
 ## 🎨 Customizing Components
 
 ### Adding New GrapesJS Blocks
+
 Blocks are automatically loaded from `resources/views/filament/blocks/`:
 
 ```blade
@@ -136,6 +155,7 @@ Blocks are automatically loaded from `resources/views/filament/blocks/`:
 ```
 
 ### Using the Visual Block Builder
+
 1. Go to **Custom Blocks** in admin panel
 2. Click **Create Custom Block**
 3. Use the visual builder with HTML, CSS, and JS tabs
@@ -143,6 +163,7 @@ Blocks are automatically loaded from `resources/views/filament/blocks/`:
 5. Save and use in pages
 
 ### Styling
+
 - **Global styles**: Edit `resources/css/site.css`
 - **Component styles**: Use Tailwind classes in blocks
 - **Admin styles**: Customize via Filament theming
@@ -151,6 +172,7 @@ Blocks are automatically loaded from `resources/views/filament/blocks/`:
 ## 🛠️ Development Commands
 
 ### Essential Commands
+
 ```bash
 # Start development server
 php artisan serve
@@ -169,6 +191,7 @@ php artisan make:filament-user
 ```
 
 ### LaraGrape Commands
+
 ```bash
 # Rebuild Tailwind CSS
 php artisan tailwind:rebuild
@@ -255,6 +278,7 @@ database/
 ### Common Issues
 
 #### Setup Command Fails
+
 ```bash
 # Clear all caches
 php artisan optimize:clear
@@ -264,6 +288,7 @@ php artisan laragrape:setup --all
 ```
 
 #### Blocks Not Loading
+
 ```bash
 # Clear block cache
 php artisan cache:clear
@@ -273,6 +298,7 @@ ls resources/views/filament/blocks/
 ```
 
 #### Admin Panel Issues
+
 ```bash
 # Reinstall Filament
 php artisan filament:install --panels
@@ -282,6 +308,7 @@ php artisan make:filament-user
 ```
 
 #### Frontend Assets
+
 ```bash
 # Rebuild assets
 npm run build
@@ -291,6 +318,7 @@ npm run build
 ```
 
 ### Error Handling
+
 The setup command includes comprehensive error handling:
 - ✅ Continues if individual steps fail
 - ✅ Provides clear error messages
@@ -308,14 +336,14 @@ Feel free to extend LaraGrape with:
 
 ## 📚 Additional Resources
 
-- [Block System Documentation](BLOCKS_README.md)
-- [Component System Documentation](COMPONENTS_README.md)
-- [Custom Blocks Documentation](CUSTOM_BLOCKS_README.md)
-- [API Documentation](API_README.md)
-- [Troubleshooting Guide](TROUBLESHOOTING.md)
+- [Block System Documentation](blocks/overview.md)
+- [Component System Documentation](components/overview.md)
+- [Custom Blocks Documentation](custom-blocks/overview.md)
+- [API Documentation](api/overview.md)
+- [Troubleshooting Guide](troubleshooting/common-issues.md)
 
 ---
 
 **Happy building with LaraGrape! 🍇**
 
-The setup process is designed to be robust and user-friendly, with comprehensive error handling and clear guidance for next steps.
+The setup process is designed to be robust and user-friendly, with comprehensive error handling and clear guidance for next steps. 

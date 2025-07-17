@@ -1,9 +1,10 @@
-# 🧑‍🎨 Dynamic Block System (LaraGrape Package)
+# 🧩 Block System Overview
 
 The LaraGrape package includes a robust dynamic block loading system that automatically scans and loads blocks from the `resources/views/filament/blocks/` directory structure with comprehensive error handling and fallbacks.
 
-## 📦 Installation
+## 🚀 Quick Start
 
+### Installation
 ```bash
 composer require streats22/laragrape
 php artisan laragrape:setup --all
@@ -291,8 +292,6 @@ $stats = $blockService->getBlockStatistics();
 - **User feedback**: Gather feedback on block usability
 - **Updates**: Keep blocks compatible with new versions
 
----
-
 ## 🎯 Best Practices
 
 ### Block Design
@@ -313,8 +312,15 @@ $stats = $blockService->getBlockStatistics();
 - **Responsive**: Ensure blocks work on all devices
 - **Fast**: Optimize for quick loading
 
+## 📚 Related Documentation
+
+- [Custom Blocks](custom-blocks/overview.md) - Visual block builder
+- [Component System](components/overview.md) - Modular components
+- [GrapesJS Integration](grapesjs/overview.md) - Visual editor
+- [API Reference](api/overview.md) - Service classes
+
 ---
 
-**The dynamic block system makes it easy to create, organize, and maintain reusable components for your Laravel projects using the LaraGrape package! 🧑‍🎨**
+**The dynamic block system makes it easy to create, organize, and maintain reusable components for your Laravel projects using the LaraGrape package! 🧩**
 
 With comprehensive error handling, automatic discovery, and robust fallbacks, the block system provides a reliable foundation for building dynamic, visual content. 
