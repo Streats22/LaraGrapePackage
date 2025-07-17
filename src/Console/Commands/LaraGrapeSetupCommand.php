@@ -53,6 +53,7 @@ class LaraGrapeSetupCommand extends Command
             'LaraGrape-frontend-layout',
             'LaraGrape-filament-forms',
             'LaraGrape-controllers',
+            'laragrape-seeders',
         ];
         foreach ($publishTags as $tag) {
             $this->info("Publishing $tag...");
@@ -66,6 +67,13 @@ class LaraGrapeSetupCommand extends Command
         $this->call('vendor:publish', [
             '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
             '--tag' => 'LaraGrape-css',
+            '--force' => true,
+        ]);
+        
+        // Publish utilities CSS file for GrapesJS
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-utilities-css',
             '--force' => true,
         ]);
         // Publish PHP service/command files
@@ -186,38 +194,36 @@ class LaraGrapeSetupCommand extends Command
                     }
                 }
             }
-            $adminPanelProviderPath = base_path('app/Filament/AdminPanelProvider.php');
-            if (file_exists($adminPanelProviderPath)) {
-                $contents = file_get_contents($adminPanelProviderPath);
-                // Remove any LaraGrape\ references in ->resources(), ->pages(), ->widgets()
-                $contents = preg_replace('/(->resources\(\[)([^\]]*)\]/s', function ($matches) {
-                    $lines = explode("\n", $matches[2]);
-                    $lines = array_filter($lines, function($line) {
-                        return strpos($line, 'LaraGrape\\') === false;
-                    });
-                    return $matches[1] . implode("\n", $lines) . "]";
-                }, $contents);
-                $contents = preg_replace('/(->pages\(\[)([^\]]*)\]/s', function ($matches) {
-                    $lines = explode("\n", $matches[2]);
-                    $lines = array_filter($lines, function($line) {
-                        return strpos($line, 'LaraGrape\\') === false;
-                    });
-                    return $matches[1] . implode("\n", $lines) . "]";
-                }, $contents);
-                $contents = preg_replace('/(->widgets\(\[)([^\]]*)\]/s', function ($matches) {
-                    $lines = explode("\n", $matches[2]);
-                    $lines = array_filter($lines, function($line) {
-                        return strpos($line, 'LaraGrape\\') === false;
-                    });
-                    return $matches[1] . implode("\n", $lines) . "]";
-                }, $contents);
-                // Also update any namespace/use statements
-                $contents = str_replace('LaraGrape\\Filament\\Resources\\', 'App\\Filament\\Resources\\', $contents);
-                $contents = str_replace('LaraGrape\\Filament\\Pages\\', 'App\\Filament\\Pages\\', $contents);
-                $contents = str_replace('LaraGrape\\Filament\\', 'App\\Filament\\', $contents);
-                $contents = str_replace('LaraGrape\\', 'App\\', $contents);
-                $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
-                file_put_contents($adminPanelProviderPath, $contents);
+            // Enhance AdminPanelProvider overwriting (already there, but add force)
+            $adminPanelProviderPath = base_path('app/Providers/Filament/AdminPanelProvider.php');
+            if (file_exists($adminPanelProviderPath) || $force) {
+                $this->info('Overwriting AdminPanelProvider with LaraGrape version...');
+                $packageAdminPanelProvider = __DIR__ . '/../../Providers/Filament/AdminPanelProvider.php';
+                if (file_exists($packageAdminPanelProvider)) {
+                    $contents = file_get_contents($packageAdminPanelProvider);
+                    // Update namespace to App
+                    $contents = str_replace('namespace LaraGrape\\Providers\\Filament;', 'namespace App\\Providers\\Filament;', $contents);
+                    // Update resource discovery paths
+                    $contents = str_replace(
+                        '->discoverResources(in: app_path(\'Filament/Resources\'), for: \'LaraGrape\\\\Filament\\\\Resources\')',
+                        '->discoverResources(in: app_path(\'Filament/Resources\'), for: \'App\\\\Filament\\\\Resources\')',
+                        $contents
+                    );
+                    $contents = str_replace(
+                        '->discoverPages(in: app_path(\'Filament/Pages\'), for: \'LaraGrape\\\\Filament\\\\Pages\')',
+                        '->discoverPages(in: app_path(\'Filament/Pages\'), for: \'App\\\\Filament\\\\Pages\')',
+                        $contents
+                    );
+                    $contents = str_replace(
+                        '->discoverWidgets(in: app_path(\'Filament/Widgets\'), for: \'App\\\\Filament\\\\Widgets\')',
+                        '->discoverWidgets(in: app_path(\'Filament/Widgets\'), for: \'App\\\\Filament\\\\Widgets\')',
+                        $contents
+                    );
+                    file_put_contents($adminPanelProviderPath, $contents);
+                    $this->info('AdminPanelProvider overwritten and namespaces updated.');
+                }
+            } else {
+                $this->warn('AdminPanelProvider not found at expected path: ' . $adminPanelProviderPath);
             }
             $this->info('Publishing Filament forms...');
             $this->call('vendor:publish', [
@@ -302,8 +308,21 @@ class LaraGrapeSetupCommand extends Command
                     }
                 }
             }
+            
+            // Clean up any duplicate Lara* files that might have been created
+            foreach ($allPublishedDirs as $dir) {
+                if (is_dir($dir)) {
+                    $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir));
+                    foreach ($rii as $file) {
+                        if ($file->isFile() && $file->getExtension() === 'php' && strpos($file->getFilename(), 'Lara') === 0) {
+                            $this->info('Removing duplicate file: ' . $file->getFilename());
+                            unlink($file->getPathname());
+                        }
+                    }
+                }
+            }
             // Add AdminPanelProvider if it exists
-            $adminPanelProviderPath = base_path('app/Filament/AdminPanelProvider.php');
+            $adminPanelProviderPath = base_path('app/Providers/Filament/AdminPanelProvider.php');
             if (file_exists($adminPanelProviderPath)) {
                 $allPublishedFiles[] = $adminPanelProviderPath;
             }
@@ -403,6 +422,37 @@ class LaraGrapeSetupCommand extends Command
         if ($this->option('migrate')) {
             $this->info('Running migrations...');
             $this->call('migrate');
+        }
+
+        // Add publishing and post-processing for seeders
+        $this->info('Publishing seeders...');
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'laragrape-seeders',
+            '--force' => $force,
+        ]);
+
+        // Post-process seeders for namespaces
+        $seedersPath = database_path('seeders');
+        if (is_dir($seedersPath)) {
+            foreach (glob($seedersPath . '/*.php') as $file) {
+                $contents = file_get_contents($file);
+                $contents = str_replace('namespace LaraGrape\\Database\\Seeders;', 'namespace Database\\Seeders;', $contents);
+                $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
+                // Remove 'Lara' prefix from seeder class names
+                $contents = preg_replace('/class Lara([A-Z][A-Za-z0-9_]*Seeder)/', 'class $1Seeder', $contents);
+                file_put_contents($file, $contents);
+            }
+        }
+
+        // Run seeders if requested
+        if ($this->option('seed') || $this->option('all')) {
+            $this->info('Running seeders...');
+            try {
+                $this->call('db:seed', ['--force' => true]);
+            } catch (\Exception $e) {
+                $this->error('Seeder failed: ' . $e->getMessage());
+            }
         }
 
         $this->info('Final publish complete. Your LaraGrape setup is fully up to date.');

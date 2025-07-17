@@ -126,6 +126,34 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/public/css/laralgrape-utilities.css' => public_path('css/laralgrape-utilities.css'),
             ], 'LaraGrape-utilities-css');
+
+            // Add publishing for full Filament resources and pages
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources' => app_path('Filament/Resources'),
+            ], 'laragrape-filament-resources');
+
+            $this->publishes([
+                $packageDir.'/src/Filament/Pages' => app_path('Filament/Pages'),
+            ], 'laragrape-filament-pages');
+
+            $this->publishes([
+                $packageDir.'/src/Filament/Forms' => app_path('Filament/Forms'),
+            ], 'laragrape-filament-forms');
+
+            // Publish tests if needed (optional, as per user)
+            $this->publishes([
+                $packageDir.'/tests' => base_path('tests'),
+            ], 'laragrape-tests');
+
+            // Ensure AdminPanelProvider is published (already there, but confirm)
+            $this->publishes([
+                $packageDir.'/src/Providers/Filament/AdminPanelProvider.php' => app_path('Providers/Filament/AdminPanelProvider.php'),
+            ], 'laragrape-admin-panel-provider');
+
+            // Add publishing for seeders
+            $this->publishes([
+                $packageDir.'/database/seeders' => database_path('seeders'),
+            ], 'laragrape-seeders');
         }
     }
 }

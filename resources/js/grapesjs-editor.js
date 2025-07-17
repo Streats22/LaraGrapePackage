@@ -256,13 +256,6 @@ class LaraGrapeGrapesJsEditor {
         }
     }
 
-    syncToFormBeforeSubmit() {
-        console.log('syncToFormBeforeSubmit called');
-        if (this.options.mode === 'backend' && this.editor) {
-            this.updateFilamentFormState();
-        }
-    }
-
     async saveContent() {
         if (this.options.mode === 'backend') {
             // Backend: Make AJAX request to save endpoint
