@@ -116,16 +116,18 @@ class LaraGrapeSetupCommand extends Command
             if (is_dir($resourcesPath)) {
                 // Top-level files
                 foreach (glob($resourcesPath . '/*.php') as $filePath) {
-                    $contents = file_get_contents($filePath);
-                    $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
-                    $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
-                    $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
-                    file_put_contents($filePath, $contents);
+                    if (file_exists($filePath)) {
+                        $contents = file_get_contents($filePath);
+                        $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
+                        $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
+                        $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
+                        file_put_contents($filePath, $contents);
+                    }
                 }
                 // All subdirectories
                 $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($resourcesPath));
                 foreach ($rii as $file) {
-                    if ($file->isFile() && $file->getExtension() === 'php') {
+                    if ($file->isFile() && $file->getExtension() === 'php' && file_exists($file->getPathname())) {
                         $contents = file_get_contents($file->getPathname());
                         $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
                         $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
@@ -145,7 +147,7 @@ class LaraGrapeSetupCommand extends Command
             if (is_dir($pagesPath)) {
                 $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($pagesPath));
                 foreach ($rii as $file) {
-                    if ($file->isFile() && $file->getExtension() === 'php') {
+                    if ($file->isFile() && $file->getExtension() === 'php' && file_exists($file->getPathname())) {
                         $contents = file_get_contents($file->getPathname());
                         $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
                         $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
@@ -165,7 +167,7 @@ class LaraGrapeSetupCommand extends Command
             if (is_dir($blocksPath)) {
                 $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($blocksPath));
                 foreach ($rii as $file) {
-                    if ($file->isFile() && $file->getExtension() === 'php') {
+                    if ($file->isFile() && $file->getExtension() === 'php' && file_exists($file->getPathname())) {
                         $contents = file_get_contents($file->getPathname());
                         $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
                         $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
@@ -185,7 +187,7 @@ class LaraGrapeSetupCommand extends Command
             if (is_dir($layoutPath)) {
                 $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($layoutPath));
                 foreach ($rii as $file) {
-                    if ($file->isFile() && $file->getExtension() === 'php') {
+                    if ($file->isFile() && $file->getExtension() === 'php' && file_exists($file->getPathname())) {
                         $contents = file_get_contents($file->getPathname());
                         $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
                         $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
@@ -236,7 +238,7 @@ class LaraGrapeSetupCommand extends Command
             if (is_dir($formsPath)) {
                 $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($formsPath));
                 foreach ($rii as $file) {
-                    if ($file->isFile() && $file->getExtension() === 'php') {
+                    if ($file->isFile() && $file->getExtension() === 'php' && file_exists($file->getPathname())) {
                         $contents = file_get_contents($file->getPathname());
                         $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
                         $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
@@ -262,7 +264,7 @@ class LaraGrapeSetupCommand extends Command
                 if (is_dir($path)) {
                     $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path));
                     foreach ($rii as $file) {
-                        if ($file->isFile() && $file->getExtension() === 'php') {
+                        if ($file->isFile() && $file->getExtension() === 'php' && file_exists($file->getPathname())) {
                             $contents = file_get_contents($file->getPathname());
                             $contents = str_replace('LaraGrape\\Filament\\Resources\\', 'App\\Filament\\Resources\\', $contents);
                             $contents = str_replace('LaraGrape\\Filament\\Pages\\', 'App\\Filament\\Pages\\', $contents);
@@ -274,7 +276,7 @@ class LaraGrapeSetupCommand extends Command
                             file_put_contents($file->getPathname(), $contents);
                         }
                     }
-                } elseif (is_file($path)) {
+                } elseif (is_file($path) && file_exists($path)) {
                     $contents = file_get_contents($path);
                     $contents = str_replace('LaraGrape\\Filament\\Resources\\', 'App\\Filament\\Resources\\', $contents);
                     $contents = str_replace('LaraGrape\\Filament\\Pages\\', 'App\\Filament\\Pages\\', $contents);
@@ -302,7 +304,7 @@ class LaraGrapeSetupCommand extends Command
                 if (is_dir($dir)) {
                     $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir));
                     foreach ($rii as $file) {
-                        if ($file->isFile() && $file->getExtension() === 'php') {
+                        if ($file->isFile() && $file->getExtension() === 'php' && file_exists($file->getPathname())) {
                             $allPublishedFiles[] = $file->getPathname();
                         }
                     }
@@ -314,7 +316,7 @@ class LaraGrapeSetupCommand extends Command
                 if (is_dir($dir)) {
                     $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir));
                     foreach ($rii as $file) {
-                        if ($file->isFile() && $file->getExtension() === 'php' && strpos($file->getFilename(), 'Lara') === 0) {
+                        if ($file->isFile() && $file->getExtension() === 'php' && strpos($file->getFilename(), 'Lara') === 0 && file_exists($file->getPathname())) {
                             $this->info('Removing duplicate file: ' . $file->getFilename());
                             unlink($file->getPathname());
                         }
@@ -327,29 +329,31 @@ class LaraGrapeSetupCommand extends Command
                 $allPublishedFiles[] = $adminPanelProviderPath;
             }
             foreach ($allPublishedFiles as $filePath) {
-                $contents = file_get_contents($filePath);
-                // Remove 'Lara' prefix from class names
-                $contents = preg_replace('/class Lara([A-Z][A-Za-z0-9_]*)/', 'class $1', $contents, -1, $classCount);
-                if ($classCount > 0) {
-                    $this->info("Updated class name in $filePath");
-                }
-                // Remove 'Lara' prefix from references to these classes
-                $contents = preg_replace('/Lara([A-Z][A-Za-z0-9_]*)/', '$1', $contents, -1, $refCount);
-                if ($refCount > 0) {
-                    $this->info("Updated class references in $filePath");
-                }
-                file_put_contents($filePath, $contents);
-                // Optionally, rename the file itself if it starts with 'Lara'
-                $dir = dirname($filePath);
-                $base = basename($filePath);
-                if (strpos($base, 'Lara') === 0) {
-                    $newBase = substr($base, 4); // Remove 'Lara'
-                    $newPath = $dir . '/' . $newBase;
-                    if (!file_exists($newPath)) {
-                        rename($filePath, $newPath);
-                        $this->info("Renamed file $base to $newBase");
-                    } else {
-                        $this->warn("File $newBase already exists, skipping rename for $base");
+                if (file_exists($filePath)) {
+                    $contents = file_get_contents($filePath);
+                    // Remove 'Lara' prefix from class names
+                    $contents = preg_replace('/class Lara([A-Z][A-Za-z0-9_]*)/', 'class $1', $contents, -1, $classCount);
+                    if ($classCount > 0) {
+                        $this->info("Updated class name in $filePath");
+                    }
+                    // Remove 'Lara' prefix from references to these classes
+                    $contents = preg_replace('/Lara([A-Z][A-Za-z0-9_]*)/', '$1', $contents, -1, $refCount);
+                    if ($refCount > 0) {
+                        $this->info("Updated class references in $filePath");
+                    }
+                    file_put_contents($filePath, $contents);
+                    // Optionally, rename the file itself if it starts with 'Lara'
+                    $dir = dirname($filePath);
+                    $base = basename($filePath);
+                    if (strpos($base, 'Lara') === 0) {
+                        $newBase = substr($base, 4); // Remove 'Lara'
+                        $newPath = $dir . '/' . $newBase;
+                        if (!file_exists($newPath) && file_exists($filePath)) {
+                            rename($filePath, $newPath);
+                            $this->info("Renamed file $base to $newBase");
+                        } else {
+                            $this->warn("Skipping rename for $base: Target exists or source missing");
+                        }
                     }
                 }
             }
@@ -361,21 +365,23 @@ class LaraGrapeSetupCommand extends Command
                 $pagesDir = $resourceDir . '/Pages';
                 if (is_dir($pagesDir)) {
                     foreach (glob($pagesDir . '/*.php') as $pageFile) {
-                        $contents = file_get_contents($pageFile);
-                        // Only add if the file references the resource and doesn't already have the use statement
-                        if (
-                            strpos($contents, "protected static string \$resource = {$resourceName}::class;") !== false &&
-                            strpos($contents, "use App\\Filament\\Resources\\{$resourceName};") === false
-                        ) {
-                            // Insert use statement after namespace
-                            $contents = preg_replace(
-                                '/(namespace [^;]+;)/',
-                                "$1\nuse App\\Filament\\Resources\\{$resourceName};",
-                                $contents,
-                                1
-                            );
-                            file_put_contents($pageFile, $contents);
-                            $this->info("Inserted use statement for {$resourceName} in " . basename($pageFile));
+                        if (file_exists($pageFile)) {
+                            $contents = file_get_contents($pageFile);
+                            // Only add if the file references the resource and doesn't already have the use statement
+                            if (
+                                strpos($contents, "protected static string \$resource = {$resourceName}::class;") !== false &&
+                                strpos($contents, "use App\\Filament\\Resources\\{$resourceName};") === false
+                            ) {
+                                // Insert use statement after namespace
+                                $contents = preg_replace(
+                                    '/(namespace [^;]+;)/',
+                                    "$1\nuse App\\Filament\\Resources\\{$resourceName};",
+                                    $contents,
+                                    1
+                                );
+                                file_put_contents($pageFile, $contents);
+                                $this->info("Inserted use statement for {$resourceName} in " . basename($pageFile));
+                            }
                         }
                     }
                 }
@@ -385,10 +391,12 @@ class LaraGrapeSetupCommand extends Command
             $modelsPath = base_path('app/Models');
             if (is_dir($modelsPath)) {
                 foreach (glob($modelsPath . '/*.php') as $modelFile) {
-                    $contents = file_get_contents($modelFile);
-                    $contents = str_replace('namespace LaraGrape\\Models;', 'namespace App\\Models;', $contents);
-                    file_put_contents($modelFile, $contents);
-                    $this->info("Updated model namespace in " . basename($modelFile));
+                    if (file_exists($modelFile)) {
+                        $contents = file_get_contents($modelFile);
+                        $contents = str_replace('namespace LaraGrape\\Models;', 'namespace App\\Models;', $contents);
+                        file_put_contents($modelFile, $contents);
+                        $this->info("Updated model namespace in " . basename($modelFile));
+                    }
                 }
             }
             
@@ -396,12 +404,14 @@ class LaraGrapeSetupCommand extends Command
             $controllersPath = base_path('app/Http/Controllers');
             if (is_dir($controllersPath)) {
                 foreach (glob($controllersPath . '/*.php') as $controllerFile) {
-                    $contents = file_get_contents($controllerFile);
-                    $contents = str_replace('namespace LaraGrape\\Http\\Controllers;', 'namespace App\\Http\\Controllers;', $contents);
-                    $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
-                    $contents = str_replace('use LaraGrape\\Services\\', 'use App\\Services\\', $contents);
-                    file_put_contents($controllerFile, $contents);
-                    $this->info("Updated controller namespace and use statements in " . basename($controllerFile));
+                    if (file_exists($controllerFile)) {
+                        $contents = file_get_contents($controllerFile);
+                        $contents = str_replace('namespace LaraGrape\\Http\\Controllers;', 'namespace App\\Http\\Controllers;', $contents);
+                        $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
+                        $contents = str_replace('use LaraGrape\\Services\\', 'use App\\Services\\', $contents);
+                        file_put_contents($controllerFile, $contents);
+                        $this->info("Updated controller namespace and use statements in " . basename($controllerFile));
+                    }
                 }
             }
         }
@@ -410,11 +420,13 @@ class LaraGrapeSetupCommand extends Command
         $servicesPath = base_path('app/Services');
         if (is_dir($servicesPath)) {
             foreach (glob($servicesPath . '/*.php') as $serviceFile) {
-                $contents = file_get_contents($serviceFile);
-                $contents = str_replace('namespace LaraGrape\\Services;', 'namespace App\\Services;', $contents);
-                $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
-                file_put_contents($serviceFile, $contents);
-                $this->info("Updated service namespace and use statements in " . basename($serviceFile));
+                if (file_exists($serviceFile)) {
+                    $contents = file_get_contents($serviceFile);
+                    $contents = str_replace('namespace LaraGrape\\Services;', 'namespace App\\Services;', $contents);
+                    $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
+                    file_put_contents($serviceFile, $contents);
+                    $this->info("Updated service namespace and use statements in " . basename($serviceFile));
+                }
             }
         }
 
@@ -436,12 +448,14 @@ class LaraGrapeSetupCommand extends Command
         $seedersPath = database_path('seeders');
         if (is_dir($seedersPath)) {
             foreach (glob($seedersPath . '/*.php') as $file) {
-                $contents = file_get_contents($file);
-                $contents = str_replace('namespace LaraGrape\\Database\\Seeders;', 'namespace Database\\Seeders;', $contents);
-                $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
-                // Remove 'Lara' prefix from seeder class names
-                $contents = preg_replace('/class Lara([A-Z][A-Za-z0-9_]*Seeder)/', 'class $1Seeder', $contents);
-                file_put_contents($file, $contents);
+                if (file_exists($file)) {
+                    $contents = file_get_contents($file);
+                    $contents = str_replace('namespace LaraGrape\\Database\\Seeders;', 'namespace Database\\Seeders;', $contents);
+                    $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
+                    // Remove 'Lara' prefix from seeder class names
+                    $contents = preg_replace('/class Lara([A-Z][A-Za-z0-9_]*Seeder)/', 'class $1Seeder', $contents);
+                    file_put_contents($file, $contents);
+                }
             }
         }
 
