@@ -18,9 +18,15 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Read wiki config
+        run: |
+          source .wiki-config
+          echo "WIKI_REPO=$WIKI_REPO" >> $GITHUB_ENV
+          echo "WIKI_BRANCH=$WIKI_BRANCH" >> $GITHUB_ENV
+
       - name: Clone wiki repository
         run: |
-          git clone https://x-access-token:${{ secrets.WIKI_TOKEN }}@github.com/Streats22/LaraGrapePackage.wiki.git wiki
+          git clone https://x-access-token:${{ secrets.WIKI_TOKEN }}@${{ env.WIKI_REPO }} wiki
 
       - name: Sync docs to wiki
         run: |
@@ -34,6 +40,6 @@ jobs:
             echo "No changes to commit."
           else
             git commit -m "Sync docs from main repo [skip ci]"
-            git remote set-url origin https://x-access-token:${{ secrets.WIKI_TOKEN }}@github.com/Streats22/LaraGrapePackage.wiki.git
-            git push origin main
+            git remote set-url origin https://x-access-token:${{ secrets.WIKI_TOKEN }}@${{ env.WIKI_REPO }}
+            git push origin ${{ env.WIKI_BRANCH }}
           fi 
