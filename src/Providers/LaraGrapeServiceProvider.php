@@ -206,6 +206,11 @@ class LaraGrapeServiceProvider extends ServiceProvider
                 $packageDir.'/src/Http/Controllers/AdminPageController.php' => app_path('Http/Controllers/AdminPageController.php'),
             ], 'laragrape-admin-controller');
 
+            // Publish Filament components for block previews
+            $this->publishes([
+                $packageDir.'/resources/views/filament/components' => resource_path('views/filament/components'),
+            ], 'laragrape-filament-components');
+
             // Ensure routes include the preview route (already in web.php publish)
         }
     }

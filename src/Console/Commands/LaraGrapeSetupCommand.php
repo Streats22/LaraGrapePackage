@@ -61,6 +61,7 @@ class LaraGrapeSetupCommand extends Command
             'laragrape-sitesettings-resource',
             'laragrape-tailwindconfig-resource',
             'laragrape-admin-controller',
+            'laragrape-filament-components',
         ];
         foreach ($publishTags as $tag) {
             $this->info("Publishing $tag...");

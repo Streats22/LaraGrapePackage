@@ -374,4 +374,4 @@ class LaraTailwindConfigResource extends Resource
             'edit' => Pages\EditTailwindConfig::route('/{record}/edit'),
         ];
     }
-}
+} 

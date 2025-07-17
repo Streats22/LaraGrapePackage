@@ -4,6 +4,7 @@ namespace LaraGrape\Services;
 
 use LaraGrape\Models\CustomBlock;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class BlockService
@@ -98,6 +99,7 @@ class BlockService
     {
         $content = File::get($file->getPathname());
         $filename = $file->getBasename('.blade.php');
+        $category = basename($file->getPath()); // e.g., 'components', 'content', etc.
         
         // Extract block metadata from comments
         $metadata = $this->extractMetadata($content);
@@ -109,10 +111,15 @@ class BlockService
             return null;
         }
         
+        // Create block ID that includes category for proper view path resolution
+        $blockId = $metadata['id'] ?? $filename;
+        $fullBlockId = $category . '/' . $blockId; // e.g., 'components/button'
+        
         return [
-            'id' => $metadata['id'] ?? $filename,
+            'id' => $blockId, // Use simple ID for backward compatibility with frontend
+            'fullId' => $fullBlockId, // Keep full path for internal use
             'label' => $metadata['label'] ?? Str::title(str_replace(['-', '_'], ' ', $filename)),
-            'category' => basename($file->getPath()),
+            'category' => $category,
             'content' => $htmlContent,
             'attributes' => $metadata['attributes'] ?? [],
             'description' => $metadata['description'] ?? '',
@@ -320,7 +327,8 @@ class BlockService
                 $content = File::get($file->getPathname());
                 $metadata = $this->extractMetadata($content);
                 $id = $metadata['id'] ?? $file->getBasename('.blade.php');
-                if ($id === $blockId) {
+                // Check both the simple ID and the filename
+                if ($id === $blockId || $file->getBasename('.blade.php') === $blockId) {
                     return $file->getPathname();
                 }
             }

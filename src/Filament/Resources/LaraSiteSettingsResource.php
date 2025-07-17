@@ -23,7 +23,7 @@ use Filament\Forms\Components\CodeEditor;
 use Filament\Forms\Components\KeyValue;
 use Illuminate\Support\Str;
 
-class LaraSiteSettingsResource extends Resource
+class LaraSiteSettingResource extends Resource
 {
     protected static ?string $model = SiteSettings::class;
 
@@ -435,9 +435,9 @@ console.log("Site loaded!");')
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListSiteSettings::route('/'),
-            'create' => Pages\CreateSiteSettings::route('/create'),
-            'edit' => Pages\EditSiteSettings::route('/{record}/edit'),
+            'index' => Pages\LaraListSiteSettings::route('/'),
+            'create' => Pages\LaraCreateSiteSettings::route('/create'),
+            'edit' => Pages\LaraEditSiteSettings::route('/{record}/edit'),
         ];
     }
 
