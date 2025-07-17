@@ -1,9 +1,9 @@
 <?php
 
-namespace LaraGrape\Console\Commands;
+namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use LaraGrape\Models\TailwindConfig;
+use App\Models\TailwindConfig;
 
 class RebuildTailwindCommand extends Command
 {

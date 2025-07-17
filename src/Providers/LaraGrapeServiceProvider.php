@@ -98,6 +98,11 @@ class LaraGrapeServiceProvider extends ServiceProvider
                 $packageDir.'/src/Services/GrapesJsConverterService.php' => app_path('Services/GrapesJsConverterService.php'),
                 $packageDir.'/src/Services/SiteSettingsService.php' => app_path('Services/SiteSettingsService.php'),
             ], 'LaraGrape-commands');
+            
+            // Publish Console Kernel for command registration
+            $this->publishes([
+                $packageDir.'/src/Console/Kernel.php' => app_path('Console/Kernel.php'),
+            ], 'LaraGrape-console-kernel');
             // Publish web.php
             $this->publishes([
                 $packageDir.'/routes/web.php' => base_path('routes/web.php'),

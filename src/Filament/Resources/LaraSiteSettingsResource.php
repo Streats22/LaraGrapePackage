@@ -23,7 +23,7 @@ use Filament\Forms\Components\CodeEditor;
 use Filament\Forms\Components\KeyValue;
 use Illuminate\Support\Str;
 
-class LaraSiteSettingResource extends Resource
+class LaraSiteSettingsResource extends Resource
 {
     protected static ?string $model = SiteSettings::class;
 

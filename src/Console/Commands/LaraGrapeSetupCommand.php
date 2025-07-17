@@ -62,6 +62,7 @@ class LaraGrapeSetupCommand extends Command
             'laragrape-tailwindconfig-resource',
             'laragrape-admin-controller',
             'laragrape-filament-components',
+            'LaraGrape-console-kernel',
         ];
         foreach ($publishTags as $tag) {
             $this->info("Publishing $tag...");
@@ -88,6 +89,13 @@ class LaraGrapeSetupCommand extends Command
         $this->call('vendor:publish', [
             '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
             '--tag' => 'LaraGrape-commands',
+            '--force' => true,
+        ]);
+        
+        // Publish Console Kernel for command registration
+        $this->call('vendor:publish', [
+            '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+            '--tag' => 'LaraGrape-console-kernel',
             '--force' => true,
         ]);
         // Publish web.php (always force)
@@ -154,6 +162,21 @@ class LaraGrapeSetupCommand extends Command
             $pagesPath = base_path('app/Filament/Pages');
             if (is_dir($pagesPath)) {
                 $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($pagesPath));
+                foreach ($rii as $file) {
+                    if ($file->isFile() && $file->getExtension() === 'php' && file_exists($file->getPathname())) {
+                        $contents = file_get_contents($file->getPathname());
+                        $contents = str_replace('namespace LaraGrape\\Filament\\', 'namespace App\\Filament\\', $contents);
+                        $contents = str_replace('namespace LaraGrape\\', 'namespace App\\', $contents);
+                        $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
+                        file_put_contents($file->getPathname(), $contents);
+                    }
+                }
+            }
+            
+            // Update Filament Resource Pages (including TailwindConfig pages)
+            $resourcePagesPath = base_path('app/Filament/Resources');
+            if (is_dir($resourcePagesPath)) {
+                $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($resourcePagesPath));
                 foreach ($rii as $file) {
                     if ($file->isFile() && $file->getExtension() === 'php' && file_exists($file->getPathname())) {
                         $contents = file_get_contents($file->getPathname());
@@ -440,6 +463,34 @@ class LaraGrapeSetupCommand extends Command
                     $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
                     file_put_contents($serviceFile, $contents);
                     $this->info("Updated service namespace and use statements in " . basename($serviceFile));
+                }
+            }
+        }
+        
+        // Post-process Console Kernel and Commands
+        $consolePath = base_path('app/Console');
+        if (is_dir($consolePath)) {
+            // Update Kernel.php
+            $kernelFile = $consolePath . '/Kernel.php';
+            if (file_exists($kernelFile)) {
+                $contents = file_get_contents($kernelFile);
+                $contents = str_replace('namespace LaraGrape\\Console;', 'namespace App\\Console;', $contents);
+                $contents = str_replace('use LaraGrape\\Console\\Commands\\', 'use App\\Console\\Commands\\', $contents);
+                file_put_contents($kernelFile, $contents);
+                $this->info("Updated Console Kernel namespace");
+            }
+            
+            // Update Commands
+            $commandsPath = $consolePath . '/Commands';
+            if (is_dir($commandsPath)) {
+                foreach (glob($commandsPath . '/*.php') as $commandFile) {
+                    if (file_exists($commandFile)) {
+                        $contents = file_get_contents($commandFile);
+                        $contents = str_replace('namespace LaraGrape\\Console\\Commands;', 'namespace App\\Console\\Commands;', $contents);
+                        $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
+                        file_put_contents($commandFile, $contents);
+                        $this->info("Updated command namespace in " . basename($commandFile));
+                    }
                 }
             }
         }
