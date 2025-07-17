@@ -34,5 +34,6 @@ jobs:
             echo "No changes to commit."
           else
             git commit -m "Sync docs from main repo [skip ci]"
-            git push
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Streats22/LaraGrapePackage.wiki.git
+            git push origin main
           fi 
