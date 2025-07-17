@@ -1,4 +1,4 @@
-name: Sync Docs to Wiki
+name: Sync Wiki Repo to GitHub Wiki
 
 on:
   push:
@@ -28,9 +28,9 @@ jobs:
         run: |
           git clone https://x-access-token:${{ secrets.WIKI_TOKEN }}@${{ env.WIKI_REPO }} wiki
 
-      - name: Sync docs to wiki
+      - name: Sync wiki repo to wiki
         run: |
-          rsync -av --delete docs/ wiki/
+          rsync -av --delete wiki-repo/ wiki/
 
       - name: Commit and push changes
         run: |
