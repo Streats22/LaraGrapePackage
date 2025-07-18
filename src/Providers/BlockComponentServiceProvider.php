@@ -29,11 +29,11 @@ class BlockComponentServiceProvider extends ServiceProvider
      */
     protected function registerBlockComponents(): void
     {
-        $blockService = app(BlockService::class);
-        $blocks = $blockService->getGrapesJsBlocks();
+        try {
+            $blockService = app(BlockService::class);
+            $blocks = $blockService->getGrapesJsBlocks();
 
-        foreach ($blocks as $category => $categoryBlocks) {
-            foreach ($categoryBlocks as $block) {
+            foreach ($blocks as $block) {
                 $componentName = 'blocks.' . $block['id'];
                 
                 // Register the component dynamically
@@ -77,6 +77,9 @@ class BlockComponentServiceProvider extends ServiceProvider
                     }
                 });
             }
+        } catch (\Exception $e) {
+            // Silently ignore errors during package discovery
+            // This can happen when the database is not available or migrations haven't been run
         }
     }
 } 
