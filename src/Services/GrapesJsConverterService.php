@@ -17,15 +17,27 @@ class GrapesJsConverterService
     }
     
     /**
-     * Convert GrapesJS JSON data to Laravel Blade components
+     * Convert GrapesJS JSON data to HTML (simplified approach)
      */
     public function convertToBladeComponents(array $grapesjsData): array
     {
         $html = $grapesjsData['html'] ?? '';
         $css = $grapesjsData['css'] ?? '';
         
-        // Parse the HTML and convert GrapesJS components to Blade components
-        $convertedHtml = $this->parseGrapesJsHtml($html);
+        \Log::info('Converting GrapesJS to HTML', [
+            'html_length' => strlen($html),
+            'css_length' => strlen($css),
+            'html_preview' => substr($html, 0, 500) . '...'
+        ]);
+        
+        // For now, just return the original HTML without conversion
+        // This prevents the Blade component issues
+        $convertedHtml = $html;
+        
+        \Log::info('GrapesJS conversion complete (no conversion applied)', [
+            'converted_html_length' => strlen($convertedHtml),
+            'converted_html_preview' => substr($convertedHtml, 0, 500) . '...'
+        ]);
         
         return [
             'html' => $convertedHtml,
@@ -43,8 +55,19 @@ class GrapesJsConverterService
         $html = $bladeData['html'] ?? '';
         $css = $bladeData['css'] ?? '';
         
+        \Log::info('Converting Blade to GrapesJS', [
+            'html_length' => strlen($html),
+            'css_length' => strlen($css),
+            'html_preview' => substr($html, 0, 200) . '...'
+        ]);
+        
         // Convert Blade components back to GrapesJS format
         $convertedHtml = $this->parseBladeToGrapesJs($html);
+        
+        \Log::info('Blade to GrapesJS conversion complete', [
+            'converted_html_length' => strlen($convertedHtml),
+            'converted_html_preview' => substr($convertedHtml, 0, 200) . '...'
+        ]);
         
         return [
             'html' => $convertedHtml,
@@ -58,6 +81,11 @@ class GrapesJsConverterService
      */
     protected function parseGrapesJsHtml(string $html): string
     {
+        \Log::info('Parsing GrapesJS HTML for conversion', [
+            'html_length' => strlen($html),
+            'html_preview' => substr($html, 0, 300) . '...'
+        ]);
+        
         // Get all available blocks for reference
         $blocks = $this->blockService->getGrapesJsBlocks();
         $blockMap = [];
@@ -65,6 +93,11 @@ class GrapesJsConverterService
         foreach ($blocks as $block) {
             $blockMap[$block['id']] = $block;
         }
+        
+        \Log::info('Available blocks for conversion', [
+            'block_count' => count($blocks),
+            'block_ids' => array_keys($blockMap)
+        ]);
         
         // Convert common GrapesJS patterns to Blade components
         $convertedHtml = $html;
@@ -86,6 +119,14 @@ class GrapesJsConverterService
         
         // Convert image blocks
         $convertedHtml = $this->convertImageBlocks($convertedHtml);
+        
+        // Try to detect and convert blocks by content patterns
+        $convertedHtml = $this->convertBlocksByContent($convertedHtml, $blockMap);
+        
+        \Log::info('GrapesJS HTML parsing complete', [
+            'converted_html_length' => strlen($convertedHtml),
+            'converted_html_preview' => substr($convertedHtml, 0, 300) . '...'
+        ]);
         
         return $convertedHtml;
     }
@@ -231,6 +272,29 @@ class GrapesJsConverterService
             
             return "<x-blocks.image src=\"{$src}\" alt=\"{$alt}\" class=\"{$classes}\" />";
         }, $html);
+    }
+    
+    /**
+     * Convert blocks by content patterns (more robust approach)
+     */
+    protected function convertBlocksByContent(string $html, array $blockMap): string
+    {
+        $convertedHtml = $html;
+        
+        // For now, let's just log what we find and return the original HTML
+        // This is a placeholder for a more sophisticated content-based detection system
+        \Log::info('Content-based block detection', [
+            'html_length' => strlen($html),
+            'block_map_keys' => array_keys($blockMap)
+        ]);
+        
+        // TODO: Implement content-based block detection
+        // This would involve:
+        // 1. Parsing the HTML to find elements
+        // 2. Comparing their content/structure with known block patterns
+        // 3. Converting matches to appropriate Blade components
+        
+        return $convertedHtml;
     }
     
     /**
@@ -410,8 +474,19 @@ class GrapesJsConverterService
      */
     public function processForSaving(array $grapesjsData): array
     {
+        \Log::info('Processing GrapesJS data for saving', [
+            'html_length' => strlen($grapesjsData['html'] ?? ''),
+            'css_length' => strlen($grapesjsData['css'] ?? ''),
+            'html_preview' => substr($grapesjsData['html'] ?? '', 0, 500) . '...'
+        ]);
+        
         // Convert to Blade components for storage
         $converted = $this->convertToBladeComponents($grapesjsData);
+        
+        \Log::info('GrapesJS data converted for saving', [
+            'converted_html_length' => strlen($converted['html']),
+            'converted_html_preview' => substr($converted['html'], 0, 500) . '...'
+        ]);
         
         return [
             'html' => $converted['html'],
@@ -427,32 +502,40 @@ class GrapesJsConverterService
      */
     public function processForEditing(array $savedData): array
     {
+        \Log::info('Processing data for editing', [
+            'savedData_keys' => array_keys($savedData),
+            'has_original_grapesjs' => isset($savedData['original_grapesjs']),
+            'has_html' => isset($savedData['html']),
+            'has_css' => isset($savedData['css'])
+        ]);
+        
         // If we have original GrapesJS data, use that for editing
         if (isset($savedData['original_grapesjs'])) {
+            \Log::info('Using original GrapesJS data for editing');
             return $savedData['original_grapesjs'];
         }
         
         // Otherwise, convert Blade components back to GrapesJS format
+        \Log::info('Converting Blade components back to GrapesJS format');
         return $this->convertToGrapesJs($savedData);
     }
 
     /**
-     * Convert processed GrapesJS data to Blade code for live rendering.
-     * Recognized blocks are mapped to Blade components, unknown blocks fallback to raw HTML.
+     * Convert processed GrapesJS data to HTML for live rendering.
      */
     public function convertToBlade(array $processedData): string
     {
-        // Example: If you have a block mapping system, you would parse $processedData['html']
-        // and replace recognized blocks with Blade component calls.
-        // For now, just wrap the HTML in a Blade comment and return as fallback.
         $html = $processedData['html'] ?? '';
         $css = $processedData['css'] ?? '';
-        $blade = '';
+        $output = '';
+        
         if (!empty($css)) {
-            $blade .= "<style>{$css}</style>\n";
+            $output .= "<style>{$css}</style>\n";
         }
-        $blade .= "{{-- GrapesJS raw HTML fallback --}}\n";
-        $blade .= $html;
-        return $blade;
+        
+        // Return the HTML directly without Blade components
+        $output .= $html;
+        
+        return $output;
     }
 }

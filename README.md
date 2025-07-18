@@ -115,6 +115,51 @@ php artisan laragrape:setup --migrate
 
 ---
 
+## 🔄 Update Command
+
+The `laragrape:update` command allows you to selectively update LaraGrape components without doing a full installation:
+
+```bash
+php artisan laragrape:update [options]
+```
+
+### Available Options
+
+| Option | Description |
+|--------|-------------|
+| `--all` | Update all components |
+| `--config` | Update configuration files only |
+| `--views` | Update view files only |
+| `--migrations` | Update migration files only |
+| `--filament` | Update Filament components only |
+| `--assets` | Update frontend assets only |
+| `--controllers` | Update controllers only |
+| `--services` | Update services only |
+| `--routes` | Update routes only |
+| `--models` | Update models only |
+| `--seeders` | Update seeders only |
+| `--console` | Update console commands only |
+| `--force` | Overwrite existing files without asking |
+
+### Examples
+```bash
+# Interactive update (select components from menu)
+php artisan laragrape:update
+
+# Update all components
+php artisan laragrape:update --all
+
+# Update specific components
+php artisan laragrape:update --filament --assets
+
+# Force update without confirmation
+php artisan laragrape:update --all --force
+```
+
+**Note**: The update command doesn't install Filament (assumes it's already installed). Use the setup command for initial installation.
+
+---
+
 ## 🎯 Key Features
 
 ### Visual Page Builder
@@ -142,6 +187,7 @@ php artisan laragrape:setup --migrate
 ## 📚 Documentation
 
 - **[Setup Guide](LARALGRAPE_SETUP.md)** - Complete installation and configuration
+- **[Update Command](docs/commands/update-command.md)** - Selective component updates
 - **[Block System](BLOCKS_README.md)** - Dynamic block loading and management
 - **[Component System](COMPONENTS_README.md)** - Modular component architecture
 - **[Custom Blocks](CUSTOM_BLOCKS_README.md)** - Visual block builder guide

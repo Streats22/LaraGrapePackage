@@ -129,6 +129,8 @@
 
             document.addEventListener('DOMContentLoaded', function() {
                 console.log('GrapesJS Editor initial data:', @json($state));
+                console.log('GrapesJS Editor blocks count:', @json(count($blocks)));
+                console.log('GrapesJS Editor blocks:', @json($blocks));
                 
                 const editor = new window.LaraGrapeGrapesJsEditor({
                     containerId: '{{ $id }}',

@@ -1,8 +1,9 @@
 <?php
 
-use App\Http\Controllers\PageController;
+use LaraGrape\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AdminPageController;
+use LaraGrape\Http\Controllers\AdminPageController;
+use LaraGrape\Models\Page;
 
 // Homepage
 Route::get('/', [PageController::class, 'home'])->name('home');
@@ -22,4 +23,21 @@ Route::post('/admin/pages/{page}/save-grapesjs', [AdminPageController::class, 's
     ->name('admin.page.save-grapesjs')
     ->middleware(['auth']);
 
-Route::get('/admin/block-preview/{blockId}', [\App\Http\Controllers\AdminPageController::class, 'blockPreview'])->name('admin.block-preview');
+Route::get('/admin/block-preview/{blockId}', [AdminPageController::class, 'blockPreview'])->name('admin.block-preview');
+
+// Debug route for testing GrapesJS data flow
+Route::get('/debug/grapesjs-data/{page}', function ($page) {
+    $page = Page::find($page);
+    if (!$page) {
+        return response()->json(['error' => 'Page not found']);
+    }
+    
+    return response()->json([
+        'page_id' => $page->id,
+        'grapesjs_data' => $page->grapesjs_data,
+        'blade_content' => $page->blade_content,
+        'has_original_grapesjs' => isset($page->grapesjs_data['original_grapesjs']),
+        'original_grapesjs_keys' => isset($page->grapesjs_data['original_grapesjs']) ? array_keys($page->grapesjs_data['original_grapesjs']) : [],
+        'grapesjs_data_keys' => array_keys($page->grapesjs_data ?? [])
+    ]);
+})->name('debug.grapesjs-data');
