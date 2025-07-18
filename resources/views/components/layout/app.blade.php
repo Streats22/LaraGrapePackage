@@ -113,23 +113,12 @@
             window.grapesjsBlocks = @json($grapesjsBlocks);
             window.pageGrapesjsData = @json($editingData ?? []);
             window.saveGrapesjsUrl = "{{ route('page.save-grapesjs', ['slug' => $page->slug]) }}";
-            function initializeFrontendEditor() {
-                if (typeof grapesjs !== 'undefined' && typeof window.LaraGrapeGrapesJsEditor !== 'undefined') {
-                    window.frontendGrapesJsEditor = new window.LaraGrapeGrapesJsEditor({
-                        containerId: 'grapejs-frontend-editor',
-                        mode: 'frontend',
-                        saveUrl: window.saveGrapesjsUrl,
-                        blocks: window.grapesjsBlocks,
-                        initialData: window.pageGrapesjsData
-                    });
-                } else {
-                    setTimeout(initializeFrontendEditor, 200);
-                }
-            }
+            
+            // Initialize the frontend editor when the page is ready
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initializeFrontendEditor);
+                document.addEventListener('DOMContentLoaded', window.initializeFrontendEditor);
             } else {
-                initializeFrontendEditor();
+                window.initializeFrontendEditor();
             }
         </script>
     @endif

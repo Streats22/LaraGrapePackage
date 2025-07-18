@@ -119,6 +119,24 @@ Alpine.data('grapejsEditBar', () => ({
     }
 }));
 
+// Frontend GrapesJS Editor Initialization
+function initializeFrontendEditor() {
+    if (typeof grapesjs !== 'undefined' && typeof window.LaraGrapeGrapesJsEditor !== 'undefined') {
+        window.frontendGrapesJsEditor = new window.LaraGrapeGrapesJsEditor({
+            containerId: 'grapejs-frontend-editor',
+            mode: 'frontend',
+            saveUrl: window.saveGrapesjsUrl,
+            blocks: window.grapesjsBlocks,
+            initialData: window.pageGrapesjsData
+        });
+    } else {
+        setTimeout(initializeFrontendEditor, 200);
+    }
+}
+
+// Make the function globally available
+window.initializeFrontendEditor = initializeFrontendEditor;
+
 // Start Alpine
 Alpine.start();
 
