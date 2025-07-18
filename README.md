@@ -115,6 +115,58 @@ php artisan laragrape:setup --migrate
 
 ---
 
+## 🔄 Update Command
+
+The `laragrape:update` command allows you to selectively update LaraGrape components without doing a full installation:
+
+```bash
+php artisan laragrape:update [options]
+```
+
+### Available Options
+
+| Option | Description |
+|--------|-------------|
+| `--all` | Update all components |
+| `--config` | Update configuration files only |
+| `--views` | Update view files only |
+| `--migrations` | Update migration files only |
+| `--filament` | Update Filament components only |
+| `--assets` | Update frontend assets only |
+| `--controllers` | Update controllers only |
+| `--services` | Update services only |
+| `--routes` | Update routes only |
+| `--models` | Update models only |
+| `--seeders` | Update seeders only |
+| `--console` | Update console commands only |
+| `--run-migrate` | Run migrations after updating |
+| `--run-seed` | Run seeders after updating |
+| `--force` | Overwrite existing files without asking |
+
+### Examples
+```bash
+# Interactive update (select components from menu)
+php artisan laragrape:update
+
+# Update all components
+php artisan laragrape:update --all
+
+# Update specific components
+php artisan laragrape:update --filament --assets
+
+# Update with database operations
+php artisan laragrape:update --all --run-migrate
+php artisan laragrape:update --all --run-seed
+php artisan laragrape:update --all --run-migrate --run-seed
+
+# Force update without confirmation
+php artisan laragrape:update --all --force
+```
+
+**Note**: The update command doesn't install Filament (assumes it's already installed). Use the setup command for initial installation.
+
+---
+
 ## 🎯 Key Features
 
 ### Visual Page Builder
@@ -141,23 +193,12 @@ php artisan laragrape:setup --migrate
 
 ## 📚 Documentation
 
-📖 **Complete documentation is available in our [Wiki](docs/README.md)**
-
-### Quick Links
-- **[Installation Guide](docs/installation.md)** - Complete setup and configuration
-- **[Block System](docs/blocks/overview.md)** - Dynamic block loading and management
-- **[API Reference](docs/api/overview.md)** - Service classes and methods
-- **[Troubleshooting](docs/troubleshooting/common-issues.md)** - Common issues and solutions
-
-### Documentation Sections
-- **[Getting Started](docs/README.md#🛠️-getting-started)** - Installation and first steps
-- **[Core Systems](docs/README.md#🧩-core-systems)** - Blocks, components, and settings
-- **[Visual Builder](docs/README.md#🎨-visual-builder)** - GrapesJS integration
-- **[Admin Panel](docs/README.md#🎯-admin-panel)** - Filament resources
-- **[Development](docs/README.md#🔧-development)** - API, customization, best practices
-- **[Theming](docs/README.md#🎨-theming--styling)** - Tailwind CSS and styling
-- **[Troubleshooting](docs/README.md#🔍-troubleshooting)** - Common issues and debugging
-- **[Reference](docs/README.md#📖-reference)** - Configuration, commands, database
+- **[Setup Guide](LARALGRAPE_SETUP.md)** - Complete installation and configuration
+- **[Block System](BLOCKS_README.md)** - Dynamic block loading and management
+- **[Component System](COMPONENTS_README.md)** - Modular component architecture
+- **[Custom Blocks](CUSTOM_BLOCKS_README.md)** - Visual block builder guide
+- **[API Documentation](API_README.md)** - Service classes and methods
+- **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 
 ---
 
@@ -198,7 +239,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ### Development Setup
 ```bash
 # Clone the repository
-git clone https://github.com/Streats22/LaraGrapePackage
+git clone https://github.com/your-org/laragrape.git
 
 # Install dependencies
 composer install
@@ -218,8 +259,8 @@ This package is open-sourced software licensed under the [MIT license](LICENSE).
 
 ## 🆘 Support
 
-- **Documentation**: Check our [Wiki](https://github.com/Streats22/LaraGrapePackage/wiki)
-- **Issues**: Report bugs on [GitHub]((https://github.com/Streats22/LaraGrapePackage/issues)
+- **Documentation**: Check the docs in this repository
+- **Issues**: Report bugs on GitHub
 - **Discussions**: Join our community discussions
 
 ---

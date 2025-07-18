@@ -1,6 +1,12 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
 
+// Create a store for GrapesJS editing state
+Alpine.store('grapejs', {
+    isEditing: false,
+    isSaving: false
+});
+
 // Register Alpine components
 Alpine.data('siteLayout', () => ({
     mobileMenuOpen: false,
@@ -27,6 +33,10 @@ Alpine.data('grapejsEditBar', () => ({
     
     init() {
         console.log('Alpine grapejsEditBar initialized');
+        // Sync local state with store
+        this.isEditing = this.$store.grapejs.isEditing;
+        this.isSaving = this.$store.grapejs.isSaving;
+        
         // Wait for the frontend editor to be initialized
         this.waitForEditor();
     },
@@ -37,39 +47,40 @@ Alpine.data('grapejsEditBar', () => ({
             console.log('Frontend GrapesJS editor found:', this.grapejsEditor);
         } else {
             console.log('Frontend GrapesJS editor not found yet, retrying...');
-            setTimeout(() => this.waitForEditor(), 100);
+            // Only retry if we're still in editing mode
+            if (this.isEditing) {
+                setTimeout(() => this.waitForEditor(), 100);
+            }
         }
     },
     
     startEditing() {
         console.log('Starting editing...');
         this.isEditing = true;
+        this.$store.grapejs.isEditing = true;
         this.originalScroll = window.scrollY;
         
-        // Hide page content and show editor
-        const pageContent = document.querySelector('.page-content');
-        const editorWrapper = document.querySelector('.grapejs-editor-wrapper');
-        
-        if (pageContent) pageContent.style.display = 'none';
-        if (editorWrapper) editorWrapper.style.display = 'block';
-        
-        // Make sure we have the editor instance
-        if (!this.grapejsEditor) {
+        // Initialize editor when entering edit mode
+        this.$nextTick(() => {
+            if (!window.editorInitialized) {
+                console.log('Initializing GrapesJS editor...');
+                window.initializeFrontendEditor();
+                window.editorInitialized = true;
+            }
+            
+            // Wait for editor to be ready
             this.waitForEditor();
-        }
+        });
     },
     
     exitEditing() {
         console.log('Exiting editing...');
         this.isEditing = false;
+        this.$store.grapejs.isEditing = false;
         this.saveStatus = '';
         
-        // Show page content and hide editor
-        const pageContent = document.querySelector('.page-content');
-        const editorWrapper = document.querySelector('.grapejs-editor-wrapper');
-        
-        if (pageContent) pageContent.style.display = '';
-        if (editorWrapper) editorWrapper.style.display = 'none';
+        // Reset editor reference when exiting
+        this.grapejsEditor = null;
         
         // Restore scroll position
         window.scrollTo(0, this.originalScroll);
@@ -86,6 +97,7 @@ Alpine.data('grapejsEditBar', () => ({
         }
         
         this.isSaving = true;
+        this.$store.grapejs.isSaving = true;
         
         try {
             console.log('Calling grapejsEditor.saveContent()...');
@@ -97,6 +109,7 @@ Alpine.data('grapejsEditBar', () => ({
             this.showSaveStatus('error', 'Save failed: ' + error.message);
         } finally {
             this.isSaving = false;
+            this.$store.grapejs.isSaving = false;
         }
     },
     
@@ -118,6 +131,24 @@ Alpine.data('grapejsEditBar', () => ({
         }
     }
 }));
+
+// Frontend GrapesJS Editor Initialization
+function initializeFrontendEditor() {
+    if (typeof grapesjs !== 'undefined' && typeof window.LaraGrapeGrapesJsEditor !== 'undefined') {
+        window.frontendGrapesJsEditor = new window.LaraGrapeGrapesJsEditor({
+            containerId: 'grapejs-frontend-editor',
+            mode: 'frontend',
+            saveUrl: window.saveGrapesjsUrl,
+            blocks: window.grapesjsBlocks,
+            initialData: window.pageGrapesjsData
+        });
+    } else {
+        setTimeout(initializeFrontendEditor, 200);
+    }
+}
+
+// Make the function globally available
+window.initializeFrontendEditor = initializeFrontendEditor;
 
 // Start Alpine
 Alpine.start();

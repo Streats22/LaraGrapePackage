@@ -35,11 +35,34 @@ class GrapesJsEditor extends Field
         
         // Process the state for editing when the form is filled
         $this->afterStateHydrated(function ($state) {
+            \Log::info('GrapesJS Editor state hydration', [
+                'state_type' => gettype($state),
+                'state_keys' => is_array($state) ? array_keys($state) : 'not_array',
+                'has_grapesjs_data' => is_array($state) && isset($state['grapesjs_data']),
+                'grapesjs_data_keys' => is_array($state) && isset($state['grapesjs_data']) ? array_keys($state['grapesjs_data']) : []
+            ]);
+            
             // If we have GrapesJS data, convert it back to original format for editing
             if (is_array($state) && isset($state['grapesjs_data']) && is_array($state['grapesjs_data'])) {
                 $converterService = app(GrapesJsConverterService::class);
                 $processedData = $converterService->processForEditing($state['grapesjs_data']);
+                \Log::info('Processed data for editing', [
+                    'processed_data_keys' => array_keys($processedData),
+                    'has_html' => isset($processedData['html']),
+                    'has_css' => isset($processedData['css'])
+                ]);
                 // Return the processed data directly for the editor
+                return $processedData;
+            }
+            // If the state itself is GrapesJS data (direct format)
+            elseif (is_array($state) && (isset($state['html']) || isset($state['css']))) {
+                $converterService = app(GrapesJsConverterService::class);
+                $processedData = $converterService->processForEditing($state);
+                \Log::info('Processed direct state data for editing', [
+                    'processed_data_keys' => array_keys($processedData),
+                    'has_html' => isset($processedData['html']),
+                    'has_css' => isset($processedData['css'])
+                ]);
                 return $processedData;
             }
             return $state;

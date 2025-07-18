@@ -5,6 +5,7 @@ namespace LaraGrape\Providers;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Support\ServiceProvider;
+use LaraGrape\Providers\BlockComponentServiceProvider;
 
 class LaraGrapeServiceProvider extends ServiceProvider
 {
@@ -21,6 +22,9 @@ class LaraGrapeServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register the block component service provider
+        $this->app->register(BlockComponentServiceProvider::class);
+        
         // GrapesJS is now loaded directly in the Blade view
         // No need to register additional assets here
 
@@ -84,6 +88,7 @@ class LaraGrapeServiceProvider extends ServiceProvider
             ], 'LaraGrape-controllers');
             $this->commands([
                 \LaraGrape\Console\Commands\LaraGrapeSetupCommand::class,
+                \LaraGrape\Console\Commands\LaraGrapeUpdateCommand::class,
             ]);
             // Publish CSS assets (site.css, app.css, filament-grapesjs-editor.css)
             $this->publishes([

@@ -65,6 +65,19 @@ class LaraGrapeGrapesJsEditor {
             return;
         }
         
+        // Ensure the editor container is visible for initialization
+        const editorWrapper = editorElement.closest('.grapejs-editor-wrapper');
+        if (editorWrapper && editorWrapper.style.display === 'none') {
+            console.log('Making editor container visible for initialization');
+            editorWrapper.style.display = 'block';
+            // Hide it again after initialization
+            setTimeout(() => {
+                if (editorWrapper && !this.options.isDisabled) {
+                    editorWrapper.style.display = 'none';
+                }
+            }, 100);
+        }
+        
         // Add PostCSS parser plugin for better CSS variable support
         const plugins = [];
         if (typeof parserPostCSS !== 'undefined') {
@@ -133,7 +146,7 @@ class LaraGrapeGrapesJsEditor {
         let html = null;
         let css = null;
         
-        if (data) {
+        if (data && Object.keys(data).length > 0) {
             // If data has html and css directly (from original_grapesjs)
             if (data.html && data.css) {
                 html = data.html;
@@ -162,11 +175,12 @@ class LaraGrapeGrapesJsEditor {
             }
         }
         
-        if (html) {
+        // Only load content if we have actual data
+        if (html && html.trim() !== '') {
             this.editor.setComponents(html);
         }
         
-        if (css) {
+        if (css && css.trim() !== '') {
             this.editor.setStyle(css);
         }
     }

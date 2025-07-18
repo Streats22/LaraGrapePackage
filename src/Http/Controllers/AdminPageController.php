@@ -45,6 +45,11 @@ class AdminPageController extends Controller
             // Process the data for saving (convert to Blade components if needed)
             $processedData = $this->converterService->processForSaving($grapesjsData);
             
+            // Ensure original GrapesJS data is preserved for editing
+            if (!isset($processedData['original_grapesjs'])) {
+                $processedData['original_grapesjs'] = $grapesjsData;
+            }
+            
             // Convert to Blade content for frontend rendering
             $bladeContent = $this->converterService->convertToBlade($processedData);
             

@@ -5,6 +5,7 @@ namespace LaraGrape\Services;
 use LaraGrape\Models\CustomBlock;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class BlockService
@@ -46,26 +47,31 @@ class BlockService
         }
         
         // Get custom blocks from database
-        $customBlocks = CustomBlock::active()->ordered()->get();
-        
-        foreach ($customBlocks as $customBlock) {
-            $category = $customBlock->category;
+        try {
+            $customBlocks = CustomBlock::active()->ordered()->get();
             
-            if (!isset($blocks[$category])) {
-                $blocks[$category] = [];
+            foreach ($customBlocks as $customBlock) {
+                $category = $customBlock->category;
+                
+                if (!isset($blocks[$category])) {
+                    $blocks[$category] = [];
+                }
+                
+                $blocks[$category][] = [
+                    'id' => 'custom-' . $customBlock->slug,
+                    'label' => $customBlock->name,
+                    'category' => $category,
+                    'content' => $customBlock->getCompleteContent(),
+                    'attributes' => $customBlock->attributes ?? [],
+                    'description' => $customBlock->description,
+                    'icon' => $customBlock->icon,
+                    'is_custom' => true,
+                    'custom_block_id' => $customBlock->id,
+                ];
             }
-            
-            $blocks[$category][] = [
-                'id' => 'custom-' . $customBlock->slug,
-                'label' => $customBlock->name,
-                'category' => $category,
-                'content' => $customBlock->getCompleteContent(),
-                'attributes' => $customBlock->attributes ?? [],
-                'description' => $customBlock->description,
-                'icon' => $customBlock->icon,
-                'is_custom' => true,
-                'custom_block_id' => $customBlock->id,
-            ];
+        } catch (\Exception $e) {
+            // Silently ignore database errors during package discovery
+            // This can happen when migrations haven't been run yet
         }
         
         return $blocks;
