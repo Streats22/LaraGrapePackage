@@ -10,18 +10,11 @@
 async function fetchBlockPreview(blockId) {
     const url = `/admin/block-preview/${blockId}`;
     try {
-        console.log('Fetching block preview for:', blockId, 'from:', url);
         const response = await fetch(url, { credentials: 'same-origin' });
-        if (!response.ok) {
-            console.error('Block preview failed for:', blockId, 'Status:', response.status);
-            throw new Error(`Failed to fetch block preview: ${response.status} ${response.statusText}`);
-        }
-        const html = await response.text();
-        console.log('Block preview loaded successfully for:', blockId);
-        return html;
+        if (!response.ok) throw new Error('Failed to fetch block preview');
+        return await response.text();
     } catch (e) {
-        console.error('Block preview error for:', blockId, 'Error:', e.message);
-        return `<div style='color:red; padding: 10px; border: 1px solid red;'>Preview error for ${blockId}: ${e.message}</div>`;
+        return `<div style='color:red;'>Preview error: ${e.message}</div>`;
     }
 }
 
@@ -39,15 +32,6 @@ class LaraGrapeGrapesJsEditor {
             onSave: null, // custom save handler
             ...options
         };
-        
-        console.log('LaraGrapeGrapesJsEditor constructor called with options:', {
-            containerId: this.options.containerId,
-            mode: this.options.mode,
-            blocksCount: this.options.blocks.length,
-            hasInitialData: !!this.options.initialData,
-            initialDataKeys: this.options.initialData ? Object.keys(this.options.initialData) : [],
-            isDisabled: this.options.isDisabled
-        });
         
         this.editor = null;
         this.wrapper = null;
@@ -91,38 +75,15 @@ class LaraGrapeGrapesJsEditor {
         
         // Instead of using static blocks, fetch previews dynamically
         const blockManagerBlocks = [];
-        console.log('Loading blocks:', this.options.blocks.length, 'blocks');
-        
         for (const block of this.options.blocks) {
-            try {
-                // Only fetch preview for file-based blocks (not custom or dynamic blocks)
-                if (block.id && !block.is_custom) {
-                    console.log('Fetching preview for block:', block.id);
-                    const html = await fetchBlockPreview(block.id);
-                    blockManagerBlocks.push({ ...block, content: html });
-                } else {
-                    console.log('Using static content for block:', block.id || 'custom block');
-                    // For custom blocks or blocks without ID, use their content directly
-                    blockManagerBlocks.push(block);
-                }
-            } catch (error) {
-                console.error('Error loading block:', block.id, error);
-                // Add block with error fallback content
-                blockManagerBlocks.push({
-                    ...block,
-                    content: `<div style='color:red; padding: 10px; border: 1px solid red;'>Error loading block: ${block.id || 'unknown'}</div>`
-                });
+            // Only fetch preview for file-based blocks (not custom or dynamic blocks)
+            if (block.id && !block.is_custom) {
+                const html = await fetchBlockPreview(block.id);
+                blockManagerBlocks.push({ ...block, content: html });
+            } else {
+                blockManagerBlocks.push(block);
             }
         }
-        
-        console.log('Loaded blocks:', blockManagerBlocks.length, 'blocks');
-        
-        console.log('Initializing GrapesJS editor with options:', {
-            container: editorElement,
-            height: this.options.height,
-            blocksCount: blockManagerBlocks.length,
-            pluginsCount: plugins.length
-        });
         
         this.editor = grapesjs.init({
             container: editorElement,
@@ -142,16 +103,12 @@ class LaraGrapeGrapesJsEditor {
             plugins,
         });
         
-        console.log('GrapesJS editor initialized successfully');
-        
         // Check if disabled before loading content
         if (this.options.isDisabled) {
             this.editor.Commands.run('core:canvas-clear');
         } else {
-            // Load existing content after a short delay to ensure editor is ready
-            setTimeout(() => {
-                this.loadExistingContent();
-            }, 50);
+            // Load existing content
+            this.loadExistingContent();
         }
         
         // Setup change listeners
@@ -162,12 +119,7 @@ class LaraGrapeGrapesJsEditor {
         
         // Refresh the editor and inject styles
         setTimeout(() => {
-            console.log('Refreshing editor...');
             this.editor.refresh();
-            
-            // Re-verify components after refresh
-            const components = this.editor.getComponents();
-            console.log('After refresh, editor has', components.length, 'components');
         }, 100);
         setTimeout(() => {
             injectStylesIntoGrapesJsIframe(this.editor, window.grapesjsCanvasStyles);
@@ -176,30 +128,26 @@ class LaraGrapeGrapesJsEditor {
 
     loadExistingContent() {
         const data = this.options.initialData;
-        console.log('Loading existing content with data:', data);
         
         // Handle different data structures
         let html = null;
         let css = null;
         
-        if (data) {
+        if (data && Object.keys(data).length > 0) {
             // If data has html and css directly (from original_grapesjs)
             if (data.html && data.css) {
                 html = data.html;
                 css = data.css;
-                console.log('Found direct html/css data');
             }
             // If data has grapesjs_data with original_grapesjs
             else if (data.grapesjs_data && data.grapesjs_data.original_grapesjs) {
                 html = data.grapesjs_data.original_grapesjs.html;
                 css = data.grapesjs_data.original_grapesjs.css;
-                console.log('Found grapesjs_data with original_grapesjs');
             }
             // If data has grapesjs_data with html and css directly
             else if (data.grapesjs_data && data.grapesjs_data.html) {
                 html = data.grapesjs_data.html;
                 css = data.grapesjs_data.css;
-                console.log('Found grapesjs_data with direct html/css');
             }
             // If data is wrapped in grapesjs_data object (from Filament form)
             else if (data.grapesjs_data) {
@@ -207,56 +155,25 @@ class LaraGrapeGrapesJsEditor {
                 if (grapesjsData.original_grapesjs) {
                     html = grapesjsData.original_grapesjs.html;
                     css = grapesjsData.original_grapesjs.css;
-                    console.log('Found nested grapesjs_data with original_grapesjs');
                 } else if (grapesjsData.html) {
                     html = grapesjsData.html;
                     css = grapesjsData.css;
-                    console.log('Found nested grapesjs_data with direct html/css');
                 }
             }
         }
         
-        console.log('Loading content:', {
-            hasHtml: !!html,
-            hasCss: !!css,
-            htmlLength: html ? html.length : 0,
-            cssLength: css ? css.length : 0
-        });
-        
-        if (html) {
-            console.log('Setting components with HTML:', html.substring(0, 200) + '...');
-            try {
-                this.editor.setComponents(html);
-                console.log('Components set successfully');
-                
-                // Verify components were loaded
-                const components = this.editor.getComponents();
-                console.log('Editor now has', components.length, 'components');
-            } catch (error) {
-                console.error('Error setting components:', error);
-            }
+        // Only load content if we have actual data
+        if (html && html.trim() !== '') {
+            this.editor.setComponents(html);
         }
         
-        if (css) {
-            console.log('Setting CSS styles');
-            try {
-                this.editor.setStyle(css);
-                console.log('CSS styles set successfully');
-            } catch (error) {
-                console.error('Error setting CSS:', error);
-            }
+        if (css && css.trim() !== '') {
+            this.editor.setStyle(css);
         }
     }
 
     setupChangeListeners() {
-        let isInitializing = true;
-        
         const updateState = () => {
-            if (isInitializing) {
-                console.log('Skipping state update during initialization');
-                return;
-            }
-            
             if (this.options.mode === 'backend') {
                 this.updateFilamentFormState();
             }
@@ -274,12 +191,6 @@ class LaraGrapeGrapesJsEditor {
         this.editor.on('canvas:drop', updateState);
         this.editor.on('canvas:dragend', updateState);
         this.editor.on('change', updateState);
-        
-        // Mark initialization as complete after a delay
-        setTimeout(() => {
-            isInitializing = false;
-            console.log('GrapesJS editor initialization complete, change listeners now active');
-        }, 1000);
     }
 
     updateFilamentFormState(data = null) {
@@ -346,61 +257,12 @@ class LaraGrapeGrapesJsEditor {
         }
     }
 
-    syncToFormBeforeSubmit() {
-        console.log('Syncing GrapesJS data to form before submit...');
-        this.updateFilamentFormState();
-        
-        // Additional sync for Filament forms
-        const form = this.wrapper.closest('form');
-        if (form) {
-            // Force update the form state
-            const html = this.editor.getHtml();
-            const css = this.editor.getCss();
-            const formData = {
-                grapesjs_data: {
-                    html: html,
-                    css: css,
-                    data: this.editor.getProjectData(),
-                    last_updated: new Date().toISOString(),
-                    synced_before_submit: true
-                }
-            };
-            
-            // Update any hidden inputs
-            const hiddenInputs = form.querySelectorAll(`input[name="${this.options.statePath}"], input[type="hidden"]`);
-            hiddenInputs.forEach(input => {
-                input.value = JSON.stringify(formData);
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-                input.dispatchEvent(new Event('change', { bubbles: true }));
-            });
-            
-            // Trigger Livewire events if available (using modern API)
-            if (window.Livewire) {
-                // Try modern Livewire API first
-                if (window.Livewire.dispatch) {
-                    window.Livewire.dispatch('grapesjs-synced', { detail: formData });
-                } else if (window.Livewire.emit) {
-                    // Fallback to older API if available
-                    window.Livewire.emit('grapesjs-synced', formData);
-                }
-            }
-            
-            console.log('GrapesJS data synced successfully');
-        }
-    }
-
     async saveContent() {
         if (this.options.mode === 'backend') {
             // Backend: Make AJAX request to save endpoint
             const html = this.editor.getHtml();
             const css = this.editor.getCss();
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            
-            console.log('Saving GrapesJS content:', {
-                htmlLength: html.length,
-                cssLength: css.length,
-                hasCsrfToken: !!csrfToken
-            });
             
             if (!csrfToken) {
                 alert('CSRF token not found. Please refresh the page and try again.');
@@ -445,10 +307,8 @@ class LaraGrapeGrapesJsEditor {
                 });
                 
                 const result = await response.json();
-                console.log('Save response:', result);
                 
                 if (response.ok && result.success) {
-                    console.log('Save successful');
                     this.showSaveStatus('success', result.message || 'Page builder content saved!');
                     
                     // Update the Filament form state with the saved data
@@ -475,7 +335,6 @@ class LaraGrapeGrapesJsEditor {
                         form.dispatchEvent(syncEvent);
                     }
                 } else {
-                    console.error('Save failed:', result);
                     this.showSaveStatus('error', 'Save failed: ' + (result.message || result.error || 'Unknown error'));
                 }
             } catch (error) {

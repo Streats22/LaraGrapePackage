@@ -1,6 +1,12 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
 
+// Create a store for GrapesJS editing state
+Alpine.store('grapejs', {
+    isEditing: false,
+    isSaving: false
+});
+
 // Register Alpine components
 Alpine.data('siteLayout', () => ({
     mobileMenuOpen: false,
@@ -27,6 +33,10 @@ Alpine.data('grapejsEditBar', () => ({
     
     init() {
         console.log('Alpine grapejsEditBar initialized');
+        // Sync local state with store
+        this.isEditing = this.$store.grapejs.isEditing;
+        this.isSaving = this.$store.grapejs.isSaving;
+        
         // Wait for the frontend editor to be initialized
         this.waitForEditor();
     },
@@ -44,14 +54,8 @@ Alpine.data('grapejsEditBar', () => ({
     startEditing() {
         console.log('Starting editing...');
         this.isEditing = true;
+        this.$store.grapejs.isEditing = true;
         this.originalScroll = window.scrollY;
-        
-        // Hide page content and show editor
-        const pageContent = document.querySelector('.page-content');
-        const editorWrapper = document.querySelector('.grapejs-editor-wrapper');
-        
-        if (pageContent) pageContent.style.display = 'none';
-        if (editorWrapper) editorWrapper.style.display = 'block';
         
         // Make sure we have the editor instance
         if (!this.grapejsEditor) {
@@ -62,14 +66,8 @@ Alpine.data('grapejsEditBar', () => ({
     exitEditing() {
         console.log('Exiting editing...');
         this.isEditing = false;
+        this.$store.grapejs.isEditing = false;
         this.saveStatus = '';
-        
-        // Show page content and hide editor
-        const pageContent = document.querySelector('.page-content');
-        const editorWrapper = document.querySelector('.grapejs-editor-wrapper');
-        
-        if (pageContent) pageContent.style.display = '';
-        if (editorWrapper) editorWrapper.style.display = 'none';
         
         // Restore scroll position
         window.scrollTo(0, this.originalScroll);
@@ -86,6 +84,7 @@ Alpine.data('grapejsEditBar', () => ({
         }
         
         this.isSaving = true;
+        this.$store.grapejs.isSaving = true;
         
         try {
             console.log('Calling grapejsEditor.saveContent()...');
@@ -97,6 +96,7 @@ Alpine.data('grapejsEditBar', () => ({
             this.showSaveStatus('error', 'Save failed: ' + error.message);
         } finally {
             this.isSaving = false;
+            this.$store.grapejs.isSaving = false;
         }
     },
     
