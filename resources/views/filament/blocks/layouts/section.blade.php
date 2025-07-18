@@ -2,6 +2,7 @@
 @php 
     $isEditorPreview = $isEditorPreview ?? false;
     $attributes = $attributes ?? collect();
+    $slot = $slot ?? '';
 @endphp
 @if($isEditorPreview)
 <div class="section-block py-12 md:py-20 border-l-8 border-accent shadow-lg">

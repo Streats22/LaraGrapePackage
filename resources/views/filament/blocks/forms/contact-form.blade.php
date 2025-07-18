@@ -1,5 +1,8 @@
 {{-- @block id="contact-form" label="Contact Form" description="A contact form with name, email, and message fields" --}}
-@php $isEditorPreview = $isEditorPreview ?? false; @endphp
+@php 
+    $isEditorPreview = $isEditorPreview ?? false;
+    $attributes = $attributes ?? collect();
+@endphp
 @if($isEditorPreview)
     <div class="contact-form max-w-2xl mx-auto py-8 border-l-8 border-accent shadow-lg">
         <form class="bg-white shadow-lg rounded-lg p-8 border-2 border-accent">
@@ -44,17 +47,17 @@
         <form class="bg-white shadow-lg rounded-lg p-8 border-2 border-accent" method="POST" action="{{ route('contact.submit') }}" novalidate>
             @csrf
             <h3 class="text-2xl font-extrabold mb-6 text-center text-primary-900" data-gjs-type="text" data-gjs-name="form-title">Contact Us</h3>
-        <div class="mb-4">
+            <div class="mb-4">
                 <label class="block text-primary-700 text-sm font-bold mb-2" for="name">Name</label>
                 <input type="text" id="name" name="name" value="{{ old('name') }}" class="shadow appearance-none border-2 border-accent rounded w-full py-2 px-3 text-primary-900 leading-tight focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent @error('name') border-error ring-error @enderror" placeholder="Your name" required aria-required="true" aria-invalid="@error('name')true@enderror">
                 @error('name')<span class="text-error text-xs mt-1 block">{{ $message }}</span>@enderror
-        </div>
-        <div class="mb-4">
+            </div>
+            <div class="mb-4">
                 <label class="block text-primary-700 text-sm font-bold mb-2" for="email">Email</label>
                 <input type="email" id="email" name="email" value="{{ old('email') }}" class="shadow appearance-none border-2 border-accent rounded w-full py-2 px-3 text-primary-900 leading-tight focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent @error('email') border-error ring-error @enderror" placeholder="your@email.com" required aria-required="true" aria-invalid="@error('email')true@enderror">
                 @error('email')<span class="text-error text-xs mt-1 block">{{ $message }}</span>@enderror
-        </div>
-        <div class="mb-6">
+            </div>
+            <div class="mb-6">
                 <label class="block text-primary-700 text-sm font-bold mb-2" for="message">Message</label>
                 <textarea id="message" name="message" rows="4" class="shadow appearance-none border-2 border-accent rounded w-full py-2 px-3 text-primary-900 leading-tight focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent @error('message') border-error ring-error @enderror" placeholder="Your message" required aria-required="true" aria-invalid="@error('message')true@enderror">{{ old('message') }}</textarea>
                 @error('message')<span class="text-error text-xs mt-1 block">{{ $message }}</span>@enderror
@@ -69,10 +72,10 @@
             <div style="display:none">
                 <label for="website">Website</label>
                 <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
-        </div>
-        <div class="text-center">
+            </div>
+            <div class="text-center">
                 <button type="submit" class="bg-accent hover:bg-primary-700 text-primary-900 font-bold py-2 px-6 rounded focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 shadow transition-colors">Send Message</button>
-        </div>
-    </form>
-</div>
+            </div>
+        </form>
+    </div>
 @endif 

@@ -2,6 +2,7 @@
 @php 
     $isEditorPreview = $isEditorPreview ?? false;
     $attributes = $attributes ?? collect();
+    $slot = $slot ?? '';
 @endphp
 @if($isEditorPreview)
 <div class="hero-block py-24 md:py-36 flex items-center justify-center text-center bg-primary-50 dark:bg-primary-900 relative border-l-8 border-accent shadow-lg">
