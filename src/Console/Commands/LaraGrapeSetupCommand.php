@@ -606,15 +606,31 @@ class LaraGrapeSetupCommand extends Command
         
         $this->info('✅ Post-processing completed successfully.');
 
-        // 4. Run migrations if requested
-        if ($this->option('migrate')) {
-            $this->info('🗄️  Running migrations...');
-            try {
-                $this->call('migrate');
-                $this->info('✅ Migrations completed successfully.');
-            } catch (\Exception $e) {
-                $this->warn('⚠️  Migrations failed: ' . $e->getMessage());
-                $this->warn('You may need to run "php artisan migrate" manually.');
+        // 4. Run migrations if requested or if no specific options are set
+        $shouldRunMigrations = $this->option('migrate') || $this->option('all') || 
+            (!$this->option('publish-config') && !$this->option('publish-views') && 
+             !$this->option('publish-migrations') && !$this->option('publish-seeders'));
+        
+        $migrationsCompleted = false;
+        if ($shouldRunMigrations) {
+            // Check if we should prompt for migration
+            $runMigrations = true;
+            if (!$this->option('migrate') && !$this->option('all') && !$this->option('force')) {
+                $runMigrations = $this->confirm('Do you want to run migrations to create the required database tables?', true);
+            }
+            
+            if ($runMigrations) {
+                $this->info('🗄️  Running migrations...');
+                try {
+                    $this->call('migrate');
+                    $this->info('✅ Migrations completed successfully.');
+                    $migrationsCompleted = true;
+                } catch (\Exception $e) {
+                    $this->warn('⚠️  Migrations failed: ' . $e->getMessage());
+                    $this->warn('You may need to run "php artisan migrate" manually.');
+                }
+            } else {
+                $this->warn('⚠️  Migrations skipped. You may need to run "php artisan migrate" manually.');
             }
         }
 
@@ -646,13 +662,31 @@ class LaraGrapeSetupCommand extends Command
             }
         }
 
-        // Run seeders if requested
-        if ($this->option('seed') || $this->option('all')) {
-            $this->info('Running seeders...');
-            try {
-                $this->call('db:seed', ['--force' => true]);
-            } catch (\Exception $e) {
-                $this->error('Seeder failed: ' . $e->getMessage());
+        // Run seeders if requested or if no specific options are set
+        $shouldRunSeeders = $this->option('seed') || $this->option('all') || 
+            (!$this->option('publish-config') && !$this->option('publish-views') && 
+             !$this->option('publish-migrations') && !$this->option('publish-seeders'));
+        
+        $seedersCompleted = false;
+        if ($shouldRunSeeders) {
+            // Check if we should prompt for seeding
+            $runSeeders = true;
+            if (!$this->option('seed') && !$this->option('all') && !$this->option('force')) {
+                $runSeeders = $this->confirm('Do you want to run seeders to populate the database with sample data?', true);
+            }
+            
+            if ($runSeeders) {
+                $this->info('🌱 Running seeders...');
+                try {
+                    $this->call('db:seed', ['--force' => true]);
+                    $this->info('✅ Seeders completed successfully.');
+                    $seedersCompleted = true;
+                } catch (\Exception $e) {
+                    $this->warn('⚠️  Seeders failed: ' . $e->getMessage());
+                    $this->warn('You may need to run "php artisan db:seed" manually.');
+                }
+            } else {
+                $this->warn('⚠️  Seeders skipped. You may need to run "php artisan db:seed" manually.');
             }
         }
 
@@ -664,8 +698,12 @@ class LaraGrapeSetupCommand extends Command
         $this->info('   ✅ Frontend assets copied');
         $this->info('');
         $this->info('🚀 Next steps:');
-        $this->info('   1. Run "php artisan migrate" if not already done');
-        $this->info('   2. Run "php artisan db:seed" to populate with sample data');
+        if (!$migrationsCompleted) {
+            $this->info('   1. Run "php artisan migrate" if not already done');
+        }
+        if (!$seedersCompleted) {
+            $this->info('   2. Run "php artisan db:seed" to populate with sample data');
+        }
         $this->info('   3. Run "npm run dev" to compile frontend assets');
         $this->info('   4. Visit /admin to access the Filament admin panel');
         $this->info('   5. Visit / to see your LaraGrape site');
