@@ -150,15 +150,18 @@
                 if (form) {
                     console.log('Filament form found, setting up additional handlers...');
 
-                    // Method 1: Listen for Livewire events
+                    // Method 1: Listen for Livewire events (using modern API)
                     document.addEventListener('livewire:load', function () {
                         if (window.Livewire) {
-                            window.Livewire.on('form-submit', function () {
-                                console.log('Livewire form-submit event detected');
-                                if (window.grapesjsEditorInstance) {
-                                    window.grapesjsEditorInstance.syncToFormBeforeSubmit();
-                                }
-                            });
+                            // Try modern Livewire API first
+                            if (window.Livewire.on) {
+                                window.Livewire.on('form-submit', function () {
+                                    console.log('Livewire form-submit event detected');
+                                    if (window.grapesjsEditorInstance) {
+                                        window.grapesjsEditorInstance.syncToFormBeforeSubmit();
+                                    }
+                                });
+                            }
                         }
                     });
 

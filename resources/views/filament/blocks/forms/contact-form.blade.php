@@ -74,5 +74,5 @@
                 <button type="submit" class="bg-accent hover:bg-primary-700 text-primary-900 font-bold py-2 px-6 rounded focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 shadow transition-colors">Send Message</button>
         </div>
     </form>
-</div> 
+</div>
 @endif 

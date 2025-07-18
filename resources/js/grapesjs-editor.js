@@ -374,9 +374,15 @@ class LaraGrapeGrapesJsEditor {
                 input.dispatchEvent(new Event('change', { bubbles: true }));
             });
             
-            // Trigger Livewire events if available
+            // Trigger Livewire events if available (using modern API)
             if (window.Livewire) {
-                window.Livewire.emit('grapesjs-synced', formData);
+                // Try modern Livewire API first
+                if (window.Livewire.dispatch) {
+                    window.Livewire.dispatch('grapesjs-synced', { detail: formData });
+                } else if (window.Livewire.emit) {
+                    // Fallback to older API if available
+                    window.Livewire.emit('grapesjs-synced', formData);
+                }
             }
             
             console.log('GrapesJS data synced successfully');
