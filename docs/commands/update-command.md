@@ -12,6 +12,26 @@ When run without options, the command will show an interactive menu where you ca
 
 ## Command Options
 
+### All Available Options
+
+| Option | Description |
+|--------|-------------|
+| `--all` | Update all components |
+| `--config` | Update configuration files only |
+| `--views` | Update view files only |
+| `--migrations` | Update migration files only |
+| `--filament` | Update Filament components only |
+| `--assets` | Update frontend assets only |
+| `--controllers` | Update controllers only |
+| `--services` | Update services only |
+| `--routes` | Update routes only |
+| `--models` | Update models only |
+| `--seeders` | Update seeders only |
+| `--console` | Update console commands only |
+| `--run-migrate` | Run migrations after updating |
+| `--run-seed` | Run seeders after updating |
+| `--force` | Overwrite existing files without asking |
+
 ### Specific Component Updates
 
 You can update specific component groups using these options:
@@ -57,6 +77,26 @@ To update all components at once:
 
 ```bash
 php artisan laragrape:update --all
+```
+
+### Database Operations
+
+To run migrations after updating:
+
+```bash
+php artisan laragrape:update --run-migrate
+```
+
+To run seeders after updating:
+
+```bash
+php artisan laragrape:update --run-seed
+```
+
+You can combine these with other options:
+
+```bash
+php artisan laragrape:update --all --run-migrate --run-seed
 ```
 
 ### Force Overwrite

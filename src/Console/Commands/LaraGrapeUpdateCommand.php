@@ -17,6 +17,11 @@ class LaraGrapeUpdateCommand extends Command
         {--controllers : Update controllers only}
         {--services : Update services only}
         {--routes : Update routes only}
+        {--models : Update models only}
+        {--seeders : Update database seeders only}
+        {--console : Update console commands only}
+        {--run-migrate : Run migrations after updating}
+        {--run-seed : Run seeders after updating}
         {--all : Update everything}';
     
     protected $description = 'Update LaraGrape components selectively';
@@ -118,6 +123,9 @@ class LaraGrapeUpdateCommand extends Command
     {
         $this->info('🔄 Starting LaraGrape update...');
         
+        // Check if database tables exist and suggest migration if needed
+        $this->checkDatabaseTables();
+        
         // Determine which components to update
         $componentsToUpdate = $this->determineComponentsToUpdate();
         
@@ -140,14 +148,32 @@ class LaraGrapeUpdateCommand extends Command
         // Update selected components
         $this->updateComponents($componentsToUpdate);
         
+        // Run migrations if requested
+        if ($this->option('run-migrate')) {
+            $this->runMigrations();
+        }
+        
+        // Run seeders if requested
+        if ($this->option('run-seed')) {
+            $this->runSeeders();
+        }
+        
         $this->info('🎉 LaraGrape update completed!');
         $this->info('');
         $this->info('📋 Summary:');
         $this->info('   ✅ Selected components updated');
         $this->info('   ✅ Namespaces updated to App namespace');
+        if ($this->option('run-migrate')) {
+            $this->info('   ✅ Migrations executed');
+        }
+        if ($this->option('run-seed')) {
+            $this->info('   ✅ Seeders executed');
+        }
         $this->info('');
         $this->info('🚀 Next steps:');
-        $this->info('   1. Run "php artisan migrate" if database structure changed');
+        if (!$this->option('run-migrate')) {
+            $this->info('   1. Run "php artisan migrate" if database structure changed');
+        }
         $this->info('   2. Run "npm run dev" to compile updated frontend assets');
         $this->info('   3. Clear cache with "php artisan cache:clear" if needed');
     }
@@ -470,6 +496,61 @@ class LaraGrapeUpdateCommand extends Command
                 $contents = str_replace('Pages\\LaraEditTailwindConfig::', 'Pages\\EditTailwindConfig::', $contents);
                 file_put_contents($resourceFile, $contents);
             }
+        }
+    }
+    
+    private function runMigrations(): void
+    {
+        $this->info('🗄️  Running migrations...');
+        try {
+            $this->call('migrate');
+            $this->info('✅ Migrations completed successfully.');
+        } catch (\Exception $e) {
+            $this->warn('⚠️  Migrations failed: ' . $e->getMessage());
+            $this->warn('You may need to run "php artisan migrate" manually.');
+        }
+    }
+    
+    private function runSeeders(): void
+    {
+        $this->info('🌱 Running seeders...');
+        try {
+            $this->call('db:seed', ['--force' => true]);
+            $this->info('✅ Seeders completed successfully.');
+        } catch (\Exception $e) {
+            $this->warn('⚠️  Seeders failed: ' . $e->getMessage());
+            $this->warn('You may need to run "php artisan db:seed" manually.');
+        }
+    }
+    
+    private function checkDatabaseTables(): void
+    {
+        try {
+            // Check if the custom_blocks table exists
+            $hasCustomBlocksTable = \Schema::hasTable('custom_blocks');
+            $hasPagesTable = \Schema::hasTable('pages');
+            $hasSiteSettingsTable = \Schema::hasTable('site_settings');
+            $hasTailwindConfigsTable = \Schema::hasTable('tailwind_configs');
+            
+            $missingTables = [];
+            if (!$hasCustomBlocksTable) $missingTables[] = 'custom_blocks';
+            if (!$hasPagesTable) $missingTables[] = 'pages';
+            if (!$hasSiteSettingsTable) $missingTables[] = 'site_settings';
+            if (!$hasTailwindConfigsTable) $missingTables[] = 'tailwind_configs';
+            
+            if (!empty($missingTables)) {
+                $this->warn('⚠️  Missing database tables: ' . implode(', ', $missingTables));
+                $this->warn('   This may cause errors when using LaraGrape features.');
+                
+                if ($this->confirm('Do you want to run migrations now to create the missing tables?', true)) {
+                    $this->runMigrations();
+                } else {
+                    $this->info('💡 You can run migrations later with: php artisan migrate');
+                }
+            }
+        } catch (\Exception $e) {
+            $this->warn('⚠️  Could not check database tables: ' . $e->getMessage());
+            $this->warn('   Make sure your database connection is configured correctly.');
         }
     }
 } 

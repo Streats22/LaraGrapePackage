@@ -139,6 +139,8 @@ php artisan laragrape:update [options]
 | `--models` | Update models only |
 | `--seeders` | Update seeders only |
 | `--console` | Update console commands only |
+| `--run-migrate` | Run migrations after updating |
+| `--run-seed` | Run seeders after updating |
 | `--force` | Overwrite existing files without asking |
 
 ### Examples
@@ -151,6 +153,11 @@ php artisan laragrape:update --all
 
 # Update specific components
 php artisan laragrape:update --filament --assets
+
+# Update with database operations
+php artisan laragrape:update --all --run-migrate
+php artisan laragrape:update --all --run-seed
+php artisan laragrape:update --all --run-migrate --run-seed
 
 # Force update without confirmation
 php artisan laragrape:update --all --force

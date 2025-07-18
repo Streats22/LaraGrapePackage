@@ -53,6 +53,8 @@ Successfully implemented a new `laragrape:update` command that allows users to s
 --models         # Update models only
 --seeders        # Update database seeders only
 --console        # Update console commands only
+--run-migrate    # Run migrations after updating
+--run-seed       # Run seeders after updating
 --all            # Update everything
 ```
 
@@ -107,6 +109,13 @@ The command organizes components into 10 logical groups:
 
 ## 🔄 Update Process
 
+### Database Check
+- **Automatic Table Detection**: Checks if required LaraGrape tables exist
+- **Missing Table Warning**: Warns about missing tables that may cause errors
+- **Migration Prompt**: Offers to run migrations if tables are missing
+- **Graceful Handling**: Continues with update even if database check fails
+
+### Component Updates
 For each selected component group, the command performs:
 
 1. **File Publishing**: Uses Laravel's `vendor:publish` command to copy files from package to application
@@ -156,6 +165,18 @@ php artisan laragrape:update --all
 ### Force Update
 ```bash
 php artisan laragrape:update --all --force
+```
+
+### Update with Database Operations
+```bash
+# Update everything and run migrations
+php artisan laragrape:update --all --run-migrate
+
+# Update everything and run seeders
+php artisan laragrape:update --all --run-seed
+
+# Update everything with both migrations and seeders
+php artisan laragrape:update --all --run-migrate --run-seed
 ```
 
 ## 🛡️ Error Handling
