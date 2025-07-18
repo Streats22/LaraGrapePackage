@@ -75,16 +75,43 @@
     <!-- Main Content -->
     <main class="flex-1 flex flex-col bg-primary-50 dark:bg-primary-900 px-4">
         <!-- Page Content -->
-        <div class="page-content flex-1 py-8 bg-primary-50 dark:bg-primary-900 transition-colors">
+        <div 
+            class="page-content flex-1 py-8 bg-primary-50 dark:bg-primary-900 transition-colors"
+            x-data="{}"
+            x-show="!$store.grapejs?.isEditing"
+            x-transition
+        >
             @if (!empty($page->blade_content))
                 {!! Blade::render($page->blade_content, ['page' => $page]) !!}
-           
+            @else
+                <!-- Default content when no blade_content exists -->
+                <div class="container mx-auto px-4">
+                    <div class="text-center py-12">
+                        <h1 class="text-4xl font-bold text-primary-900 mb-4">{{ $page->title }}</h1>
+                        @if(!empty($page->content))
+                            <div class="prose prose-lg mx-auto">
+                                {!! $page->content !!}
+                            </div>
+                        @else
+                            <p class="text-xl text-primary-700 mb-8">Welcome to your new page!</p>
+                            @if(auth()->check())
+                                <p class="text-primary-600">Click "Edit Page" to start building your content.</p>
+                            @endif
+                        @endif
+                    </div>
+                </div>
             @endif
         </div>
         
         @if(auth()->check())
             <!-- GrapesJS Editor Container (hidden by default) -->
-            <div class="grapejs-editor-wrapper" style="display:none; min-height: 700px;">
+            <div 
+                class="grapejs-editor-wrapper" 
+                x-data="{}"
+                x-show="$store.grapejs?.isEditing" 
+                x-transition
+                style="min-height: 700px;"
+            >
                 <div id="grapejs-frontend-editor" style="min-height: 700px;"></div>
             </div>
         @endif
@@ -114,12 +141,8 @@
             window.pageGrapesjsData = @json($editingData ?? []);
             window.saveGrapesjsUrl = "{{ route('page.save-grapesjs', ['slug' => $page->slug]) }}";
             
-            // Initialize the frontend editor when the page is ready
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', window.initializeFrontendEditor);
-            } else {
-                window.initializeFrontendEditor();
-            }
+            // Don't initialize immediately - wait for edit mode to be activated
+            window.editorInitialized = false;
         </script>
     @endif
 </body>

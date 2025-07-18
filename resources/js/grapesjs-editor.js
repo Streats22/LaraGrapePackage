@@ -65,6 +65,19 @@ class LaraGrapeGrapesJsEditor {
             return;
         }
         
+        // Ensure the editor container is visible for initialization
+        const editorWrapper = editorElement.closest('.grapejs-editor-wrapper');
+        if (editorWrapper && editorWrapper.style.display === 'none') {
+            console.log('Making editor container visible for initialization');
+            editorWrapper.style.display = 'block';
+            // Hide it again after initialization
+            setTimeout(() => {
+                if (editorWrapper && !this.options.isDisabled) {
+                    editorWrapper.style.display = 'none';
+                }
+            }, 100);
+        }
+        
         // Add PostCSS parser plugin for better CSS variable support
         const plugins = [];
         if (typeof parserPostCSS !== 'undefined') {

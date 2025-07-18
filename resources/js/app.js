@@ -47,7 +47,10 @@ Alpine.data('grapejsEditBar', () => ({
             console.log('Frontend GrapesJS editor found:', this.grapejsEditor);
         } else {
             console.log('Frontend GrapesJS editor not found yet, retrying...');
-            setTimeout(() => this.waitForEditor(), 100);
+            // Only retry if we're still in editing mode
+            if (this.isEditing) {
+                setTimeout(() => this.waitForEditor(), 100);
+            }
         }
     },
     
@@ -57,10 +60,17 @@ Alpine.data('grapejsEditBar', () => ({
         this.$store.grapejs.isEditing = true;
         this.originalScroll = window.scrollY;
         
-        // Make sure we have the editor instance
-        if (!this.grapejsEditor) {
+        // Initialize editor when entering edit mode
+        this.$nextTick(() => {
+            if (!window.editorInitialized) {
+                console.log('Initializing GrapesJS editor...');
+                window.initializeFrontendEditor();
+                window.editorInitialized = true;
+            }
+            
+            // Wait for editor to be ready
             this.waitForEditor();
-        }
+        });
     },
     
     exitEditing() {
@@ -68,6 +78,9 @@ Alpine.data('grapejsEditBar', () => ({
         this.isEditing = false;
         this.$store.grapejs.isEditing = false;
         this.saveStatus = '';
+        
+        // Reset editor reference when exiting
+        this.grapejsEditor = null;
         
         // Restore scroll position
         window.scrollTo(0, this.originalScroll);
