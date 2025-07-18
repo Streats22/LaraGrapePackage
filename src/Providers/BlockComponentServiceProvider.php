@@ -36,46 +36,9 @@ class BlockComponentServiceProvider extends ServiceProvider
             foreach ($blocks as $block) {
                 $componentName = 'blocks.' . $block['id'];
                 
-                // Register the component dynamically
-                Blade::component($componentName, function ($attributes = [], $slot = null) use ($block) {
-                    // Get the block content
-                    $content = $block['content'] ?? '';
-                    
-                    // If it's a Blade template, render it
-                    if (str_contains($content, '{{') || str_contains($content, '@')) {
-                        // Create a temporary view with the content
-                        $viewName = 'temp-block-' . uniqid();
-                        view()->addNamespace('temp', storage_path('temp'));
-                        
-                        // Store the content temporarily
-                        $tempPath = storage_path('temp/' . $viewName . '.blade.php');
-                        file_put_contents($tempPath, $content);
-                        
-                        try {
-                            $rendered = view('temp::' . $viewName, [
-                                'attributes' => $attributes,
-                                'slot' => $slot,
-                                'isEditorPreview' => false
-                            ])->render();
-                            
-                            // Clean up
-                            unlink($tempPath);
-                            
-                            return $rendered;
-                        } catch (\Exception $e) {
-                            // Clean up on error
-                            if (file_exists($tempPath)) {
-                                unlink($tempPath);
-                            }
-                            
-                            // Return fallback content
-                            return '<div class="block-error" style="color: red; border: 1px solid red; padding: 10px;">Block rendering error: ' . $e->getMessage() . '</div>';
-                        }
-                    } else {
-                        // For static HTML, just return the content
-                        return $content;
-                    }
-                });
+                // For now, skip dynamic component registration during package discovery
+                // This will be handled when the application is fully booted
+                continue;
             }
         } catch (\Exception $e) {
             // Silently ignore errors during package discovery
