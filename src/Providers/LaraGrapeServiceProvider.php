@@ -220,6 +220,38 @@ class LaraGrapeServiceProvider extends ServiceProvider
                 $packageDir.'/src/Filament/Resources/TailwindConfigResource/Pages/LaraListTailwindConfigs.php' => app_path('Filament/Resources/TailwindConfigResource/Pages/ListTailwindConfigs.php'),
             ], 'laragrape-tailwindconfig-resource');
 
+            // Publishing for HeaderConfig, FooterConfig, Form, FormSubmission, MenuSet
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/LaraHeaderConfigResource.php' => app_path('Filament/Resources/HeaderConfigResource.php'),
+                $packageDir.'/src/Filament/Resources/HeaderConfigResource/Pages/LaraListHeaderConfigs.php' => app_path('Filament/Resources/HeaderConfigResource/Pages/ListHeaderConfigs.php'),
+                $packageDir.'/src/Filament/Resources/HeaderConfigResource/Pages/LaraCreateHeaderConfig.php' => app_path('Filament/Resources/HeaderConfigResource/Pages/CreateHeaderConfig.php'),
+                $packageDir.'/src/Filament/Resources/HeaderConfigResource/Pages/LaraEditHeaderConfig.php' => app_path('Filament/Resources/HeaderConfigResource/Pages/EditHeaderConfig.php'),
+            ], 'laragrape-headerconfig-resource');
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/LaraFooterConfigResource.php' => app_path('Filament/Resources/FooterConfigResource.php'),
+                $packageDir.'/src/Filament/Resources/FooterConfigResource/Pages/LaraListFooterConfigs.php' => app_path('Filament/Resources/FooterConfigResource/Pages/ListFooterConfigs.php'),
+                $packageDir.'/src/Filament/Resources/FooterConfigResource/Pages/LaraCreateFooterConfig.php' => app_path('Filament/Resources/FooterConfigResource/Pages/CreateFooterConfig.php'),
+                $packageDir.'/src/Filament/Resources/FooterConfigResource/Pages/LaraEditFooterConfig.php' => app_path('Filament/Resources/FooterConfigResource/Pages/EditFooterConfig.php'),
+            ], 'laragrape-footerconfig-resource');
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/LaraFormResource.php' => app_path('Filament/Resources/FormResource.php'),
+                $packageDir.'/src/Filament/Resources/FormResource/Pages/LaraListForms.php' => app_path('Filament/Resources/FormResource/Pages/ListForms.php'),
+                $packageDir.'/src/Filament/Resources/FormResource/Pages/LaraCreateForm.php' => app_path('Filament/Resources/FormResource/Pages/CreateForm.php'),
+                $packageDir.'/src/Filament/Resources/FormResource/Pages/LaraEditForm.php' => app_path('Filament/Resources/FormResource/Pages/EditForm.php'),
+            ], 'laragrape-form-resource');
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/LaraFormSubmissionResource.php' => app_path('Filament/Resources/FormSubmissionResource.php'),
+                $packageDir.'/src/Filament/Resources/FormSubmissionResource/Pages/LaraListFormSubmissions.php' => app_path('Filament/Resources/FormSubmissionResource/Pages/ListFormSubmissions.php'),
+                $packageDir.'/src/Filament/Resources/FormSubmissionResource/Pages/LaraCreateFormSubmission.php' => app_path('Filament/Resources/FormSubmissionResource/Pages/CreateFormSubmission.php'),
+                $packageDir.'/src/Filament/Resources/FormSubmissionResource/Pages/LaraEditFormSubmission.php' => app_path('Filament/Resources/FormSubmissionResource/Pages/EditFormSubmission.php'),
+            ], 'laragrape-formsubmission-resource');
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/LaraMenuSetResource.php' => app_path('Filament/Resources/MenuSetResource.php'),
+                $packageDir.'/src/Filament/Resources/MenuSetResource/Pages/LaraListMenuSets.php' => app_path('Filament/Resources/MenuSetResource/Pages/ListMenuSets.php'),
+                $packageDir.'/src/Filament/Resources/MenuSetResource/Pages/LaraCreateMenuSet.php' => app_path('Filament/Resources/MenuSetResource/Pages/CreateMenuSet.php'),
+                $packageDir.'/src/Filament/Resources/MenuSetResource/Pages/LaraEditMenuSet.php' => app_path('Filament/Resources/MenuSetResource/Pages/EditMenuSet.php'),
+            ], 'laragrape-menuset-resource');
+
             // Publish AdminPageController for block previews
             $this->publishes([
                 $packageDir.'/src/Http/Controllers/AdminPageController.php' => app_path('Http/Controllers/AdminPageController.php'),

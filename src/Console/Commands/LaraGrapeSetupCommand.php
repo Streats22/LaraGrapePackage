@@ -82,6 +82,11 @@ class LaraGrapeSetupCommand extends Command
             'laragrape-page-resource',
             'laragrape-sitesettings-resource',
             'laragrape-tailwindconfig-resource',
+            'laragrape-headerconfig-resource',
+            'laragrape-footerconfig-resource',
+            'laragrape-form-resource',
+            'laragrape-formsubmission-resource',
+            'laragrape-menuset-resource',
             'laragrape-admin-controller',
             'laragrape-filament-components',
             'LaraGrape-console-kernel',
@@ -414,6 +419,11 @@ class LaraGrapeSetupCommand extends Command
                 base_path('app/Filament/Resources/PageResource/Pages'),
                 base_path('app/Filament/Resources/SiteSettingsResource/Pages'),
                 base_path('app/Filament/Resources/TailwindConfigResource/Pages'),
+                base_path('app/Filament/Resources/HeaderConfigResource/Pages'),
+                base_path('app/Filament/Resources/FooterConfigResource/Pages'),
+                base_path('app/Filament/Resources/FormResource/Pages'),
+                base_path('app/Filament/Resources/FormSubmissionResource/Pages'),
+                base_path('app/Filament/Resources/MenuSetResource/Pages'),
             ];
             $allPublishedFiles = [];
             foreach ($allPublishedDirs as $dir) {
@@ -800,6 +810,11 @@ class LaraGrapeSetupCommand extends Command
                 base_path('app/Filament/Resources/PageResource.php'),
                 base_path('app/Filament/Resources/SiteSettingsResource.php'),
                 base_path('app/Filament/Resources/TailwindConfigResource.php'),
+                base_path('app/Filament/Resources/HeaderConfigResource.php'),
+                base_path('app/Filament/Resources/FooterConfigResource.php'),
+                base_path('app/Filament/Resources/FormResource.php'),
+                base_path('app/Filament/Resources/FormSubmissionResource.php'),
+                base_path('app/Filament/Resources/MenuSetResource.php'),
             ];
             $processedCount = 0;
             foreach ($resourceFiles as $resourceFile) {
@@ -818,6 +833,21 @@ class LaraGrapeSetupCommand extends Command
                     $contents = str_replace('Pages\\LaraListTailwindConfigs::', 'Pages\\ListTailwindConfigs::', $contents);
                     $contents = str_replace('Pages\\LaraCreateTailwindConfig::', 'Pages\\CreateTailwindConfig::', $contents);
                     $contents = str_replace('Pages\\LaraEditTailwindConfig::', 'Pages\\EditTailwindConfig::', $contents);
+                    $contents = str_replace('Pages\\LaraListHeaderConfigs::', 'Pages\\ListHeaderConfigs::', $contents);
+                    $contents = str_replace('Pages\\LaraCreateHeaderConfig::', 'Pages\\CreateHeaderConfig::', $contents);
+                    $contents = str_replace('Pages\\LaraEditHeaderConfig::', 'Pages\\EditHeaderConfig::', $contents);
+                    $contents = str_replace('Pages\\LaraListFooterConfigs::', 'Pages\\ListFooterConfigs::', $contents);
+                    $contents = str_replace('Pages\\LaraCreateFooterConfig::', 'Pages\\CreateFooterConfig::', $contents);
+                    $contents = str_replace('Pages\\LaraEditFooterConfig::', 'Pages\\EditFooterConfig::', $contents);
+                    $contents = str_replace('Pages\\LaraListForms::', 'Pages\\ListForms::', $contents);
+                    $contents = str_replace('Pages\\LaraCreateForm::', 'Pages\\CreateForm::', $contents);
+                    $contents = str_replace('Pages\\LaraEditForm::', 'Pages\\EditForm::', $contents);
+                    $contents = str_replace('Pages\\LaraListFormSubmissions::', 'Pages\\ListFormSubmissions::', $contents);
+                    $contents = str_replace('Pages\\LaraCreateFormSubmission::', 'Pages\\CreateFormSubmission::', $contents);
+                    $contents = str_replace('Pages\\LaraEditFormSubmission::', 'Pages\\EditFormSubmission::', $contents);
+                    $contents = str_replace('Pages\\LaraListMenuSets::', 'Pages\\ListMenuSets::', $contents);
+                    $contents = str_replace('Pages\\LaraCreateMenuSet::', 'Pages\\CreateMenuSet::', $contents);
+                    $contents = str_replace('Pages\\LaraEditMenuSet::', 'Pages\\EditMenuSet::', $contents);
                     file_put_contents($resourceFile, $contents);
                     $processedCount++;
                 }

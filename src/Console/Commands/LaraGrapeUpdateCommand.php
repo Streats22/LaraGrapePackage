@@ -66,6 +66,11 @@ class LaraGrapeUpdateCommand extends Command
                 'laragrape-page-resource',
                 'laragrape-sitesettings-resource',
                 'laragrape-tailwindconfig-resource',
+                'laragrape-headerconfig-resource',
+                'laragrape-footerconfig-resource',
+                'laragrape-form-resource',
+                'laragrape-formsubmission-resource',
+                'laragrape-menuset-resource',
                 'laragrape-filament-components'
             ],
             'paths' => ['app/Filament/', 'resources/views/filament/']

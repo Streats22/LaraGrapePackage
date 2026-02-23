@@ -209,17 +209,17 @@ class LaraPageResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()
+                \Filament\Actions\ViewAction::make()
                     ->url(fn (Page $record) => route('page.show', $record->slug))
                     ->openUrlInNewTab(),
                 
-                Tables\Actions\EditAction::make(),
+                \Filament\Actions\EditAction::make(),
                 
-                Tables\Actions\DeleteAction::make(),
+                \Filament\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');

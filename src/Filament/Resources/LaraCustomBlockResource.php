@@ -220,10 +220,10 @@ class LaraCustomBlockResource extends Resource
                     ->label('Active'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\Action::make('clone')
+                \Filament\Actions\ViewAction::make(),
+                \Filament\Actions\EditAction::make(),
+                \Filament\Actions\DeleteAction::make(),
+                \Filament\Actions\Action::make('clone')
                     ->label('Clone')
                     ->icon('heroicon-o-document-duplicate')
                     ->action(function ($record, $livewire) {
@@ -231,14 +231,14 @@ class LaraCustomBlockResource extends Resource
                         $newBlock->name = $record->name . ' (Copy)';
                         $newBlock->slug = $record->slug . '-copy-' . uniqid();
                         $newBlock->push();
-                        $livewire->redirect(CustomBlockResource::getUrl('edit', ['record' => $newBlock->getKey()]));
+                        $livewire->redirect(static::getUrl('edit', ['record' => $newBlock->getKey()]));
                     })
                     ->color('secondary'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\BulkAction::make('export')
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
+                    \Filament\Actions\BulkAction::make('export')
                         ->label('Export as JSON')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->action(function ($records) {
@@ -247,7 +247,7 @@ class LaraCustomBlockResource extends Resource
                                 ->header('Content-Type', 'application/json')
                                 ->header('Content-Disposition', 'attachment; filename=custom-blocks-export.json');
                         }),
-                    Tables\Actions\BulkAction::make('import')
+                    \Filament\Actions\BulkAction::make('import')
                         ->label('Import from JSON')
                         ->icon('heroicon-o-arrow-up-tray')
                         ->form([
