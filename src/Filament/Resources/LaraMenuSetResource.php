@@ -5,6 +5,10 @@ namespace LaraGrape\Filament\Resources;
 use LaraGrape\Filament\Resources\MenuSetResource\Pages;
 use LaraGrape\Models\MenuSet;
 use Filament\Forms;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -27,11 +31,11 @@ class LaraMenuSetResource extends Resource
     {
         return $schema
             ->schema([
-                Forms\Components\Tabs::make('Menu Set Configuration')
+                Tabs::make('Menu Set Configuration')
                     ->tabs([
-                        Forms\Components\Tabs\Tab::make('Basic Information')
+                        Tab::make('Basic Information')
                             ->schema([
-                                Forms\Components\Section::make('Menu Set Details')
+                                Section::make('Menu Set Details')
                                     ->schema([
                                         Forms\Components\TextInput::make('name')
                                             ->label('Internal Name')
@@ -97,15 +101,15 @@ class LaraMenuSetResource extends Resource
                                     ->columns(2),
                             ]),
 
-                        Forms\Components\Tabs\Tab::make('Menu Items')
+                        Tab::make('Menu Items')
                             ->schema([
-                                Forms\Components\Section::make('Menu Items')
+                                Section::make('Menu Items')
                                     ->description('Add and configure menu items. Drag to reorder.')
                                     ->schema([
                                         Forms\Components\Repeater::make('menuItems')
                                             ->relationship('allMenuItems')
                                             ->schema([
-                                                Forms\Components\Grid::make(3)
+                                                Grid::make(3)
                                                     ->schema([
                                                         Forms\Components\TextInput::make('name')
                                                             ->label('Internal Name')
@@ -158,7 +162,7 @@ class LaraMenuSetResource extends Resource
                                                             ->default(false),
                                                     ]),
 
-                                                Forms\Components\Grid::make(2)
+                                                Grid::make(2)
                                                     ->schema([
                                                         Forms\Components\Select::make('page_id')
                                                             ->label('Select Page')
@@ -178,7 +182,7 @@ class LaraMenuSetResource extends Resource
                                                             ->columnSpan(1),
                                                     ]),
 
-                                                Forms\Components\Grid::make(2)
+                                                Grid::make(2)
                                                     ->schema([
                                                         Forms\Components\TextInput::make('link_text')
                                                             ->label('Link Text')
@@ -195,7 +199,7 @@ class LaraMenuSetResource extends Resource
                                                             ->columnSpan(1),
                                                     ]),
 
-                                                Forms\Components\Grid::make(3)
+                                                Grid::make(3)
                                                     ->schema([
                                                         Forms\Components\TextInput::make('icon')
                                                             ->label('Icon')
@@ -219,7 +223,7 @@ class LaraMenuSetResource extends Resource
                                                             ->columnSpan(1),
                                                     ]),
 
-                                                Forms\Components\Grid::make(3)
+                                                Grid::make(3)
                                                     ->schema([
                                                         Forms\Components\Toggle::make('open_in_new_tab')
                                                             ->label('Open in New Tab')
@@ -241,13 +245,13 @@ class LaraMenuSetResource extends Resource
                                                     ]),
 
                                                 // Sub-items section
-                                                Forms\Components\Section::make('Sub-items')
+                                                Section::make('Sub-items')
                                                     ->description('Add child menu items (sub-menu)')
                                                     ->schema([
                                                         Forms\Components\Repeater::make('children')
                                                             ->relationship('children')
                                                             ->schema([
-                                                                Forms\Components\Grid::make(2)
+                                                                Grid::make(2)
                                                                     ->schema([
                                                                         Forms\Components\TextInput::make('display_name')
                                                                             ->label('Display Name')
@@ -268,7 +272,7 @@ class LaraMenuSetResource extends Resource
                                                                             ->columnSpan(1),
                                                                     ]),
 
-                                                                Forms\Components\Grid::make(2)
+                                                                Grid::make(2)
                                                                     ->schema([
                                                                         Forms\Components\Select::make('page_id')
                                                                             ->label('Select Page')
@@ -288,7 +292,7 @@ class LaraMenuSetResource extends Resource
                                                                             ->columnSpan(1),
                                                                     ]),
 
-                                                                Forms\Components\Grid::make(2)
+                                                                Grid::make(2)
                                                                     ->schema([
                                                                         Forms\Components\TextInput::make('link_text')
                                                                             ->label('Link Text')
@@ -305,7 +309,7 @@ class LaraMenuSetResource extends Resource
                                                                             ->columnSpan(1),
                                                                     ]),
 
-                                                                Forms\Components\Grid::make(3)
+                                                                Grid::make(3)
                                                                     ->schema([
                                                                         Forms\Components\TextInput::make('icon')
                                                                             ->label('Icon')
@@ -329,7 +333,7 @@ class LaraMenuSetResource extends Resource
                                                                             ->columnSpan(1),
                                                                     ]),
 
-                                                                Forms\Components\Grid::make(3)
+                                                                Grid::make(3)
                                                                     ->schema([
                                                                         Forms\Components\Toggle::make('open_in_new_tab')
                                                                             ->label('Open in New Tab')
@@ -442,7 +446,7 @@ class LaraMenuSetResource extends Resource
                                     ])
                                     ->columns(1),
 
-                                Forms\Components\Section::make('Preview')
+                                Section::make('Preview')
                                     ->description('Preview of how your menu will look')
                                     ->schema([
                                         Forms\Components\Placeholder::make('preview')

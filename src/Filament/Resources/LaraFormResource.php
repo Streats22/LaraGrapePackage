@@ -6,6 +6,8 @@ use LaraGrape\Filament\Resources\FormResource\Pages;
 use LaraGrape\Models\Form;
 use LaraGrape\Models\FormField;
 use Filament\Forms;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -28,7 +30,7 @@ class LaraFormResource extends Resource
     {
         return $schema
             ->schema([
-                Forms\Components\Section::make('Form Details')
+                Section::make('Form Details')
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->required()
@@ -48,7 +50,7 @@ class LaraFormResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Email Settings')
+                Section::make('Email Settings')
                     ->schema([
                         Forms\Components\TextInput::make('email_to')
                             ->email()
@@ -64,7 +66,7 @@ class LaraFormResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Messages')
+                Section::make('Messages')
                     ->schema([
                         Forms\Components\Textarea::make('success_message')
                             ->required()
@@ -78,7 +80,7 @@ class LaraFormResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Settings')
+                Section::make('Settings')
                     ->schema([
                         Forms\Components\Toggle::make('is_active')
                             ->label('Active')
@@ -91,13 +93,13 @@ class LaraFormResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Form Fields')
+                Section::make('Form Fields')
                     ->description('Add and configure form fields. Drag to reorder.')
                     ->schema([
                         Forms\Components\Repeater::make('fields')
                             ->relationship('fields')
                             ->schema([
-                                Forms\Components\Grid::make(2)
+                                Grid::make(2)
                                     ->schema([
                                         Forms\Components\Select::make('type')
                                             ->options(FormField::getFieldTypes())
@@ -112,7 +114,7 @@ class LaraFormResource extends Resource
                                             ->columnSpan(1),
                                     ]),
 
-                                Forms\Components\Grid::make(2)
+                                Grid::make(2)
                                     ->schema([
                                         Forms\Components\TextInput::make('label')
                                             ->required()
@@ -127,7 +129,7 @@ class LaraFormResource extends Resource
                                             ->helperText('Field name for form submission (use lowercase, no spaces)'),
                                     ]),
 
-                                Forms\Components\Grid::make(2)
+                                Grid::make(2)
                                     ->schema([
                                         Forms\Components\TextInput::make('placeholder')
                                             ->maxLength(255)
@@ -145,7 +147,7 @@ class LaraFormResource extends Resource
                                     ->helperText('Additional help text shown below the field')
                                     ->rows(2),
 
-                                Forms\Components\Grid::make(2)
+                                Grid::make(2)
                                     ->schema([
                                         Forms\Components\Toggle::make('is_unique')
                                             ->label('Unique value')
@@ -158,12 +160,12 @@ class LaraFormResource extends Resource
                                     ]),
 
                                 // Options for select, radio, checkbox fields
-                                Forms\Components\Section::make('Field Options')
+                                Section::make('Field Options')
                                     ->description('Configure options for select, radio, and checkbox fields')
                                     ->schema([
                                         Forms\Components\Repeater::make('options')
                                             ->schema([
-                                                Forms\Components\Grid::make(2)
+                                                Grid::make(2)
                                                     ->schema([
                                                         Forms\Components\TextInput::make('label')
                                                             ->required()
