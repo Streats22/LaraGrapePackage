@@ -26,24 +26,16 @@ class BlockService
     }
     
     /**
-     * Get all available blocks organized by category
+     * Get all available blocks organized by category.
+     * Recursively scans subdirectories (e.g. components/animated/) so animated blocks are found.
      */
     public function getBlocks(): array
     {
         $blocks = [];
         
-        // Get file-based blocks
+        // Get file-based blocks (recursive scan for subdirs like components/animated/)
         if (File::exists($this->blocksPath)) {
-            $directories = File::directories($this->blocksPath);
-            
-            foreach ($directories as $directory) {
-                $category = basename($directory);
-                $categoryBlocks = $this->scanDirectory($directory);
-                
-                if (!empty($categoryBlocks)) {
-                    $blocks[$category] = $categoryBlocks;
-                }
-            }
+            $blocks = $this->scanBlocksRecursively($this->blocksPath);
         }
         
         // Get custom blocks from database
@@ -78,15 +70,42 @@ class BlockService
     }
     
     /**
-     * Scan a directory for block files
+     * Scan blocks recursively to find files in subdirectories (e.g. components/animated/)
+     */
+    protected function scanBlocksRecursively(string $basePath): array
+    {
+        $blocks = [];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($basePath, \RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+
+        foreach ($iterator as $file) {
+            if (!$file->isFile() || !str_ends_with($file->getFilename(), '.blade.php')) {
+                continue;
+            }
+            $block = $this->parseBlockFile($file);
+            if (!$block) {
+                continue;
+            }
+            $category = $block['category'];
+            if (!isset($blocks[$category])) {
+                $blocks[$category] = [];
+            }
+            $blocks[$category][] = $block;
+        }
+
+        return $blocks;
+    }
+
+    /**
+     * Scan a directory for block files (non-recursive, for backward compatibility)
      */
     protected function scanDirectory(string $directory): array
     {
         $blocks = [];
         $files = File::files($directory);
-        
+
         foreach ($files as $file) {
-            // Check for .blade.php files
             if (str_ends_with($file->getBasename(), '.blade.php')) {
                 $block = $this->parseBlockFile($file);
                 if ($block) {
@@ -94,7 +113,7 @@ class BlockService
                 }
             }
         }
-        
+
         return $blocks;
     }
     
@@ -105,7 +124,8 @@ class BlockService
     {
         $content = File::get($file->getPathname());
         $filename = $file->getBasename('.blade.php');
-        $category = basename($file->getPath()); // e.g., 'components', 'content', etc.
+        // Use immediate parent dir as category (e.g. 'animated' for components/animated/block.blade.php)
+        $category = basename($file->getPath());
         
         // Extract block metadata from comments
         $metadata = $this->extractMetadata($content);
@@ -237,6 +257,9 @@ class BlockService
             'media' => 'fas fa-image',
             'forms' => 'fas fa-wpforms',
             'components' => 'fas fa-cube',
+            'animated' => 'fas fa-magic',
+            'advanced' => 'fas fa-rocket',
+            'basic' => 'fas fa-cube',
             default => 'fas fa-cube',
         };
     }
@@ -282,22 +305,10 @@ class BlockService
      */
     public function getFileBlocks(): array
     {
-        $blocks = [];
-        
-        if (File::exists($this->blocksPath)) {
-            $directories = File::directories($this->blocksPath);
-            
-            foreach ($directories as $directory) {
-                $category = basename($directory);
-                $categoryBlocks = $this->scanDirectory($directory);
-                
-                if (!empty($categoryBlocks)) {
-                    $blocks[$category] = $categoryBlocks;
-                }
-            }
+        if (!File::exists($this->blocksPath)) {
+            return [];
         }
-        
-        return $blocks;
+        return $this->scanBlocksRecursively($this->blocksPath);
     }
 
     /**
