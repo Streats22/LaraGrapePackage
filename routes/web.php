@@ -1,12 +1,19 @@
 <?php
 
 use LaraGrape\Http\Controllers\PageController;
+use LaraGrape\Http\Controllers\FormController;
 use Illuminate\Support\Facades\Route;
 use LaraGrape\Http\Controllers\AdminPageController;
 use LaraGrape\Models\Page;
 
 // Homepage
 Route::get('/', [PageController::class, 'home'])->name('home');
+
+// Form routes (must come before dynamic routes)
+Route::post('/forms/{form}/submit', [FormController::class, 'submit'])
+    ->name('form.submit');
+Route::get('/forms/{form}/preview', [FormController::class, 'preview'])->name('form.preview');
+Route::get('/forms/{form}/embed', [FormController::class, 'embed'])->name('form.embed');
 
 // Dynamic pages
 Route::get('/{slug}', [PageController::class, 'show'])->name('page.show')

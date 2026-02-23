@@ -22,6 +22,12 @@ class LaraGrapeServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $packageDir = dirname(__DIR__, 2);
+        $this->loadViewsFrom($packageDir.'/resources/views', 'LaraGrape');
+
+        $this->app->singleton(\LaraGrape\Services\FormService::class);
+        $this->app->singleton(\LaraGrape\Services\LayoutService::class);
+
         // Register the block component service provider
         $this->app->register(BlockComponentServiceProvider::class);
         
@@ -29,7 +35,6 @@ class LaraGrapeServiceProvider extends ServiceProvider
         // No need to register additional assets here
 
         if ($this->app->runningInConsole()) {
-            $packageDir = dirname(__DIR__, 2);
             $this->publishes([
                 $packageDir.'/config/LaraGrape.php' => config_path('LaraGrape.php'),
             ], 'LaraGrape-config');
@@ -89,6 +94,7 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->commands([
                 \LaraGrape\Console\Commands\LaraGrapeSetupCommand::class,
                 \LaraGrape\Console\Commands\LaraGrapeUpdateCommand::class,
+                \LaraGrape\Console\Commands\ClearLayoutCacheCommand::class,
             ]);
             // Publish CSS assets (site.css, app.css, filament-grapesjs-editor.css)
             $this->publishes([
@@ -99,8 +105,11 @@ class LaraGrapeServiceProvider extends ServiceProvider
             // Publish PHP service/command files
             $this->publishes([
                 $packageDir.'/src/Console/Commands/RebuildTailwindCommand.php' => app_path('Console/Commands/RebuildTailwindCommand.php'),
+                $packageDir.'/src/Console/Commands/ClearLayoutCacheCommand.php' => app_path('Console/Commands/ClearLayoutCacheCommand.php'),
                 $packageDir.'/src/Services/BlockService.php' => app_path('Services/BlockService.php'),
+                $packageDir.'/src/Services/FormService.php' => app_path('Services/FormService.php'),
                 $packageDir.'/src/Services/GrapesJsConverterService.php' => app_path('Services/GrapesJsConverterService.php'),
+                $packageDir.'/src/Services/LayoutService.php' => app_path('Services/LayoutService.php'),
                 $packageDir.'/src/Services/SiteSettingsService.php' => app_path('Services/SiteSettingsService.php'),
             ], 'LaraGrape-commands');
             

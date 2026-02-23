@@ -53,8 +53,8 @@
         'saveUrl' => $saveUrl,
         'statePath' => $statePath,
         'url' => request()->url(),
-        'route_name' => request()->route()->getName() ?? 'unknown',
-        'route_parameters' => request()->route()->parameters() ?? []
+        'route_name' => request()->route()?->getName() ?? 'unknown',
+        'route_parameters' => request()->route()?->parameters() ?? []
     ]);
 @endphp
 @php

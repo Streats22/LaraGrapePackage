@@ -9,13 +9,13 @@ use Filament\Widgets\Widget;
 
 class Dashboard extends BaseDashboard
 {
-    protected static ?string $navigationIcon = 'heroicon-o-home';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-home';
     protected static ?string $navigationLabel = 'Dashboard';
     protected static ?string $title = 'LaraGrape Admin';
     protected static ?string $slug = 'dashboard';
-    protected static ?string $navigationGroup = 'Admin';
+    protected static string|\UnitEnum|null $navigationGroup = 'Admin';
 
-    public function getColumns(): int|string|array
+    public function getColumns(): int|array
     {
         return 2;
     }

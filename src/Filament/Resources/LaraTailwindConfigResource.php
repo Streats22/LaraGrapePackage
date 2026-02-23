@@ -5,13 +5,14 @@ namespace LaraGrape\Filament\Resources;
 use LaraGrape\Filament\Resources\TailwindConfigResource\Pages;
 use LaraGrape\Models\TailwindConfig;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -22,7 +23,7 @@ class LaraTailwindConfigResource extends Resource
 {
     protected static ?string $model = TailwindConfig::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-paint-brush';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-paint-brush';
     
     protected static ?string $navigationLabel = 'Tailwind Config';
     
@@ -30,15 +31,15 @@ class LaraTailwindConfigResource extends Resource
     
     protected static ?string $pluralModelLabel = 'Tailwind Configurations';
     
-    protected static ?string $navigationGroup = 'Design System';
+    protected static string|\UnitEnum|null $navigationGroup = 'Design System';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Tabs::make('Tailwind Configuration')
                     ->tabs([
-                        Tabs\Tab::make('Basic Info')
+                        Tab::make('Basic Info')
                             ->schema([
                                 Section::make('Configuration Details')
                                     ->schema([
@@ -63,7 +64,7 @@ class LaraTailwindConfigResource extends Resource
                                     ]),
                             ]),
                         
-                        Tabs\Tab::make('Colors')
+                        Tab::make('Colors')
                             ->schema([
                                 Section::make('Primary Colors')
                                     ->description('Configure your primary color palette')
@@ -132,7 +133,7 @@ class LaraTailwindConfigResource extends Resource
                                     ]),
                             ]),
                         
-                        Tabs\Tab::make('Typography')
+                        Tab::make('Typography')
                             ->schema([
                                 Section::make('Font Settings')
                                     ->schema([
@@ -172,7 +173,7 @@ class LaraTailwindConfigResource extends Resource
                                     ]),
                             ]),
                         
-                        Tabs\Tab::make('Spacing & Layout')
+                        Tab::make('Spacing & Layout')
                             ->schema([
                                 Section::make('Spacing Scale')
                                     ->schema([
@@ -230,7 +231,7 @@ class LaraTailwindConfigResource extends Resource
                                     ]),
                             ]),
                         
-                        Tabs\Tab::make('Custom CSS')
+                        Tab::make('Custom CSS')
                             ->schema([
                                 Section::make('Custom Styles')
                                     ->schema([
@@ -247,11 +248,11 @@ class LaraTailwindConfigResource extends Resource
     /* Your styles */
 }')
                                             ->helperText('Add custom CSS that will be injected into all pages')
-                                            ->visible(fn (Forms\Get $get) => $get('enable_custom_css')),
+                                            ->visible(fn ($get) => $get('enable_custom_css')),
                                     ]),
                             ]),
                         
-                        Tabs\Tab::make('Advanced')
+                        Tab::make('Advanced')
                             ->schema([
                                 Section::make('Configuration')
                                     ->schema([
