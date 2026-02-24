@@ -1,7 +1,7 @@
-{{-- @block id="animated-pricing" label="Animated Pricing" description="Animated pricing cards with interactive features and hover effects" --}}
+{{-- @block id="animated-pricing-clean" label="Animated Pricing (Clean)" description="Clean animated pricing cards with interactive features" --}}
 @php $isEditorPreview = $isEditorPreview ?? false; @endphp
 @if($isEditorPreview)
-<!-- BLOCK: animated-pricing START -->
+<!-- BLOCK: animated-pricing-clean START -->
 <div class="pricing-block py-12 bg-primary-50">
     <div class="container mx-auto px-4">
         <h2 class="text-3xl font-bold mb-8 text-center text-primary-900" data-gjs-type="text" data-gjs-name="pricing-title">Choose Your Plan</h2>
@@ -93,7 +93,7 @@
         </div>
     </div>
  </div>
-<!-- BLOCK: animated-pricing END -->
+<!-- BLOCK: animated-pricing-clean END -->
 @else
 @php
     // Ensure dynamicData is always an array

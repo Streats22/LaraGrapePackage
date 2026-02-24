@@ -1,6 +1,7 @@
 {{-- @block id="animated-cards" label="Animated Cards" description="Animated cards with hover effects and interactive features" --}}
 @php $isEditorPreview = $isEditorPreview ?? false; @endphp
 @if($isEditorPreview)
+<!-- BLOCK: animated-cards START -->
 <div class="cards-block py-12 bg-primary-50">
     <div class="container mx-auto px-4">
         <h2 class="text-3xl font-bold mb-8 text-center text-primary-900" data-gjs-type="text" data-gjs-name="cards-title">Our Services</h2>
@@ -43,6 +44,7 @@
         </div>
     </div>
  </div>
+<!-- BLOCK: animated-cards END -->
 @else
 @php
     // Ensure dynamicData is always an array

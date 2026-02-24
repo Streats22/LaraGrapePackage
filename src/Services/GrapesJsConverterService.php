@@ -521,21 +521,41 @@ class GrapesJsConverterService
     }
 
     /**
-     * Convert processed GrapesJS data to HTML for live rendering.
+     * Convert processed GrapesJS data to Blade for live rendering.
+     * Replaces block sections (with BLOCK: id START/END markers) with @include directives
+     * so the full Alpine.js version renders instead of the static editor preview.
      */
     public function convertToBlade(array $processedData): string
     {
         $html = $processedData['html'] ?? '';
         $css = $processedData['css'] ?? '';
         $output = '';
-        
+
         if (!empty($css)) {
             $output .= "<style>{$css}</style>\n";
         }
-        
-        // Return the HTML directly without Blade components
-        $output .= $html;
-        
+
+        // Replace block sections with @include to render full Alpine blocks (not editor preview)
+        $output .= $this->replaceBlocksWithIncludes($html);
+
         return $output;
+    }
+
+    /**
+     * Replace block sections (<!-- BLOCK: id START -->...<!-- BLOCK: id END -->) with @include directives.
+     */
+    protected function replaceBlocksWithIncludes(string $html): string
+    {
+        $pattern = '/<!-- BLOCK: ([a-zA-Z0-9_-]+) START -->.*?<!-- BLOCK: \1 END -->/s';
+
+        return preg_replace_callback($pattern, function ($matches) {
+            $blockId = $matches[1];
+            $viewName = $this->blockService->getViewNameForBlockId($blockId);
+            if ($viewName) {
+                return "@include('{$viewName}', ['isEditorPreview' => false])";
+            }
+            // Fallback: return original HTML if block view not found
+            return $matches[0];
+        }, $html);
     }
 }

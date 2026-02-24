@@ -366,4 +366,56 @@ class BlockService
         $relative = str_replace(resource_path('views') . '/', '', $path);
         return str_replace(['/', '.blade.php'], ['.', ''], $relative);
     }
+
+    /**
+     * Get the Blade view name for a block ID (for @include in frontend rendering).
+     * Checks app path first, then package path. Returns LaraGrape:: prefixed name for package views.
+     */
+    public function getViewNameForBlockId(string $blockId): ?string
+    {
+        $blockFile = $this->findBlockFileById($blockId);
+        if ($blockFile) {
+            $viewName = $this->bladeViewNameFromPath($blockFile);
+            if (\Illuminate\Support\Facades\View::exists($viewName)) {
+                return $viewName;
+            }
+        }
+
+        // Fallback: try package view (LaraGrape::filament.blocks...)
+        $packageDir = dirname(__DIR__, 2);
+        $packageBlocksPath = $packageDir . '/resources/views/filament/blocks';
+        if (File::exists($packageBlocksPath)) {
+            $blockFile = $this->findBlockFileInPath($blockId, $packageBlocksPath);
+            if ($blockFile) {
+                $relative = str_replace($packageDir . '/resources/views/', '', $blockFile);
+                $viewName = 'LaraGrape::' . str_replace(['/', '.blade.php'], ['.', ''], $relative);
+                if (\Illuminate\Support\Facades\View::exists($viewName)) {
+                    return $viewName;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Find block file in a specific path (used for package fallback)
+     */
+    protected function findBlockFileInPath(string $blockId, string $basePath): ?string
+    {
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($basePath, \RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+        foreach ($iterator as $file) {
+            if ($file->isFile() && str_ends_with($file->getFilename(), '.blade.php')) {
+                $content = File::get($file->getPathname());
+                $metadata = $this->extractMetadata($content);
+                $id = $metadata['id'] ?? $file->getBasename('.blade.php');
+                if ($id === $blockId || $file->getBasename('.blade.php') === $blockId) {
+                    return $file->getPathname();
+                }
+            }
+        }
+        return null;
+    }
 }
