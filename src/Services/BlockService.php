@@ -316,7 +316,10 @@ class BlockService
      */
     public function renderBlockPreview(string $blockId): ?string
     {
-        // Find the block file by id
+        if (!File::exists($this->blocksPath)) {
+            return null;
+        }
+        // Find the block file by id (searches recursively including animated/, advanced/, basic/)
         $blockFile = $this->findBlockFileById($blockId);
         if (!$blockFile) {
             return null;
@@ -338,7 +341,9 @@ class BlockService
      */
     protected function findBlockFileById(string $blockId): ?string
     {
-        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->blocksPath));
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($this->blocksPath, \RecursiveDirectoryIterator::SKIP_DOTS)
+        );
         foreach ($iterator as $file) {
             if ($file->isFile() && str_ends_with($file->getFilename(), '.blade.php')) {
                 $content = File::get($file->getPathname());

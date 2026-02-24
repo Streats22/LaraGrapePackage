@@ -94,7 +94,7 @@ class LaraSiteSettingsResource extends Resource
                                             ->schema([
                                                 TextInput::make('site_name')
                                                     ->label('Site Name')
-                                                    ->default('LaralGrape')
+                                                    ->default('LaraGrape')
                                                     ->helperText('The name of your website'),
                                                 
                                                 TextInput::make('site_tagline')
@@ -143,7 +143,7 @@ class LaraSiteSettingsResource extends Resource
                                             ->schema([
                                                 TextInput::make('header_logo_text')
                                                     ->label('Logo Text')
-                                                    ->default('LaralGrape')
+                                                    ->default('LaraGrape')
                                                     ->helperText('Text to display as logo'),
                                                 
                                                 FileUpload::make('header_logo_image')
@@ -196,7 +196,7 @@ class LaraSiteSettingsResource extends Resource
                                             ->schema([
                                                 TextInput::make('footer_logo_text')
                                                     ->label('Footer Logo Text')
-                                                    ->default('LaralGrape')
+                                                    ->default('LaraGrape')
                                                     ->helperText('Text to display in footer'),
                                                 
                                                 FileUpload::make('footer_logo_image')
@@ -220,7 +220,7 @@ class LaraSiteSettingsResource extends Resource
                                         Textarea::make('footer_content')
                                             ->label('Footer Content')
                                             ->rows(4)
-                                            ->default('© 2024 LaralGrape. All rights reserved.')
+                                            ->default('© ' . date('Y') . ' LaraGrape. All rights reserved.')
                                             ->helperText('Main footer content (supports HTML)'),
                                         
                                         Grid::make(2)
@@ -255,7 +255,7 @@ class LaraSiteSettingsResource extends Resource
                                             ->schema([
                                                 TextInput::make('seo_title')
                                                     ->label('Default Page Title')
-                                                    ->default('LaralGrape - Web Development Boilerplate')
+                                                    ->default('LaraGrape - Web Development')
                                                     ->helperText('Default title for pages without custom title'),
                                                 
                                                 TextInput::make('seo_keywords')

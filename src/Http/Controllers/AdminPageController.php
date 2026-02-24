@@ -11,12 +11,10 @@ use Illuminate\Support\Facades\Log;
 
 class AdminPageController extends Controller
 {
-    protected GrapesJsConverterService $converterService;
-    
-    public function __construct(GrapesJsConverterService $converterService)
-    {
-        $this->converterService = $converterService;
-    }
+    public function __construct(
+        protected GrapesJsConverterService $converterService,
+        protected BlockService $blockService,
+    ) {}
 
     public function saveGrapesJs(Request $request, Page $page): JsonResponse
     {
@@ -91,48 +89,18 @@ class AdminPageController extends Controller
     /**
      * Serve a rendered block preview for GrapesJS/editor
      * GET /admin/block-preview/{blockId}
+     * Uses BlockService which recursively finds blocks (including animated/, advanced/, basic/ subdirs)
      */
     public function blockPreview($blockId)
     {
         try {
             Log::info('Block preview request', ['blockId' => $blockId]);
-            
-            // Handle new block ID format: 'category/blockname' (e.g., 'components/button')
-            $viewPath = null;
-            
-            if (strpos($blockId, '/') !== false) {
-                // New format: category/blockname
-                $viewPath = 'filament.blocks.' . str_replace('/', '.', $blockId);
-            } else {
-                // Simple block ID format: try to find the block in all categories
-                $possiblePaths = [
-                    'filament.blocks.components.' . $blockId, // components subdirectory
-                    'filament.blocks.content.' . $blockId, // content subdirectory
-                    'filament.blocks.forms.' . $blockId, // forms subdirectory
-                    'filament.blocks.layouts.' . $blockId, // layouts subdirectory
-                    'filament.blocks.media.' . $blockId, // media subdirectory
-                ];
-                
-                foreach ($possiblePaths as $path) {
-                    if (view()->exists($path)) {
-                        $viewPath = $path;
-                        break;
-                    }
-                }
-            }
-            
-            if (!$viewPath) {
-                Log::warning('Block view not found', [
-                    'blockId' => $blockId,
-                    'attempted_path' => $viewPath
-                ]);
+            $html = $this->blockService->renderBlockPreview($blockId);
+            if (!$html) {
+                Log::warning('Block view not found', ['blockId' => $blockId]);
                 return response()->json(['error' => 'Block view not found: ' . $blockId], 404);
             }
-            
-            Log::info('Rendering block preview', ['viewPath' => $viewPath]);
-            $html = view($viewPath)->render();
             return response($html);
-            
         } catch (\Exception $e) {
             Log::error('Failed to load block preview', [
                 'blockId' => $blockId,
