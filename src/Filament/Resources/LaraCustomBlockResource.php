@@ -105,6 +105,7 @@ class LaraCustomBlockResource extends Resource
                                     ->schema([
                                         CodeEditor::make('html_content')
                                             ->label('HTML Content')
+                                            ->default('')
                                             ->helperText('Only HTML is allowed. Use data-gjs-type="text" and data-gjs-name="unique-name" to make elements editable'),
                                     ]),
                             ]),
