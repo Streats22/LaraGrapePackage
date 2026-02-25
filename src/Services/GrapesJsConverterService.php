@@ -542,20 +542,71 @@ class GrapesJsConverterService
     }
 
     /**
-     * Replace block sections (<!-- BLOCK: id START -->...<!-- BLOCK: id END -->) with @include directives.
+     * Replace elements with data-laragrape-block attribute with @include directives.
+     * GrapesJS may strip HTML comments, so we use data attributes which are preserved.
      */
     protected function replaceBlocksWithIncludes(string $html): string
     {
-        $pattern = '/<!-- BLOCK: ([a-zA-Z0-9_-]+) START -->.*?<!-- BLOCK: \1 END -->/s';
+        if (trim($html) === '') {
+            return $html;
+        }
 
-        return preg_replace_callback($pattern, function ($matches) {
-            $blockId = $matches[1];
+        $pattern = '/<([a-zA-Z][a-zA-Z0-9]*)[^>]*\sdata-laragrape-block="([a-zA-Z0-9_-]+)"[^>]*>(.*)$/s';
+        $offset = 0;
+        $result = '';
+
+        while (preg_match($pattern, $html, $matches, PREG_OFFSET_CAPTURE, $offset)) {
+            $tagName = $matches[1][0];
+            $blockId = $matches[2][0];
+            $matchStart = $matches[0][1];
+            $contentStart = $matches[3][1];
+
             $viewName = $this->blockService->getViewNameForBlockId($blockId);
-            if ($viewName) {
-                return "@include('{$viewName}', ['isEditorPreview' => false])";
+            if (!$viewName) {
+                $offset = $contentStart;
+                continue;
             }
-            // Fallback: return original HTML if block view not found
-            return $matches[0];
-        }, $html);
+
+            $elementEnd = $this->findMatchingClosingTag($html, $tagName, $contentStart);
+            if ($elementEnd === null) {
+                $offset = $contentStart;
+                continue;
+            }
+
+            $includeDirective = "@include('{$viewName}', ['isEditorPreview' => false])";
+            $result .= substr($html, $offset, $matchStart - $offset) . $includeDirective;
+            $offset = $elementEnd;
+        }
+
+        $result .= substr($html, $offset);
+        return $result;
+    }
+
+    /**
+     * Find the position after the matching closing tag for a given tag name.
+     */
+    protected function findMatchingClosingTag(string $html, string $tagName, int $contentStart): ?int
+    {
+        $closeTag = '</' . $tagName . '>';
+        $openTagPattern = '/<(?!\/)' . preg_quote($tagName, '/') . '[\s>]/i';
+        $depth = 1;
+        $pos = $contentStart;
+        $len = strlen($html);
+
+        while ($pos < $len && $depth > 0) {
+            $nextClose = strpos($html, $closeTag, $pos);
+            if ($nextClose === false) {
+                return null;
+            }
+            $between = substr($html, $pos, $nextClose - $pos);
+            $openCount = preg_match_all($openTagPattern, $between);
+            $depth += $openCount - 1;
+            if ($depth === 0) {
+                return $nextClose + strlen($closeTag);
+            }
+            $pos = $nextClose + strlen($closeTag);
+        }
+
+        return null;
     }
 }

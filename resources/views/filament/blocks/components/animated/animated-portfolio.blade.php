@@ -1,8 +1,7 @@
 {{-- @block id="animated-portfolio" label="Animated Portfolio" description="Animated portfolio showcase with project cards" --}}
 @php $isEditorPreview = $isEditorPreview ?? false; @endphp
 @if($isEditorPreview)
-<!-- BLOCK: animated-portfolio START -->
-<div class="portfolio-block py-12 bg-primary-50 dark:bg-primary-900">
+<div class="portfolio-block py-12 bg-primary-50 dark:bg-primary-900" data-laragrape-block="animated-portfolio">
     <div class="container mx-auto px-4">
         <h2 class="text-3xl font-bold mb-4 text-center text-primary-900 dark:text-primary-50" data-gjs-type="text" data-gjs-name="portfolio-title">Our Projects</h2>
         <p class="text-center text-primary-600 dark:text-primary-300 mb-8" data-gjs-type="text" data-gjs-name="portfolio-subtitle">Some of our recent work</p>
@@ -55,7 +54,6 @@
         </div>
     </div>
 </div>
-<!-- BLOCK: animated-portfolio END -->
 @else
 @php
     // Ensure dynamicData is always an array

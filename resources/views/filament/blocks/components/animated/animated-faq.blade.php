@@ -1,8 +1,7 @@
 {{-- @block id="animated-faq" label="Animated FAQ" description="Animated FAQ section with expandable answers and smooth transitions" --}}
 @php $isEditorPreview = $isEditorPreview ?? false; @endphp
 @if($isEditorPreview)
-<!-- BLOCK: animated-faq START -->
-<div class="faq-block py-12 bg-primary-50">
+<div class="faq-block py-12 bg-primary-50" data-laragrape-block="animated-faq">
     <div class="container mx-auto px-4">
         <h2 class="text-3xl font-bold mb-8 text-center text-primary-900" data-gjs-type="text" data-gjs-name="faq-title">Frequently Asked Questions</h2>
         <div class="max-w-4xl mx-auto space-y-4">
@@ -66,7 +65,6 @@
         </div>
     </div>
  </div>
-<!-- BLOCK: animated-faq END -->
 @else
 @php
     // Ensure dynamicData is always an array

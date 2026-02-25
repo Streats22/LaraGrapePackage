@@ -1,8 +1,7 @@
 {{-- @block id="animated-progress-bars" label="Animated Progress Bars" description="Animated progress bars with interactive features and smooth animations" --}}
 @php $isEditorPreview = $isEditorPreview ?? false; @endphp
 @if($isEditorPreview)
-<!-- BLOCK: animated-progress-bars START -->
-<div class="progress-block py-12 bg-primary-50 dark:bg-primary-900">
+<div class="progress-block py-12 bg-primary-50 dark:bg-primary-900" data-laragrape-block="animated-progress-bars">
     <div class="container mx-auto px-4">
         <h2 class="text-3xl font-bold mb-8 text-center text-primary-900 dark:text-primary-50" data-gjs-type="text" data-gjs-name="progress-title">Our Skills & Expertise</h2>
         <div class="max-w-4xl mx-auto space-y-8">
@@ -58,7 +57,6 @@
         </div>
     </div>
 </div>
-<!-- BLOCK: animated-progress-bars END -->
 @else
 @php
     // Ensure dynamicData is always an array

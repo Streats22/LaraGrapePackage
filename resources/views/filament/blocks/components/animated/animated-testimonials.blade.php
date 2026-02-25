@@ -1,8 +1,7 @@
 {{-- @block id="animated-testimonials" label="Animated Testimonials" description="Animated testimonials with carousel and interactive features" --}}
 @php $isEditorPreview = $isEditorPreview ?? false; @endphp
 @if($isEditorPreview)
-<!-- BLOCK: animated-testimonials START -->
-<div class="testimonials-block py-12 bg-primary-50">
+<div class="testimonials-block py-12 bg-primary-50" data-laragrape-block="animated-testimonials">
     <div class="container mx-auto px-4">
         <h2 class="text-3xl font-bold mb-8 text-center text-primary-900" data-gjs-type="text" data-gjs-name="testimonials-title">What Our Clients Say</h2>
         <div class="max-w-4xl mx-auto space-y-6">
@@ -68,7 +67,6 @@
         </div>
     </div>
 </div>
-<!-- BLOCK: animated-testimonials END -->
 @else
 @php
     // Ensure dynamicData is always an array

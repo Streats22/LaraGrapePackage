@@ -1,8 +1,7 @@
 {{-- @block id="animated-timeline" label="Animated Timeline" description="Interactive timeline showing the development process with animations" --}}
 @php $isEditorPreview = $isEditorPreview ?? false; @endphp
 @if($isEditorPreview)
-<!-- BLOCK: animated-timeline START -->
-<div class="animated-timeline-block py-16 bg-primary-50" x-data="{ 
+<div class="animated-timeline-block py-16 bg-primary-50" data-laragrape-block="animated-timeline" x-data="{ 
     steps: [
         { 
             title: 'Discovery & Planning', 
@@ -284,7 +283,6 @@
         </div>
     </div>
 </div>
-<!-- BLOCK: animated-timeline END -->
 @else
 @php
     // Ensure dynamicData is always an array

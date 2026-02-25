@@ -1,8 +1,7 @@
 {{-- @block id="animated-stats" label="Animated Stats" description="Animated statistics with counting animations and hover effects" --}}
 @php $isEditorPreview = $isEditorPreview ?? false; @endphp
 @if($isEditorPreview)
-<!-- BLOCK: animated-stats START -->
-<div class="animated-stats-block py-16 bg-primary-50 dark:bg-primary-900">
+<div class="animated-stats-block py-16 bg-primary-50 dark:bg-primary-900" data-laragrape-block="animated-stats">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
             <h2 class="text-4xl font-extrabold mb-4 text-primary-900 dark:text-primary-50" data-gjs-type="text" data-gjs-name="stats-title">Our Impact</h2>
@@ -76,7 +75,6 @@
         </div>
     </div>
 </div>
-<!-- BLOCK: animated-stats END -->
 @else
 @php
     // Ensure dynamicData is always an array

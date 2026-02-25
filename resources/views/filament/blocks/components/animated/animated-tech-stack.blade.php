@@ -1,8 +1,7 @@
 {{-- @block id="animated-tech-stack" label="Animated Tech Stack" description="Animated tech stack showcase with logos and animations" --}}
 @php $isEditorPreview = $isEditorPreview ?? false; @endphp
 @if($isEditorPreview)
-<!-- BLOCK: animated-tech-stack START -->
-<div class="tech-stack-block py-12 bg-primary-50 dark:bg-primary-900">
+<div class="tech-stack-block py-12 bg-primary-50 dark:bg-primary-900" data-laragrape-block="animated-tech-stack">
     <div class="container mx-auto px-4">
         <h2 class="text-3xl font-bold mb-4 text-center text-primary-900 dark:text-primary-50" data-gjs-type="text" data-gjs-name="tech-stack-title">Our Tech Stack</h2>
         <p class="text-center text-primary-600 dark:text-primary-300 mb-8" data-gjs-type="text" data-gjs-name="tech-stack-subtitle">Technologies we work with</p>
@@ -40,7 +39,6 @@
         </div>
     </div>
 </div>
-<!-- BLOCK: animated-tech-stack END -->
 @else
 @php
     // Ensure dynamicData is always an array
