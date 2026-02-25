@@ -6,13 +6,14 @@ use LaraGrape\Filament\Resources\CustomBlockResource\Pages;
 use LaraGrape\Filament\Resources\CustomBlockResource\RelationManagers;
 use LaraGrape\Models\CustomBlock;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -20,14 +21,14 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\ViewField;
-use Wiebenieuwenhuis\FilamentCodeEditor\Components\CodeEditor;
+use Filament\Forms\Components\CodeEditor;
 use Filament\Forms\Components\TagsInput;
 
 class LaraCustomBlockResource extends Resource
 {
     protected static ?string $model = CustomBlock::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-cube';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-cube';
     
     protected static ?string $navigationLabel = 'Custom Blocks';
     
@@ -35,15 +36,15 @@ class LaraCustomBlockResource extends Resource
     
     protected static ?string $pluralModelLabel = 'Custom Blocks';
     
-    protected static ?string $navigationGroup = 'Design System';
+    protected static string|\UnitEnum|null $navigationGroup = 'Design System';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Tabs::make('Block Builder')
                     ->tabs([
-                        Tabs\Tab::make('Basic Info')
+                        Tab::make('Basic Info')
                             ->schema([
                                 Section::make('Block Details')
                                     ->schema([
@@ -97,17 +98,18 @@ class LaraCustomBlockResource extends Resource
                                             ]),
                                     ]),
                             ]),
-                        Tabs\Tab::make('HTML')
+                        Tab::make('HTML')
                             ->schema([
                                 Section::make('HTML Structure')
                                     ->description('Write the HTML structure for your block. Use data-gjs attributes for GrapesJS integration.')
                                     ->schema([
                                         CodeEditor::make('html_content')
                                             ->label('HTML Content')
+                                            ->default('')
                                             ->helperText('Only HTML is allowed. Use data-gjs-type="text" and data-gjs-name="unique-name" to make elements editable'),
                                     ]),
                             ]),
-                        Tabs\Tab::make('CSS Styling')
+                        Tab::make('CSS Styling')
                             ->schema([
                                 Section::make('Custom CSS')
                                     ->description('Add custom CSS styles for your block')
@@ -117,7 +119,7 @@ class LaraCustomBlockResource extends Resource
                                             ->helperText('CSS will be scoped to this block'),
                                     ]),
                             ]),
-                        Tabs\Tab::make('PHP')
+                        Tab::make('PHP')
                             ->schema([
                                 Section::make('Custom PHP')
                                     ->description('Add custom PHP (Blade) code for advanced use. This will not be executed in the admin preview.')
@@ -127,7 +129,7 @@ class LaraCustomBlockResource extends Resource
                                             ->helperText('Write your PHP/Blade code here. This will only be executed on the frontend, not in the admin preview.'),
                                     ]),
                             ]),
-                        Tabs\Tab::make('Variables')
+                        Tab::make('Variables')
                             ->schema([
                                 Section::make('Reusable Variables')
                                     ->description('Define variables (e.g., title, content) that can be used in your block code as {{ $variable }}.')
@@ -140,7 +142,7 @@ class LaraCustomBlockResource extends Resource
                                             ->helperText('Define variables that can be used in your HTML, CSS, or PHP/Blade code.'),
                                     ]),
                             ]),
-                        Tabs\Tab::make('Preview')
+                        Tab::make('Preview')
                             ->schema([
                                 Section::make('Block Preview')
                                     ->description('See how your block will look')
@@ -156,7 +158,7 @@ class LaraCustomBlockResource extends Resource
                                             ->columnSpanFull(),
                                     ]),
                             ]),
-                        Tabs\Tab::make('Examples & Help')
+                        Tab::make('Examples & Help')
                             ->schema([
                                 Section::make('Block Examples & Conventions')
                                     ->description('Reference for building custom blocks')
@@ -219,10 +221,10 @@ class LaraCustomBlockResource extends Resource
                     ->label('Active'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\Action::make('clone')
+                \Filament\Actions\ViewAction::make(),
+                \Filament\Actions\EditAction::make(),
+                \Filament\Actions\DeleteAction::make(),
+                \Filament\Actions\Action::make('clone')
                     ->label('Clone')
                     ->icon('heroicon-o-document-duplicate')
                     ->action(function ($record, $livewire) {
@@ -230,14 +232,14 @@ class LaraCustomBlockResource extends Resource
                         $newBlock->name = $record->name . ' (Copy)';
                         $newBlock->slug = $record->slug . '-copy-' . uniqid();
                         $newBlock->push();
-                        $livewire->redirect(CustomBlockResource::getUrl('edit', ['record' => $newBlock->getKey()]));
+                        $livewire->redirect(static::getUrl('edit', ['record' => $newBlock->getKey()]));
                     })
                     ->color('secondary'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\BulkAction::make('export')
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
+                    \Filament\Actions\BulkAction::make('export')
                         ->label('Export as JSON')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->action(function ($records) {
@@ -246,7 +248,7 @@ class LaraCustomBlockResource extends Resource
                                 ->header('Content-Type', 'application/json')
                                 ->header('Content-Disposition', 'attachment; filename=custom-blocks-export.json');
                         }),
-                    Tables\Actions\BulkAction::make('import')
+                    \Filament\Actions\BulkAction::make('import')
                         ->label('Import from JSON')
                         ->icon('heroicon-o-arrow-up-tray')
                         ->form([

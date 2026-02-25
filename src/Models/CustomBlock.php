@@ -43,6 +43,9 @@ class CustomBlock extends Model
             if (empty($block->slug)) {
                 $block->slug = Str::slug($block->name);
             }
+            if ($block->html_content === null) {
+                $block->html_content = '';
+            }
         });
         
         static::updating(function ($block) {
@@ -81,7 +84,7 @@ class CustomBlock extends Model
      */
     public function getCompleteContent(): string
     {
-        $content = $this->html_content;
+        $content = $this->html_content ?? '';
         
         if (!empty($this->css_content)) {
             $content = "<style>{$this->css_content}</style>" . $content;

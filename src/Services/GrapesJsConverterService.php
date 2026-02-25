@@ -521,21 +521,92 @@ class GrapesJsConverterService
     }
 
     /**
-     * Convert processed GrapesJS data to HTML for live rendering.
+     * Convert processed GrapesJS data to Blade for live rendering.
+     * Replaces block sections (with BLOCK: id START/END markers) with @include directives
+     * so the full Alpine.js version renders instead of the static editor preview.
      */
     public function convertToBlade(array $processedData): string
     {
         $html = $processedData['html'] ?? '';
         $css = $processedData['css'] ?? '';
         $output = '';
-        
+
         if (!empty($css)) {
             $output .= "<style>{$css}</style>\n";
         }
-        
-        // Return the HTML directly without Blade components
-        $output .= $html;
-        
+
+        // Replace block sections with @include to render full Alpine blocks (not editor preview)
+        $output .= $this->replaceBlocksWithIncludes($html);
+
         return $output;
+    }
+
+    /**
+     * Replace elements with data-laragrape-block attribute with @include directives.
+     * GrapesJS may strip HTML comments, so we use data attributes which are preserved.
+     */
+    protected function replaceBlocksWithIncludes(string $html): string
+    {
+        if (trim($html) === '') {
+            return $html;
+        }
+
+        $pattern = '/<([a-zA-Z][a-zA-Z0-9]*)[^>]*\sdata-laragrape-block="([a-zA-Z0-9_-]+)"[^>]*>(.*)$/s';
+        $offset = 0;
+        $result = '';
+
+        while (preg_match($pattern, $html, $matches, PREG_OFFSET_CAPTURE, $offset)) {
+            $tagName = $matches[1][0];
+            $blockId = $matches[2][0];
+            $matchStart = $matches[0][1];
+            $contentStart = $matches[3][1];
+
+            $viewName = $this->blockService->getViewNameForBlockId($blockId);
+            if (!$viewName) {
+                $offset = $contentStart;
+                continue;
+            }
+
+            $elementEnd = $this->findMatchingClosingTag($html, $tagName, $contentStart);
+            if ($elementEnd === null) {
+                $offset = $contentStart;
+                continue;
+            }
+
+            $includeDirective = "@include('{$viewName}', ['isEditorPreview' => false])";
+            $result .= substr($html, $offset, $matchStart - $offset) . $includeDirective;
+            $offset = $elementEnd;
+        }
+
+        $result .= substr($html, $offset);
+        return $result;
+    }
+
+    /**
+     * Find the position after the matching closing tag for a given tag name.
+     */
+    protected function findMatchingClosingTag(string $html, string $tagName, int $contentStart): ?int
+    {
+        $closeTag = '</' . $tagName . '>';
+        $openTagPattern = '/<(?!\/)' . preg_quote($tagName, '/') . '[\s>]/i';
+        $depth = 1;
+        $pos = $contentStart;
+        $len = strlen($html);
+
+        while ($pos < $len && $depth > 0) {
+            $nextClose = strpos($html, $closeTag, $pos);
+            if ($nextClose === false) {
+                return null;
+            }
+            $between = substr($html, $pos, $nextClose - $pos);
+            $openCount = preg_match_all($openTagPattern, $between);
+            $depth += $openCount - 1;
+            if ($depth === 0) {
+                return $nextClose + strlen($closeTag);
+            }
+            $pos = $nextClose + strlen($closeTag);
+        }
+
+        return null;
     }
 }

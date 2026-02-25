@@ -7,21 +7,22 @@ use LaraGrape\Filament\Resources\PageResource\Pages;
 use LaraGrape\Filament\Resources\PageResource\RelationManagers;
 use LaraGrape\Models\Page;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 
 class LaraPageResource extends Resource
 {
     protected static ?string $model = Page::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
     
     protected static ?string $navigationLabel = 'Pages';
     
@@ -29,13 +30,13 @@ class LaraPageResource extends Resource
     
     protected static ?string $pluralModelLabel = 'Pages';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Tabs::make('Page Content')
                     ->tabs([
-                        Tabs\Tab::make('Basic Information')
+                        Tab::make('Basic Information')
                             ->schema([
                                 Section::make('Page Details')
                                     ->schema([
@@ -45,7 +46,7 @@ class LaraPageResource extends Resource
                                                     ->required()
                                                     ->maxLength(255)
                                                     ->live(onBlur: true)
-                                                    ->afterStateUpdated(fn (string $operation, $state, Forms\Set $set) => $operation === 'create' ? $set('slug', \Illuminate\Support\Str::slug($state)) : null),
+                                                    ->afterStateUpdated(fn (string $operation, $state, $set) => $operation === 'create' ? $set('slug', \Illuminate\Support\Str::slug($state)) : null),
                                                 
                                                 Forms\Components\TextInput::make('slug')
                                                     ->required()
@@ -88,7 +89,7 @@ class LaraPageResource extends Resource
                                     ]),
                             ]),
                         
-                        Tabs\Tab::make('Visual Editor')
+                        Tab::make('Visual Editor')
                             ->schema([
                                 Section::make('Page Builder')
                                     ->description('Use the visual editor to design your page')
@@ -100,7 +101,7 @@ class LaraPageResource extends Resource
                                     ]),
                             ]),
                         
-                        Tabs\Tab::make('Content')
+                        Tab::make('Content')
                             ->schema([
                                 Section::make('Page Content')
                                     ->schema([
@@ -126,7 +127,7 @@ class LaraPageResource extends Resource
                                     ]),
                             ]),
                         
-                        Tabs\Tab::make('SEO')
+                        Tab::make('SEO')
                             ->schema([
                                 Section::make('Search Engine Optimization')
                                     ->schema([
@@ -208,17 +209,17 @@ class LaraPageResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()
+                \Filament\Actions\ViewAction::make()
                     ->url(fn (Page $record) => route('page.show', $record->slug))
                     ->openUrlInNewTab(),
                 
-                Tables\Actions\EditAction::make(),
+                \Filament\Actions\EditAction::make(),
                 
-                Tables\Actions\DeleteAction::make(),
+                \Filament\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');

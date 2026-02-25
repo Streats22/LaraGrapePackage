@@ -22,6 +22,12 @@ class LaraGrapeServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $packageDir = dirname(__DIR__, 2);
+        $this->loadViewsFrom($packageDir.'/resources/views', 'LaraGrape');
+
+        $this->app->singleton(\LaraGrape\Services\FormService::class);
+        $this->app->singleton(\LaraGrape\Services\LayoutService::class);
+
         // Register the block component service provider
         $this->app->register(BlockComponentServiceProvider::class);
         
@@ -29,7 +35,6 @@ class LaraGrapeServiceProvider extends ServiceProvider
         // No need to register additional assets here
 
         if ($this->app->runningInConsole()) {
-            $packageDir = dirname(__DIR__, 2);
             $this->publishes([
                 $packageDir.'/config/LaraGrape.php' => config_path('LaraGrape.php'),
             ], 'LaraGrape-config');
@@ -89,6 +94,7 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->commands([
                 \LaraGrape\Console\Commands\LaraGrapeSetupCommand::class,
                 \LaraGrape\Console\Commands\LaraGrapeUpdateCommand::class,
+                \LaraGrape\Console\Commands\ClearLayoutCacheCommand::class,
             ]);
             // Publish CSS assets (site.css, app.css, filament-grapesjs-editor.css)
             $this->publishes([
@@ -99,8 +105,11 @@ class LaraGrapeServiceProvider extends ServiceProvider
             // Publish PHP service/command files
             $this->publishes([
                 $packageDir.'/src/Console/Commands/RebuildTailwindCommand.php' => app_path('Console/Commands/RebuildTailwindCommand.php'),
+                $packageDir.'/src/Console/Commands/ClearLayoutCacheCommand.php' => app_path('Console/Commands/ClearLayoutCacheCommand.php'),
                 $packageDir.'/src/Services/BlockService.php' => app_path('Services/BlockService.php'),
+                $packageDir.'/src/Services/FormService.php' => app_path('Services/FormService.php'),
                 $packageDir.'/src/Services/GrapesJsConverterService.php' => app_path('Services/GrapesJsConverterService.php'),
+                $packageDir.'/src/Services/LayoutService.php' => app_path('Services/LayoutService.php'),
                 $packageDir.'/src/Services/SiteSettingsService.php' => app_path('Services/SiteSettingsService.php'),
             ], 'LaraGrape-commands');
             
@@ -210,6 +219,38 @@ class LaraGrapeServiceProvider extends ServiceProvider
                 $packageDir.'/src/Filament/Resources/TailwindConfigResource/Pages/LaraEditTailwindConfig.php' => app_path('Filament/Resources/TailwindConfigResource/Pages/EditTailwindConfig.php'),
                 $packageDir.'/src/Filament/Resources/TailwindConfigResource/Pages/LaraListTailwindConfigs.php' => app_path('Filament/Resources/TailwindConfigResource/Pages/ListTailwindConfigs.php'),
             ], 'laragrape-tailwindconfig-resource');
+
+            // Publishing for HeaderConfig, FooterConfig, Form, FormSubmission, MenuSet
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/LaraHeaderConfigResource.php' => app_path('Filament/Resources/HeaderConfigResource.php'),
+                $packageDir.'/src/Filament/Resources/HeaderConfigResource/Pages/LaraListHeaderConfigs.php' => app_path('Filament/Resources/HeaderConfigResource/Pages/ListHeaderConfigs.php'),
+                $packageDir.'/src/Filament/Resources/HeaderConfigResource/Pages/LaraCreateHeaderConfig.php' => app_path('Filament/Resources/HeaderConfigResource/Pages/CreateHeaderConfig.php'),
+                $packageDir.'/src/Filament/Resources/HeaderConfigResource/Pages/LaraEditHeaderConfig.php' => app_path('Filament/Resources/HeaderConfigResource/Pages/EditHeaderConfig.php'),
+            ], 'laragrape-headerconfig-resource');
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/LaraFooterConfigResource.php' => app_path('Filament/Resources/FooterConfigResource.php'),
+                $packageDir.'/src/Filament/Resources/FooterConfigResource/Pages/LaraListFooterConfigs.php' => app_path('Filament/Resources/FooterConfigResource/Pages/ListFooterConfigs.php'),
+                $packageDir.'/src/Filament/Resources/FooterConfigResource/Pages/LaraCreateFooterConfig.php' => app_path('Filament/Resources/FooterConfigResource/Pages/CreateFooterConfig.php'),
+                $packageDir.'/src/Filament/Resources/FooterConfigResource/Pages/LaraEditFooterConfig.php' => app_path('Filament/Resources/FooterConfigResource/Pages/EditFooterConfig.php'),
+            ], 'laragrape-footerconfig-resource');
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/LaraFormResource.php' => app_path('Filament/Resources/FormResource.php'),
+                $packageDir.'/src/Filament/Resources/FormResource/Pages/LaraListForms.php' => app_path('Filament/Resources/FormResource/Pages/ListForms.php'),
+                $packageDir.'/src/Filament/Resources/FormResource/Pages/LaraCreateForm.php' => app_path('Filament/Resources/FormResource/Pages/CreateForm.php'),
+                $packageDir.'/src/Filament/Resources/FormResource/Pages/LaraEditForm.php' => app_path('Filament/Resources/FormResource/Pages/EditForm.php'),
+            ], 'laragrape-form-resource');
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/LaraFormSubmissionResource.php' => app_path('Filament/Resources/FormSubmissionResource.php'),
+                $packageDir.'/src/Filament/Resources/FormSubmissionResource/Pages/LaraListFormSubmissions.php' => app_path('Filament/Resources/FormSubmissionResource/Pages/ListFormSubmissions.php'),
+                $packageDir.'/src/Filament/Resources/FormSubmissionResource/Pages/LaraCreateFormSubmission.php' => app_path('Filament/Resources/FormSubmissionResource/Pages/CreateFormSubmission.php'),
+                $packageDir.'/src/Filament/Resources/FormSubmissionResource/Pages/LaraEditFormSubmission.php' => app_path('Filament/Resources/FormSubmissionResource/Pages/EditFormSubmission.php'),
+            ], 'laragrape-formsubmission-resource');
+            $this->publishes([
+                $packageDir.'/src/Filament/Resources/LaraMenuSetResource.php' => app_path('Filament/Resources/MenuSetResource.php'),
+                $packageDir.'/src/Filament/Resources/MenuSetResource/Pages/LaraListMenuSets.php' => app_path('Filament/Resources/MenuSetResource/Pages/ListMenuSets.php'),
+                $packageDir.'/src/Filament/Resources/MenuSetResource/Pages/LaraCreateMenuSet.php' => app_path('Filament/Resources/MenuSetResource/Pages/CreateMenuSet.php'),
+                $packageDir.'/src/Filament/Resources/MenuSetResource/Pages/LaraEditMenuSet.php' => app_path('Filament/Resources/MenuSetResource/Pages/EditMenuSet.php'),
+            ], 'laragrape-menuset-resource');
 
             // Publish AdminPageController for block previews
             $this->publishes([

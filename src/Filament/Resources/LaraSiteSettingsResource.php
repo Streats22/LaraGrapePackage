@@ -6,13 +6,14 @@ use LaraGrape\Filament\Resources\SiteSettingsResource\Pages;
 use LaraGrape\Filament\Resources\SiteSettingsResource\RelationManagers;
 use LaraGrape\Models\SiteSettings;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -27,7 +28,7 @@ class LaraSiteSettingsResource extends Resource
 {
     protected static ?string $model = SiteSettings::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
     
     protected static ?string $navigationLabel = 'Site Settings';
     
@@ -35,16 +36,16 @@ class LaraSiteSettingsResource extends Resource
     
     protected static ?string $pluralModelLabel = 'Site Settings';
     
-    protected static ?string $navigationGroup = 'Design System';
+    protected static string|\UnitEnum|null $navigationGroup = 'Design System';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
             
                 Tabs::make('Site Configuration')
                     ->tabs([
-                        Tabs\Tab::make('General')
+                        Tab::make('General')
                             ->schema([
                                 Select::make('label_select')
                                     ->label('Label')
@@ -61,7 +62,7 @@ class LaraSiteSettingsResource extends Resource
                                         'Other (custom)' => 'Other (custom)',
                                     ])
                                     ->required()
-                                    ->reactive()
+                                    ->live()
                                     ->afterStateUpdated(function ($set, $state) {
                                         if ($state !== 'Other (custom)') {
                                             $set('label', $state);
@@ -77,7 +78,7 @@ class LaraSiteSettingsResource extends Resource
                                     ->placeholder('Enter a custom label')
                                     ->required(fn ($get) => $get('label_select') === 'Other (custom)')
                                     ->visible(fn ($get) => $get('label_select') === 'Other (custom)')
-                                    ->reactive()
+                                    ->live()
                                     ->afterStateUpdated(function ($set, $state) {
                                         $set('key', \Illuminate\Support\Str::slug($state, '_'));
                                     }),
@@ -93,7 +94,7 @@ class LaraSiteSettingsResource extends Resource
                                             ->schema([
                                                 TextInput::make('site_name')
                                                     ->label('Site Name')
-                                                    ->default('LaralGrape')
+                                                    ->default('LaraGrape')
                                                     ->helperText('The name of your website'),
                                                 
                                                 TextInput::make('site_tagline')
@@ -142,7 +143,7 @@ class LaraSiteSettingsResource extends Resource
                                             ->schema([
                                                 TextInput::make('header_logo_text')
                                                     ->label('Logo Text')
-                                                    ->default('LaralGrape')
+                                                    ->default('LaraGrape')
                                                     ->helperText('Text to display as logo'),
                                                 
                                                 FileUpload::make('header_logo_image')
@@ -195,7 +196,7 @@ class LaraSiteSettingsResource extends Resource
                                             ->schema([
                                                 TextInput::make('footer_logo_text')
                                                     ->label('Footer Logo Text')
-                                                    ->default('LaralGrape')
+                                                    ->default('LaraGrape')
                                                     ->helperText('Text to display in footer'),
                                                 
                                                 FileUpload::make('footer_logo_image')
@@ -219,7 +220,7 @@ class LaraSiteSettingsResource extends Resource
                                         Textarea::make('footer_content')
                                             ->label('Footer Content')
                                             ->rows(4)
-                                            ->default('© 2024 LaralGrape. All rights reserved.')
+                                            ->default('© ' . date('Y') . ' LaraGrape. All rights reserved.')
                                             ->helperText('Main footer content (supports HTML)'),
                                         
                                         Grid::make(2)
@@ -254,7 +255,7 @@ class LaraSiteSettingsResource extends Resource
                                             ->schema([
                                                 TextInput::make('seo_title')
                                                     ->label('Default Page Title')
-                                                    ->default('LaralGrape - Web Development Boilerplate')
+                                                    ->default('LaraGrape - Web Development')
                                                     ->helperText('Default title for pages without custom title'),
                                                 
                                                 TextInput::make('seo_keywords')
@@ -414,12 +415,12 @@ console.log("Site loaded!");')
                     ->options(SiteSettings::getTypes()),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                \Filament\Actions\EditAction::make(),
+                \Filament\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('group', 'asc');

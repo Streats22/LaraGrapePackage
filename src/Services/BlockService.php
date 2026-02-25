@@ -26,24 +26,16 @@ class BlockService
     }
     
     /**
-     * Get all available blocks organized by category
+     * Get all available blocks organized by category.
+     * Recursively scans subdirectories (e.g. components/animated/) so animated blocks are found.
      */
     public function getBlocks(): array
     {
         $blocks = [];
         
-        // Get file-based blocks
+        // Get file-based blocks (recursive scan for subdirs like components/animated/)
         if (File::exists($this->blocksPath)) {
-            $directories = File::directories($this->blocksPath);
-            
-            foreach ($directories as $directory) {
-                $category = basename($directory);
-                $categoryBlocks = $this->scanDirectory($directory);
-                
-                if (!empty($categoryBlocks)) {
-                    $blocks[$category] = $categoryBlocks;
-                }
-            }
+            $blocks = $this->scanBlocksRecursively($this->blocksPath);
         }
         
         // Get custom blocks from database
@@ -78,15 +70,42 @@ class BlockService
     }
     
     /**
-     * Scan a directory for block files
+     * Scan blocks recursively to find files in subdirectories (e.g. components/animated/)
+     */
+    protected function scanBlocksRecursively(string $basePath): array
+    {
+        $blocks = [];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($basePath, \RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+
+        foreach ($iterator as $file) {
+            if (!$file->isFile() || !str_ends_with($file->getFilename(), '.blade.php')) {
+                continue;
+            }
+            $block = $this->parseBlockFile($file);
+            if (!$block) {
+                continue;
+            }
+            $category = $block['category'];
+            if (!isset($blocks[$category])) {
+                $blocks[$category] = [];
+            }
+            $blocks[$category][] = $block;
+        }
+
+        return $blocks;
+    }
+
+    /**
+     * Scan a directory for block files (non-recursive, for backward compatibility)
      */
     protected function scanDirectory(string $directory): array
     {
         $blocks = [];
         $files = File::files($directory);
-        
+
         foreach ($files as $file) {
-            // Check for .blade.php files
             if (str_ends_with($file->getBasename(), '.blade.php')) {
                 $block = $this->parseBlockFile($file);
                 if ($block) {
@@ -94,7 +113,7 @@ class BlockService
                 }
             }
         }
-        
+
         return $blocks;
     }
     
@@ -105,7 +124,8 @@ class BlockService
     {
         $content = File::get($file->getPathname());
         $filename = $file->getBasename('.blade.php');
-        $category = basename($file->getPath()); // e.g., 'components', 'content', etc.
+        // Use immediate parent dir as category (e.g. 'animated' for components/animated/block.blade.php)
+        $category = basename($file->getPath());
         
         // Extract block metadata from comments
         $metadata = $this->extractMetadata($content);
@@ -237,6 +257,9 @@ class BlockService
             'media' => 'fas fa-image',
             'forms' => 'fas fa-wpforms',
             'components' => 'fas fa-cube',
+            'animated' => 'fas fa-magic',
+            'advanced' => 'fas fa-rocket',
+            'basic' => 'fas fa-cube',
             default => 'fas fa-cube',
         };
     }
@@ -282,22 +305,10 @@ class BlockService
      */
     public function getFileBlocks(): array
     {
-        $blocks = [];
-        
-        if (File::exists($this->blocksPath)) {
-            $directories = File::directories($this->blocksPath);
-            
-            foreach ($directories as $directory) {
-                $category = basename($directory);
-                $categoryBlocks = $this->scanDirectory($directory);
-                
-                if (!empty($categoryBlocks)) {
-                    $blocks[$category] = $categoryBlocks;
-                }
-            }
+        if (!File::exists($this->blocksPath)) {
+            return [];
         }
-        
-        return $blocks;
+        return $this->scanBlocksRecursively($this->blocksPath);
     }
 
     /**
@@ -305,7 +316,10 @@ class BlockService
      */
     public function renderBlockPreview(string $blockId): ?string
     {
-        // Find the block file by id
+        if (!File::exists($this->blocksPath)) {
+            return null;
+        }
+        // Find the block file by id (searches recursively including animated/, advanced/, basic/)
         $blockFile = $this->findBlockFileById($blockId);
         if (!$blockFile) {
             return null;
@@ -327,7 +341,9 @@ class BlockService
      */
     protected function findBlockFileById(string $blockId): ?string
     {
-        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->blocksPath));
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($this->blocksPath, \RecursiveDirectoryIterator::SKIP_DOTS)
+        );
         foreach ($iterator as $file) {
             if ($file->isFile() && str_ends_with($file->getFilename(), '.blade.php')) {
                 $content = File::get($file->getPathname());
@@ -349,5 +365,57 @@ class BlockService
     {
         $relative = str_replace(resource_path('views') . '/', '', $path);
         return str_replace(['/', '.blade.php'], ['.', ''], $relative);
+    }
+
+    /**
+     * Get the Blade view name for a block ID (for @include in frontend rendering).
+     * Checks app path first, then package path. Returns LaraGrape:: prefixed name for package views.
+     */
+    public function getViewNameForBlockId(string $blockId): ?string
+    {
+        $blockFile = $this->findBlockFileById($blockId);
+        if ($blockFile) {
+            $viewName = $this->bladeViewNameFromPath($blockFile);
+            if (\Illuminate\Support\Facades\View::exists($viewName)) {
+                return $viewName;
+            }
+        }
+
+        // Fallback: try package view (LaraGrape::filament.blocks...)
+        $packageDir = dirname(__DIR__, 2);
+        $packageBlocksPath = $packageDir . '/resources/views/filament/blocks';
+        if (File::exists($packageBlocksPath)) {
+            $blockFile = $this->findBlockFileInPath($blockId, $packageBlocksPath);
+            if ($blockFile) {
+                $relative = str_replace($packageDir . '/resources/views/', '', $blockFile);
+                $viewName = 'LaraGrape::' . str_replace(['/', '.blade.php'], ['.', ''], $relative);
+                if (\Illuminate\Support\Facades\View::exists($viewName)) {
+                    return $viewName;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Find block file in a specific path (used for package fallback)
+     */
+    protected function findBlockFileInPath(string $blockId, string $basePath): ?string
+    {
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($basePath, \RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+        foreach ($iterator as $file) {
+            if ($file->isFile() && str_ends_with($file->getFilename(), '.blade.php')) {
+                $content = File::get($file->getPathname());
+                $metadata = $this->extractMetadata($content);
+                $id = $metadata['id'] ?? $file->getBasename('.blade.php');
+                if ($id === $blockId || $file->getBasename('.blade.php') === $blockId) {
+                    return $file->getPathname();
+                }
+            }
+        }
+        return null;
     }
 }

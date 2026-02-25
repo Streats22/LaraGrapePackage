@@ -173,9 +173,9 @@ class PageController extends Controller
     private function createDefaultHomepage(): Page
     {
         return Page::create([
-            'title' => 'Welcome to LaralGrape',
+            'title' => 'Welcome to LaraGrape',
             'slug' => 'home',
-            'content' => '<h1>Welcome to LaralGrape</h1><p>This is your new Laravel + GrapesJS + Filament boilerplate!</p>',
+            'content' => '<h1>Welcome to LaraGrape</h1><p>This is your Laravel + GrapesJS + Filament boilerplate. Edit this page in the admin panel.</p>',
             'is_published' => true,
             'published_at' => now(),
         ]);

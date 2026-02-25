@@ -3,7 +3,7 @@
 @section('content')
     <div class="py-10 px-6 max-w-5xl mx-auto">
         <div class="mb-8 text-center">
-            <h1 class="text-4xl font-bold text-primary-700 mb-2">Welcome to LaralGrape Admin</h1>
+            <h1 class="text-4xl font-bold text-primary-700 mb-2">Welcome to LaraGrape Admin</h1>
             <p class="text-lg text-primary-600">Manage your site content, blocks, and settings with ease.</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
