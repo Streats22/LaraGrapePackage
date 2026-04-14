@@ -16,6 +16,6 @@
     },
     "dependencies": {
         "alpinejs": "^3.14.9",
-        "grapesjs": "^0.22.8"
+        "grapesjs": "^0.22.15"
     }
 }
