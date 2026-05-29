@@ -15,6 +15,7 @@ class LaraGrapeSetupCommand extends Command
         {--publish-views : Only publish views}
         {--publish-migrations : Only publish migrations}
         {--publish-seeders : Only publish seeders}
+        {--portfolio : Publish optional portfolio CMS module}
         {--all : Publish everything, migrate, and seed}';
     protected $description = 'Setup LaraGrape: publish config, views, migrations, and optionally run migrations';
 
@@ -22,31 +23,35 @@ class LaraGrapeSetupCommand extends Command
     {
         $this->info('🚀 Starting LaraGrape setup...');
         
-        // 1. Filament install (if confirmed)
-        if (!$this->option('all')) {
-            if ($this->confirm('Do you want to install the Filament admin panel now? (Recommended for first-time setup)', true)) {
-                $this->info('📦 Running Filament base install...');
-                try {
-                    $this->call('filament:install');
-                    $this->info('✅ Filament base install completed.');
-                } catch (\Exception $e) {
-                    $this->warn('⚠️  Filament base install failed: ' . $e->getMessage());
-                    $this->warn('You may need to run "php artisan filament:install" manually.');
-                }
-                
-                $this->info('🔧 Enabling Filament panels support...');
-                try {
-                    $this->call('filament:install', [
-                        '--panels' => true,
-                    ]);
-                    $this->info('✅ Filament panels support enabled.');
-                } catch (\Exception $e) {
-                    $this->warn('⚠️  Filament panels install failed: ' . $e->getMessage());
-                    $this->warn('You may need to run "php artisan filament:install --panels" manually.');
-                }
-            } else {
-                $this->warn('⚠️  You must run "php artisan filament:install" and then "php artisan filament:install --panels" before using the admin panel.');
+        // 1. Filament install (required for AdminPanelProvider and /admin)
+        $shouldInstallFilament = $this->option('all')
+            || $this->confirm('Do you want to install the Filament admin panel now? (Recommended for first-time setup)', true);
+
+        if ($shouldInstallFilament) {
+            $this->info('📦 Running Filament base install...');
+            try {
+                $this->call('filament:install', [
+                    '--no-interaction' => true,
+                ]);
+                $this->info('✅ Filament base install completed.');
+            } catch (\Exception $e) {
+                $this->warn('⚠️  Filament base install failed: '.$e->getMessage());
+                $this->warn('You may need to run "php artisan filament:install" manually.');
             }
+
+            $this->info('🔧 Enabling Filament panels support...');
+            try {
+                $this->call('filament:install', [
+                    '--panels' => true,
+                    '--no-interaction' => true,
+                ]);
+                $this->info('✅ Filament panels support enabled.');
+            } catch (\Exception $e) {
+                $this->warn('⚠️  Filament panels install failed: '.$e->getMessage());
+                $this->warn('You may need to run "php artisan filament:install --panels" manually.');
+            }
+        } else {
+            $this->warn('⚠️  Skipping Filament install. Run filament:install --panels before using /admin.');
         }
 
         // Publish models
@@ -113,6 +118,22 @@ class LaraGrapeSetupCommand extends Command
         }
         
         $this->info("📊 Publishing summary: $successCount/$totalCount resources published successfully.");
+
+        if ($this->option('portfolio') || $this->option('all')) {
+            $this->info('📁 Publishing optional portfolio module...');
+            try {
+                $this->call('vendor:publish', [
+                    '--provider' => 'LaraGrape\\Providers\\LaraGrapeServiceProvider',
+                    '--tag' => 'LaraGrape-portfolio',
+                    '--force' => $force,
+                ]);
+                $this->enablePortfolioInEnv();
+                $this->info('✅ Portfolio module published and LARAGRAPE_PORTFOLIO=true set in .env');
+            } catch (\Exception $e) {
+                $this->warn('⚠️  Portfolio publishing failed: '.$e->getMessage());
+            }
+        }
+
         // Publish CSS assets (site.css, app.css, filament-grapesjs-editor.css)
         $this->info('🎨 Publishing CSS assets...');
         try {
@@ -319,6 +340,10 @@ class LaraGrapeSetupCommand extends Command
                 $this->info('Overwriting AdminPanelProvider with LaraGrape version...');
                 $packageAdminPanelProvider = __DIR__ . '/../../Providers/Filament/AdminPanelProvider.php';
                 if (file_exists($packageAdminPanelProvider)) {
+                    $providerDir = dirname($adminPanelProviderPath);
+                    if (! is_dir($providerDir)) {
+                        mkdir($providerDir, 0755, true);
+                    }
                     $contents = file_get_contents($packageAdminPanelProvider);
                     // Update namespace to App
                     $contents = str_replace('namespace LaraGrape\\Providers\\Filament;', 'namespace App\\Providers\\Filament;', $contents);
@@ -544,76 +569,8 @@ class LaraGrapeSetupCommand extends Command
             }
         }
 
-        // Post-process service namespaces (ensure App\Services) and use statements (ensure App\Models)
-        $servicesPath = base_path('app/Services');
-        if (is_dir($servicesPath)) {
-            foreach (glob($servicesPath . '/*.php') as $serviceFile) {
-                if (file_exists($serviceFile)) {
-                    $contents = file_get_contents($serviceFile);
-                    $contents = str_replace('namespace LaraGrape\\Services;', 'namespace App\\Services;', $contents);
-                    $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
-                    file_put_contents($serviceFile, $contents);
-                    $this->info("Updated service namespace and use statements in " . basename($serviceFile));
-                }
-            }
-        }
-        
-        // Post-process Console Kernel and Commands
-        $consolePath = base_path('app/Console');
-        if (is_dir($consolePath)) {
-            // Update Kernel.php
-            $kernelFile = $consolePath . '/Kernel.php';
-            if (file_exists($kernelFile)) {
-                $contents = file_get_contents($kernelFile);
-                $contents = str_replace('namespace LaraGrape\\Console;', 'namespace App\\Console;', $contents);
-                $contents = str_replace('use LaraGrape\\Console\\Commands\\', 'use App\\Console\\Commands\\', $contents);
-                file_put_contents($kernelFile, $contents);
-                $this->info("Updated Console Kernel namespace");
-            }
-            
-            // Update Commands
-            $commandsPath = $consolePath . '/Commands';
-            if (is_dir($commandsPath)) {
-                foreach (glob($commandsPath . '/*.php') as $commandFile) {
-                    if (file_exists($commandFile)) {
-                        $contents = file_get_contents($commandFile);
-                        $contents = str_replace('namespace LaraGrape\\Console\\Commands;', 'namespace App\\Console\\Commands;', $contents);
-                        $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
-                        file_put_contents($commandFile, $contents);
-                        $this->info("Updated command namespace in " . basename($commandFile));
-                    }
-                }
-            }
-        }
-        
-        // Post-process Console Kernel and Commands
-        $consolePath = base_path('app/Console');
-        if (is_dir($consolePath)) {
-            // Update Kernel.php
-            $kernelFile = $consolePath . '/Kernel.php';
-            if (file_exists($kernelFile)) {
-                $contents = file_get_contents($kernelFile);
-                $contents = str_replace('namespace LaraGrape\\Console;', 'namespace App\\Console;', $contents);
-                $contents = str_replace('use LaraGrape\\Console\\Commands\\', 'use App\\Console\\Commands\\', $contents);
-                file_put_contents($kernelFile, $contents);
-                $this->info("Updated Console Kernel namespace");
-            }
-            
-            // Update Commands
-            $commandsPath = $consolePath . '/Commands';
-            if (is_dir($commandsPath)) {
-                foreach (glob($commandsPath . '/*.php') as $commandFile) {
-                    if (file_exists($commandFile)) {
-                        $contents = file_get_contents($commandFile);
-                        $contents = str_replace('namespace LaraGrape\\Console\\Commands;', 'namespace App\\Console\\Commands;', $contents);
-                        $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
-                        file_put_contents($commandFile, $contents);
-                        $this->info("Updated command namespace in " . basename($commandFile));
-                    }
-                }
-            }
-        }
-        
+        $this->postProcessPublishedNamespaces();
+
         $this->info('✅ Post-processing completed successfully.');
 
         // 4. Run migrations if requested or if no specific options are set
@@ -657,20 +614,8 @@ class LaraGrapeSetupCommand extends Command
             $this->warn('⚠️  Seeders publishing failed: ' . $e->getMessage());
         }
 
-        // Post-process seeders for namespaces
-        $seedersPath = database_path('seeders');
-        if (is_dir($seedersPath)) {
-            foreach (glob($seedersPath . '/*.php') as $file) {
-                if (file_exists($file)) {
-                    $contents = file_get_contents($file);
-                    $contents = str_replace('namespace LaraGrape\\Database\\Seeders;', 'namespace Database\\Seeders;', $contents);
-                    $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
-                    // Remove 'Lara' prefix from seeder class names
-                    $contents = preg_replace('/class Lara([A-Z][A-Za-z0-9_]*Seeder)/', 'class $1Seeder', $contents);
-                    file_put_contents($file, $contents);
-                }
-            }
-        }
+        // Post-process seeders for namespaces (after publish)
+        $this->postProcessPublishedSeeders();
 
         // Run seeders if requested or if no specific options are set
         $shouldRunSeeders = $this->option('seed') || $this->option('all') || 
@@ -698,6 +643,10 @@ class LaraGrapeSetupCommand extends Command
             } else {
                 $this->warn('⚠️  Seeders skipped. You may need to run "php artisan db:seed" manually.');
             }
+        }
+
+        if ($this->option('portfolio') || $this->option('all')) {
+            $this->ensurePortfolioDefaults();
         }
 
         $this->info('🎉 LaraGrape setup completed!');
@@ -757,19 +706,21 @@ class LaraGrapeSetupCommand extends Command
             }
         }
 
-        // Always directly copy app.js to ensure it is overwritten
-        $this->info('📄 Direct copy fallback for app.js...');
-        try {
-            $packageAppJs = __DIR__ . '/../../../resources/js/app.js';
-            $appAppJs = base_path('resources/js/app.js');
-            if (file_exists($packageAppJs)) {
-                copy($packageAppJs, $appAppJs);
-                $this->info('✅ app.js was directly copied to ensure it is overwritten.');
-            } else {
-                $this->warn('⚠️  Package app.js not found for direct copy.');
+        // Always directly copy app.js / bootstrap.js to ensure they are overwritten
+        $this->info('📄 Direct copy fallback for JS entry files...');
+        foreach (['app.js', 'bootstrap.js'] as $jsFile) {
+            try {
+                $packageJs = __DIR__.'/../../../resources/js/'.$jsFile;
+                $appJs = base_path('resources/js/'.$jsFile);
+                if (file_exists($packageJs)) {
+                    copy($packageJs, $appJs);
+                    $this->info("✅ {$jsFile} was directly copied.");
+                } else {
+                    $this->warn("⚠️  Package {$jsFile} not found for direct copy.");
+                }
+            } catch (\Exception $e) {
+                $this->warn("⚠️  Direct copy of {$jsFile} failed: ".$e->getMessage());
             }
-        } catch (\Exception $e) {
-            $this->warn('⚠️  Direct copy of app.js failed: ' . $e->getMessage());
         }
 
         // Ensure alpinejs is installed in the consuming app
@@ -785,22 +736,10 @@ class LaraGrapeSetupCommand extends Command
             $this->warn('⚠️  npm install failed: ' . $e->getMessage());
         }
 
-        // Post-process web.php to update controller namespaces
-        $this->info('🌐 Post-processing web.php routes...');
-        try {
-            $webPath = base_path('routes/web.php');
-            if (file_exists($webPath)) {
-                $contents = file_get_contents($webPath);
-                $contents = str_replace('LaraGrape\\Http\\Controllers\\', 'App\\Http\\Controllers\\', $contents);
-                $contents = str_replace('AdminPageController', 'AdminPageController', $contents); // Adjust if class was renamed
-                file_put_contents($webPath, $contents);
-                $this->info('✅ Updated routes/web.php for controller namespaces');
-            } else {
-                $this->warn('⚠️  routes/web.php not found for post-processing.');
-            }
-        } catch (\Exception $e) {
-            $this->warn('⚠️  Post-processing web.php failed: ' . $e->getMessage());
-        }
+        $this->postProcessWebRoutes();
+
+        // Final namespace pass after all late publishes (portfolio, JS, layout, etc.)
+        $this->postProcessPublishedNamespaces();
 
         // Update getPages() in resource files to use the correct page class names
         $this->info('📝 Post-processing resource files...');
@@ -856,5 +795,194 @@ class LaraGrapeSetupCommand extends Command
         } catch (\Exception $e) {
             $this->warn('⚠️  Post-processing resource files failed: ' . $e->getMessage());
         }
+    }
+
+    private function postProcessWebRoutes(): void
+    {
+        $webPath = base_path('routes/web.php');
+        if (! is_file($webPath)) {
+            return;
+        }
+
+        $this->info('🌐 Post-processing web.php routes...');
+
+        $contents = file_get_contents($webPath);
+        $contents = str_replace('LaraGrape\\Http\\Controllers\\', 'App\\Http\\Controllers\\', $contents);
+        $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
+        file_put_contents($webPath, $contents);
+
+        $portfolioRoutes = base_path('routes/portfolio.php');
+        if (is_file($portfolioRoutes)) {
+            $contents = file_get_contents($portfolioRoutes);
+            $contents = str_replace('LaraGrape\\Http\\Controllers\\', 'App\\Http\\Controllers\\', $contents);
+            file_put_contents($portfolioRoutes, $contents);
+        }
+
+        $this->info('✅ Updated routes for App namespaces');
+    }
+
+    private function postProcessPublishedSeeders(): void
+    {
+        $seedersPath = database_path('seeders');
+        if (! is_dir($seedersPath)) {
+            return;
+        }
+
+        foreach (glob($seedersPath.'/*.php') ?: [] as $file) {
+            $contents = file_get_contents($file);
+            $contents = str_replace('namespace LaraGrape\\Database\\Seeders;', 'namespace Database\\Seeders;', $contents);
+            $contents = str_replace('use LaraGrape\\Models\\', 'use App\\Models\\', $contents);
+            $contents = preg_replace('/class Lara([A-Z][A-Za-z0-9_]*Seeder)/', 'class $1Seeder', $contents);
+            file_put_contents($file, $contents);
+        }
+    }
+
+    /**
+     * Rewrite LaraGrape namespaces to App\ after publish.
+     *
+     * Package source stays LaraGrape\ (vendor autoload). Published copies under app/
+     * must become App\ so Laravel routes and the host app own those classes.
+     */
+    private function postProcessPublishedNamespaces(): void
+    {
+        $this->info('🔧 Post-processing published app code (LaraGrape\\ → App\\)...');
+
+        $updated = $this->rewritePublishedAppPhpFiles();
+
+        $this->postProcessWebRoutes();
+        $this->postProcessPublishedSeeders();
+
+        $this->info($updated > 0
+            ? "✅ Rewrote LaraGrape namespaces in {$updated} file(s) under app/."
+            : '✅ No LaraGrape namespaces left under app/ (already App\\).');
+    }
+
+    /**
+     * @return int Number of files updated
+     */
+    private function rewritePublishedAppPhpFiles(): int
+    {
+        $appPath = app_path();
+        if (! is_dir($appPath)) {
+            return 0;
+        }
+
+        $updated = 0;
+        $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($appPath));
+
+        foreach ($rii as $file) {
+            if (! $file->isFile() || $file->getExtension() !== 'php') {
+                continue;
+            }
+
+            $path = $file->getPathname();
+            if (str_contains($path, DIRECTORY_SEPARATOR.'Models'.DIRECTORY_SEPARATOR.'User.php')) {
+                continue;
+            }
+
+            $contents = file_get_contents($path);
+            $rewritten = $this->rewriteLaraGrapeNamespacesInPhp($contents);
+
+            if ($rewritten !== $contents) {
+                file_put_contents($path, $rewritten);
+                $updated++;
+            }
+        }
+
+        return $updated;
+    }
+
+    private function rewriteLaraGrapeNamespacesInPhp(string $contents): string
+    {
+        // Most specific namespaces first
+        $namespaceMap = [
+            'namespace LaraGrape\\Providers\\Filament;' => 'namespace App\\Providers\\Filament;',
+            'namespace LaraGrape\\Filament\\Resources\\' => 'namespace App\\Filament\\Resources\\',
+            'namespace LaraGrape\\Filament\\Pages\\' => 'namespace App\\Filament\\Pages\\',
+            'namespace LaraGrape\\Filament\\Forms\\' => 'namespace App\\Filament\\Forms\\',
+            'namespace LaraGrape\\Filament\\' => 'namespace App\\Filament\\',
+            'namespace LaraGrape\\Http\\Controllers;' => 'namespace App\\Http\\Controllers;',
+            'namespace LaraGrape\\Console\\Commands;' => 'namespace App\\Console\\Commands;',
+            'namespace LaraGrape\\Console;' => 'namespace App\\Console;',
+            'namespace LaraGrape\\Providers;' => 'namespace App\\Providers;',
+            'namespace LaraGrape\\Models;' => 'namespace App\\Models;',
+            'namespace LaraGrape\\Services;' => 'namespace App\\Services;',
+            'namespace LaraGrape\\Support;' => 'namespace App\\Support;',
+            'namespace LaraGrape\\' => 'namespace App\\',
+        ];
+
+        foreach ($namespaceMap as $from => $to) {
+            $contents = str_replace($from, $to, $contents);
+        }
+
+        $contents = str_replace('use LaraGrape\\', 'use App\\', $contents);
+        $contents = str_replace('app(\\LaraGrape\\', 'app(\\App\\', $contents);
+        $contents = preg_replace('/class Lara([A-Z][A-Za-z0-9_]*)/', 'class $1', $contents);
+
+        return $contents;
+    }
+
+    private function enablePortfolioInEnv(): void
+    {
+        $envPath = base_path('.env');
+        if (! is_file($envPath)) {
+            $this->warn('⚠️  .env not found; set LARAGRAPE_PORTFOLIO=true manually.');
+
+            return;
+        }
+
+        $env = file_get_contents($envPath);
+        if (preg_match('/^LARAGRAPE_PORTFOLIO=.*/m', $env)) {
+            $env = preg_replace('/^LARAGRAPE_PORTFOLIO=.*/m', 'LARAGRAPE_PORTFOLIO=true', $env);
+        } else {
+            $env .= PHP_EOL.'LARAGRAPE_PORTFOLIO=true'.PHP_EOL;
+        }
+        file_put_contents($envPath, $env);
+
+        putenv('LARAGRAPE_PORTFOLIO=true');
+        $_ENV['LARAGRAPE_PORTFOLIO'] = 'true';
+        $_SERVER['LARAGRAPE_PORTFOLIO'] = 'true';
+        config(['laragrape.portfolio_enabled' => true]);
+
+        try {
+            $this->call('config:clear');
+        } catch (\Exception $e) {
+            // Non-fatal during setup
+        }
+    }
+
+    private function ensurePortfolioDefaults(): void
+    {
+        if (! config('laragrape.portfolio_enabled', false)) {
+            return;
+        }
+
+        if (! \Illuminate\Support\Facades\Schema::hasTable('portfolio_projects')) {
+            $this->warn('⚠️  portfolio_projects table missing; run php artisan migrate');
+
+            return;
+        }
+
+        try {
+            $this->call('db:seed', [
+                '--class' => 'Database\\Seeders\\PortfolioProjectSeeder',
+                '--force' => true,
+            ]);
+        } catch (\Exception $e) {
+            $this->warn('⚠️  Portfolio project seeding failed: '.$e->getMessage());
+        }
+
+        $pageModel = class_exists(\App\Models\Page::class) ? \App\Models\Page::class : \LaraGrape\Models\Page::class;
+        $pageModel::firstOrCreate(
+            ['slug' => 'portfolio'],
+            [
+                'title' => 'Portfolio',
+                'content' => '<h1>Portfolio</h1><p>Our latest work.</p>',
+                'is_published' => true,
+                'show_in_menu' => true,
+                'sort_order' => 4,
+            ]
+        );
+        $this->info('✅ Portfolio page and sample projects ensured.');
     }
 } 

@@ -1,10 +1,10 @@
 <?php
 
-use LaraGrape\Http\Controllers\PageController;
-use LaraGrape\Http\Controllers\FormController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\FormController;
 use Illuminate\Support\Facades\Route;
-use LaraGrape\Http\Controllers\AdminPageController;
-use LaraGrape\Models\Page;
+use App\Http\Controllers\AdminPageController;
+use App\Models\Page;
 
 // Homepage
 Route::get('/', [PageController::class, 'home'])->name('home');
@@ -30,7 +30,11 @@ Route::post('/admin/pages/{page}/save-grapesjs', [AdminPageController::class, 's
     ->name('admin.page.save-grapesjs')
     ->middleware(['auth']);
 
-Route::get('/admin/block-preview/{blockId}', [AdminPageController::class, 'blockPreview'])->name('admin.block-preview')->middleware('auth');
+Route::get('/admin/block-preview/{blockId?}', [AdminPageController::class, 'blockPreview'])->name('admin.block-preview')->middleware('auth');
+
+if (file_exists(__DIR__.'/portfolio.php')) {
+    require __DIR__.'/portfolio.php';
+}
 
 // Debug route for testing GrapesJS data flow
 Route::get('/debug/grapesjs-data/{page}', function ($page) {

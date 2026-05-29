@@ -2,6 +2,7 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "streats22/laragrape",
     "type": "library",
+    "version": "1.5.0",
     "description": "A Laravel package for GrapesJS + Filament block builder integration.",
     "keywords": [
         "laravel",
@@ -12,9 +13,9 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "filament/filament": "^5.0",
-        "illuminate/support": "^10.0|^11.0|^12.0",
+        "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
         "maatwebsite/excel": "^3.1"
     },
     "require-dev": {

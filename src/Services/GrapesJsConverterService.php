@@ -9,12 +9,10 @@ use LaraGrape\Models\Page as GrapePage;
 
 class GrapesJsConverterService
 {
-    protected BlockService $blockService;
-    
-    public function __construct(BlockService $blockService)
-    {
-        $this->blockService = $blockService;
-    }
+    public function __construct(
+        protected BlockService $blockService,
+        protected DynamicBlockDataService $dynamicBlockDataService,
+    ) {}
     
     /**
      * Convert GrapesJS JSON data to HTML (simplified approach)
@@ -30,9 +28,7 @@ class GrapesJsConverterService
             'html_preview' => substr($html, 0, 500) . '...'
         ]);
         
-        // For now, just return the original HTML without conversion
-        // This prevents the Blade component issues
-        $convertedHtml = $html;
+        $convertedHtml = $this->stripStaleCsrfTokensFromHtml($html);
         
         \Log::info('GrapesJS conversion complete (no conversion applied)', [
             'converted_html_length' => strlen($convertedHtml),
@@ -474,27 +470,90 @@ class GrapesJsConverterService
      */
     public function processForSaving(array $grapesjsData): array
     {
-        \Log::info('Processing GrapesJS data for saving', [
-            'html_length' => strlen($grapesjsData['html'] ?? ''),
-            'css_length' => strlen($grapesjsData['css'] ?? ''),
-            'html_preview' => substr($grapesjsData['html'] ?? '', 0, 500) . '...'
-        ]);
-        
-        // Convert to Blade components for storage
+        if (config('laragrape.debug', false)) {
+            Log::info('Processing GrapesJS data for saving', [
+                'html_length' => strlen($grapesjsData['html'] ?? ''),
+                'css_length' => strlen($grapesjsData['css'] ?? ''),
+            ]);
+        }
+
         $converted = $this->convertToBladeComponents($grapesjsData);
-        
-        \Log::info('GrapesJS data converted for saving', [
-            'converted_html_length' => strlen($converted['html']),
-            'converted_html_preview' => substr($converted['html'], 0, 500) . '...'
-        ]);
-        
+        $blockDynamicData = $this->extractBlockDynamicDataFromHtml($converted['html'] ?? '');
+
         return [
             'html' => $converted['html'],
             'css' => $converted['css'],
             'components' => $converted['components'],
-            'original_grapesjs' => $grapesjsData, // Keep original for editing
+            'original_grapesjs' => $grapesjsData,
             'converted_at' => $converted['converted_at'],
+            'block_dynamic_data' => $blockDynamicData,
         ];
+    }
+
+    protected function extractBlockDynamicDataFromHtml(string $html): array
+    {
+        $out = [];
+        $fragments = $this->collectBlockFragments($html);
+        foreach ($fragments as $fragment) {
+            $blockId = $fragment['block_id'];
+            $instanceIndex = $fragment['instance_index'];
+            $fragmentHtml = $fragment['html'];
+            $instanceKey = $this->buildBlockInstanceKey($blockId, $instanceIndex);
+            $dynamicData = $this->dynamicBlockDataService->extractDynamicData(
+                ['html' => $fragmentHtml],
+                $blockId
+            );
+
+            $out[$instanceKey] = $dynamicData;
+            if (! isset($out[$blockId])) {
+                $out[$blockId] = $dynamicData;
+            }
+        }
+
+        return $out;
+    }
+
+    protected function collectBlockFragments(string $html): array
+    {
+        $fragments = [];
+        $instanceCounters = [];
+        $pattern = '/<([a-zA-Z][a-zA-Z0-9]*)[^>]*\sdata-laragrape-block="([a-zA-Z0-9_-]+)"[^>]*>(.*)$/s';
+        $offset = 0;
+        while (preg_match($pattern, $html, $matches, PREG_OFFSET_CAPTURE, $offset)) {
+            $tagName = $matches[1][0];
+            $blockId = $matches[2][0];
+            $matchStart = $matches[0][1];
+            $contentStart = $matches[3][1];
+            $elementEnd = $this->findMatchingClosingTag($html, $tagName, $contentStart);
+            if ($elementEnd === null) {
+                $offset = $contentStart;
+                continue;
+            }
+            $instanceIndex = $instanceCounters[$blockId] ?? 0;
+            $instanceCounters[$blockId] = $instanceIndex + 1;
+            $fragments[] = [
+                'block_id' => $blockId,
+                'instance_index' => $instanceIndex,
+                'html' => substr($html, $matchStart, $elementEnd - $matchStart),
+            ];
+            $offset = $elementEnd;
+        }
+
+        return $fragments;
+    }
+
+    protected function buildBlockInstanceKey(string $blockId, int $instanceIndex): string
+    {
+        return $blockId.'__'.$instanceIndex;
+    }
+
+    protected function stripStaleCsrfTokensFromHtml(string $html): string
+    {
+        if ($html === '') {
+            return $html;
+        }
+
+        return (string) preg_replace('/<input[^>]*\bname\s*=\s*["\']_token["\'][^>]*>/iu', '', $html);
     }
     
     /**
@@ -527,16 +586,16 @@ class GrapesJsConverterService
      */
     public function convertToBlade(array $processedData): string
     {
-        $html = $processedData['html'] ?? '';
+        $html = $this->stripStaleCsrfTokensFromHtml($processedData['html'] ?? '');
         $css = $processedData['css'] ?? '';
         $output = '';
 
-        if (!empty($css)) {
+        if (! empty($css)) {
             $output .= "<style>{$css}</style>\n";
         }
 
-        // Replace block sections with @include to render full Alpine blocks (not editor preview)
-        $output .= $this->replaceBlocksWithIncludes($html);
+        $blockDynamicData = $processedData['block_dynamic_data'] ?? [];
+        $output .= $this->replaceBlocksWithIncludes($html, $blockDynamicData);
 
         return $output;
     }
@@ -545,7 +604,7 @@ class GrapesJsConverterService
      * Replace elements with data-laragrape-block attribute with @include directives.
      * GrapesJS may strip HTML comments, so we use data attributes which are preserved.
      */
-    protected function replaceBlocksWithIncludes(string $html): string
+    protected function replaceBlocksWithIncludes(string $html, array $blockDynamicData = []): string
     {
         if (trim($html) === '') {
             return $html;
@@ -554,6 +613,7 @@ class GrapesJsConverterService
         $pattern = '/<([a-zA-Z][a-zA-Z0-9]*)[^>]*\sdata-laragrape-block="([a-zA-Z0-9_-]+)"[^>]*>(.*)$/s';
         $offset = 0;
         $result = '';
+        $instanceCounters = [];
 
         while (preg_match($pattern, $html, $matches, PREG_OFFSET_CAPTURE, $offset)) {
             $tagName = $matches[1][0];
@@ -562,7 +622,7 @@ class GrapesJsConverterService
             $contentStart = $matches[3][1];
 
             $viewName = $this->blockService->getViewNameForBlockId($blockId);
-            if (!$viewName) {
+            if (! $viewName) {
                 $offset = $contentStart;
                 continue;
             }
@@ -573,12 +633,18 @@ class GrapesJsConverterService
                 continue;
             }
 
-            $includeDirective = "@include('{$viewName}', ['isEditorPreview' => false])";
-            $result .= substr($html, $offset, $matchStart - $offset) . $includeDirective;
+            $instanceIndex = $instanceCounters[$blockId] ?? 0;
+            $instanceCounters[$blockId] = $instanceIndex + 1;
+            $instanceKey = $this->buildBlockInstanceKey($blockId, $instanceIndex);
+            $dynamicData = $blockDynamicData[$instanceKey] ?? $blockDynamicData[$blockId] ?? [];
+            $dynamicPhp = var_export($dynamicData, true);
+            $includeDirective = "@include('{$viewName}', ['isEditorPreview' => false, 'dynamicData' => {$dynamicPhp}])";
+            $result .= substr($html, $offset, $matchStart - $offset).$includeDirective;
             $offset = $elementEnd;
         }
 
         $result .= substr($html, $offset);
+
         return $result;
     }
 

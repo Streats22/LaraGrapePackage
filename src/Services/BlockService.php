@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Throwable;
 
 class BlockService
 {
@@ -227,22 +228,40 @@ class BlockService
                 ];
             }
         }
-        
-        // // Add form blocks dynamically
-        // $forms = \App\Models\Form::where('is_active', true)->get();
-        // foreach ($forms as $form) {
-        //     $grapesJsBlocks[] = [
-        //         'id' => 'form-' . $form->id,
-        //         'label' => $form->name,
-        //         'category' => 'forms',
-        //         'content' => view('components.forms.form-block', ['form' => $form])->render(),
-        //         'attributes' => ['draggable' => true, 'droppable' => false],
-        //         'description' => $form->description,
-        //         'icon' => 'fas fa-wpforms',
-        //         'is_custom' => true,
-        //     ];
-        // }
-        
+
+        try {
+            if (Schema::hasTable('forms')) {
+                $formClass = class_exists(\App\Models\Form::class)
+                    ? \App\Models\Form::class
+                    : \LaraGrape\Models\Form::class;
+
+                $forms = $formClass::query()
+                    ->where('is_active', true)
+                    ->orderBy('name')
+                    ->with('fields')
+                    ->get();
+
+                foreach ($forms as $form) {
+                    $grapesJsBlocks[] = [
+                        'id' => 'form-'.$form->id,
+                        'label' => $form->name,
+                        'category' => 'forms',
+                        'content' => $form->generateFormHtml(),
+                        'attributes' => [
+                            'draggable' => true,
+                            'droppable' => false,
+                            'form_id' => $form->id,
+                        ],
+                        'description' => $form->description ?? '',
+                        'icon' => 'fas fa-wpforms',
+                        'is_custom' => true,
+                    ];
+                }
+            }
+        } catch (Throwable) {
+            // Migrations not run or DB unavailable (e.g. during package discovery).
+        }
+
         return $grapesJsBlocks;
     }
     

@@ -1,17 +1,24 @@
 /**
- * LaraGrape Unified GrapesJS Editor
+ * LaraGrape — unified GrapesJS editor
  * Works for both frontend and backend (Filament) contexts
  */
+
+import { initDynamicForms } from './form-blocks';
+
+// Alpine in the canvas iframe (animated blocks use x-data / x-intersect / etc.)
+const GRAPESJS_CANVAS_ALPINE_SCRIPT = 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js';
 
 // Import grapesjs-parser-postcss if using a bundler (uncomment if needed)
 // import parserPostCSS from 'grapesjs-parser-postcss';
 
 // Helper to fetch rendered block preview from backend
 async function fetchBlockPreview(blockId) {
-    const url = `/admin/block-preview/${blockId}`;
+    const url = `/admin/block-preview?id=${encodeURIComponent(blockId)}`;
     try {
         const response = await fetch(url, { credentials: 'same-origin' });
-        if (!response.ok) throw new Error('Failed to fetch block preview');
+        if (!response.ok) {
+            throw new Error(`Failed to fetch block preview (${response.status})`);
+        }
         return await response.text();
     } catch (e) {
         return `<div style='color:red;'>Preview error: ${e.message}</div>`;
@@ -30,6 +37,7 @@ class LaraGrapeGrapesJsEditor {
             isDisabled: false,
             height: '100vh',
             onSave: null, // custom save handler
+            portfolioEnabled: false,
             ...options
         };
         
@@ -106,15 +114,30 @@ class LaraGrapeGrapesJsEditor {
             showOffsets: true,
             noticeOnUnload: false,
             storageManager: false,
+            // Per Components module tips: scope styles to the selected instance (avoids editing shared classes).
+            selectorManager: {
+                componentFirst: true,
+            },
             canvas: {
                 styles: window.grapesjsCanvasStyles || [],
-                scripts: [],
+                scripts: [GRAPESJS_CANVAS_ALPINE_SCRIPT],
             },
             blockManager: {
                 blocks: blockManagerBlocks
             },
             plugins,
         });
+
+        // Must run before setComponents/load — custom types with traits (data-gjs-type on blocks references these).
+        if (this.options.portfolioEnabled) {
+            this.registerAnimatedPortfolioBlockType();
+            this.registerAnimatedPortfolioItemType();
+            this.attachPortfolioBlockDataDialog();
+        }
+        this.registerAnimatedTechItemType();
+
+        this.wireCanvasDarkMode();
+        this.wireCanvasAlpineLifecycle();
         
         // Check if disabled before loading content
         if (this.options.isDisabled) {
@@ -136,53 +159,637 @@ class LaraGrapeGrapesJsEditor {
         }, 100);
         setTimeout(() => {
             injectStylesIntoGrapesJsIframe(this.editor, window.grapesjsCanvasStyles);
+            syncGrapesJsCanvasDarkMode(this.editor);
+            this.refreshCanvasAlpineAndForms();
         }, 500);
+    }
+
+    /**
+     * Keep the canvas <html> in sync with the parent (Filament / site) dark mode so
+     * `.dark { --laralgrape-* }`, Tailwind `dark:*`, and `site-forms.css` apply to blocks and forms.
+     */
+    /**
+     * Animated portfolio root: shell only (IDs live on each animated-portfolio-item). Root attrs optional fallback for extraction.
+     */
+    registerAnimatedPortfolioBlockType() {
+        const editor = this.editor;
+        if (!editor?.DomComponents) {
+            return;
+        }
+        editor.DomComponents.addType('animated-portfolio-block', {
+            extend: 'default',
+            isComponent: (el) =>
+                typeof el?.getAttribute === 'function' &&
+                el.getAttribute('data-laragrape-block') === 'animated-portfolio',
+            model: {
+                defaults: {
+                    attributes: {
+                        'data-laragrape-block': 'animated-portfolio',
+                        'data-portfolio-project-ids': '',
+                        'data-portfolio-project-slugs': '',
+                    },
+                },
+                /** Section shell: no portfolio fields (those are per card). */
+                init(...args) {
+                    const base = editor.DomComponents.getType('default')?.model?.prototype;
+                    if (base?.init) {
+                        base.init.apply(this, args);
+                    }
+                    this.setTraits([]);
+                },
+            },
+        });
+    }
+
+    /**
+     * Each portfolio card: Trait "Portfolio project ID" → data-portfolio-project-id (saved + extracted per slot).
+     */
+    registerAnimatedPortfolioItemType() {
+        const editor = this.editor;
+        if (!editor?.DomComponents) {
+            return;
+        }
+        editor.DomComponents.addType('animated-portfolio-item', {
+            extend: 'default',
+            isComponent: (el) => el?.getAttribute?.('data-gjs-type') === 'animated-portfolio-item',
+            model: {
+                defaults: {
+                    attributes: {
+                        'data-portfolio-project-id': '',
+                    },
+                },
+                init(...args) {
+                    const base = editor.DomComponents.getType('default')?.model?.prototype;
+                    if (base?.init) {
+                        base.init.apply(this, args);
+                    }
+                    this.setTraits([
+                        {
+                            type: 'text',
+                            label: 'Portfolio project ID (this card)',
+                            name: 'data-portfolio-project-id',
+                            placeholder: 'e.g. 1, 2, or project_3',
+                        },
+                    ]);
+                },
+            },
+        });
+    }
+
+    /**
+     * Animated tech stack card item: Settings dropdown for techKey.
+     */
+    registerAnimatedTechItemType() {
+        const editor = this.editor;
+        if (!editor?.DomComponents) {
+            return;
+        }
+
+        const options = this.getTechTraitOptions();
+        const registryMap = this.getTechRegistryMap();
+        const defaultKey = options[0]?.id || 'nuxt';
+
+        const findFirstChildByTag = (component, tagName) => {
+            if (!component) {
+                return null;
+            }
+
+            const children = component.components?.();
+            if (!children || typeof children.each !== 'function') {
+                return null;
+            }
+
+            let found = null;
+            children.each((child) => {
+                if (found) {
+                    return;
+                }
+                const childTag = String(child.get?.('tagName') || '').toLowerCase();
+                if (childTag === tagName) {
+                    found = child;
+                    return;
+                }
+                found = findFirstChildByTag(child, tagName) || found;
+            });
+
+            return found;
+        };
+
+        const resolveMeta = (key) => {
+            const normalized = String(key || '').trim();
+            if (normalized && registryMap[normalized]) {
+                return { key: normalized, ...registryMap[normalized] };
+            }
+            const fallback = registryMap.custom || { label: 'Technology', url: '#', icon: '' };
+            return { key: normalized || 'custom', ...fallback };
+        };
+
+        const applyTechMeta = (component, key) => {
+            if (!component) {
+                return;
+            }
+
+            const meta = resolveMeta(key);
+            component.addAttributes({ 'data-tech-key': meta.key });
+
+            const imageComp = findFirstChildByTag(component, 'img');
+            if (imageComp) {
+                const imageAttrs = imageComp.getAttributes?.() || {};
+                imageComp.addAttributes({
+                    ...imageAttrs,
+                    src: meta.icon || imageAttrs.src || '',
+                    alt: `${meta.label || 'Technology'} logo`,
+                });
+            }
+
+            const titleComp = findFirstChildByTag(component, 'h3');
+            if (titleComp) {
+                titleComp.components(meta.label || 'Technology');
+            }
+
+            const rootTag = String(component.get?.('tagName') || '').toLowerCase();
+            if (rootTag === 'a') {
+                const rootAttrs = component.getAttributes?.() || {};
+                component.addAttributes({
+                    ...rootAttrs,
+                    href: meta.url || '#',
+                });
+            }
+        };
+
+        editor.DomComponents.addType('animated-tech-item', {
+            extend: 'default',
+            isComponent: (el) =>
+                el?.getAttribute?.('data-gjs-type') === 'animated-tech-item' || !!el?.getAttribute?.('data-tech-key'),
+            model: {
+                defaults: {
+                    attributes: {
+                        'data-tech-key': defaultKey,
+                    },
+                },
+                init(...args) {
+                    const base = editor.DomComponents.getType('default')?.model?.prototype;
+                    if (base?.init) {
+                        base.init.apply(this, args);
+                    }
+
+                    const attrs = this.getAttributes?.() || {};
+                    const initialKey = attrs['data-tech-key'] || defaultKey;
+                    applyTechMeta(this, initialKey);
+
+                    this.on('change:attributes', () => {
+                        const nextAttrs = this.getAttributes?.() || {};
+                        const key = nextAttrs['data-tech-key'] || defaultKey;
+                        applyTechMeta(this, key);
+                    });
+                    this.on('change:attributes:data-tech-key', () => {
+                        const nextAttrs = this.getAttributes?.() || {};
+                        const key = nextAttrs['data-tech-key'] || defaultKey;
+                        applyTechMeta(this, key);
+                    });
+
+                    this.setTraits([
+                        {
+                            type: 'select',
+                            label: 'Tech key',
+                            name: 'data-tech-key',
+                            options: options.map((option) => ({
+                                id: option.id,
+                                name: option.label,
+                                value: option.id,
+                            })),
+                        },
+                    ]);
+                },
+            },
+        });
+
+        // Keep canvas visuals in sync when traits/attributes change, without saving.
+        if (!this._techVisualSyncBound) {
+            this._techVisualSyncBound = true;
+
+            const syncIfTechItem = (component) => {
+                if (!component) {
+                    return;
+                }
+                const attrs = component.getAttributes?.() || {};
+                const type = component.get?.('type');
+                if (type === 'animated-tech-item' || attrs['data-tech-key']) {
+                    const key = attrs['data-tech-key'] || defaultKey;
+                    applyTechMeta(component, key);
+                }
+            };
+
+            editor.on('component:update:attributes', syncIfTechItem);
+            editor.on('component:update', syncIfTechItem);
+            editor.on('component:selected', syncIfTechItem);
+            editor.on('trait:value', (...args) => {
+                const trait = args[0];
+                const value = args[1];
+                const selected = editor.getSelected?.();
+                const traitName = trait?.get?.('name') || trait?.attributes?.name || '';
+                if (traitName === 'data-tech-key' && selected) {
+                    applyTechMeta(selected, value);
+                    this.updateFilamentFormState();
+                }
+            });
+            editor.on('load', () => {
+                const walk = (component) => {
+                    if (!component) {
+                        return;
+                    }
+                    syncIfTechItem(component);
+                    const children = component.components?.();
+                    if (children && typeof children.each === 'function') {
+                        children.each(walk);
+                    }
+                };
+                walk(editor.DomComponents.getWrapper());
+            });
+        }
+    }
+
+    getTechTraitOptions() {
+        const raw = window.grapesjsTechRegistryOptions;
+        if (Array.isArray(raw) && raw.length > 0) {
+            return raw
+                .map((item) => {
+                    const id = String(item?.id || '').trim();
+                    const label = String(item?.label || id).trim();
+                    if (!id) {
+                        return null;
+                    }
+                    return { id, label: label || id };
+                })
+                .filter(Boolean);
+        }
+
+        return [
+            { id: 'wordpress', label: 'WordPress' },
+            { id: 'nuxt', label: 'Nuxt.js' },
+            { id: 'vue', label: 'Vue.js' },
+            { id: 'react', label: 'React' },
+            { id: 'inertia', label: 'Inertia.js' },
+            { id: 'laravel', label: 'Laravel' },
+            { id: 'tallstack', label: 'Laravel TALL Stack' },
+            { id: 'laragrape', label: 'LaraGrape' },
+            { id: 'livewire', label: 'Livewire' },
+            { id: 'filament', label: 'Filament' },
+            { id: 'alpine', label: 'Alpine.js' },
+            { id: 'tailwind', label: 'Tailwind CSS' },
+            { id: 'flutter', label: 'Flutter' },
+            { id: 'dart', label: 'Dart' },
+            { id: 'typescript', label: 'TypeScript' },
+            { id: 'javascript', label: 'JavaScript' },
+            { id: 'node', label: 'Node.js' },
+            { id: 'nextjs', label: 'Next.js' },
+            { id: 'svelte', label: 'Svelte' },
+            { id: 'angular', label: 'Angular' },
+            { id: 'remix', label: 'Remix' },
+            { id: 'electron', label: 'Electron' },
+            { id: 'php', label: 'PHP' },
+            { id: 'python', label: 'Python' },
+            { id: 'go', label: 'Go' },
+            { id: 'rust', label: 'Rust' },
+            { id: 'csharp', label: 'C#' },
+            { id: 'dotnet', label: '.NET' },
+            { id: 'vite', label: 'Vite' },
+            { id: 'graphql', label: 'GraphQL' },
+            { id: 'mysql', label: 'MySQL' },
+            { id: 'mariadb', label: 'MariaDB' },
+            { id: 'postgresql', label: 'PostgreSQL' },
+            { id: 'mongodb', label: 'MongoDB' },
+            { id: 'redis', label: 'Redis' },
+            { id: 'prisma', label: 'Prisma' },
+            { id: 'firebase', label: 'Firebase' },
+            { id: 'supabase', label: 'Supabase' },
+            { id: 'docker', label: 'Docker' },
+            { id: 'kubernetes', label: 'Kubernetes' },
+            { id: 'aws', label: 'AWS' },
+            { id: 'gcp', label: 'Google Cloud' },
+            { id: 'vercel', label: 'Vercel' },
+            { id: 'cloudflare', label: 'Cloudflare' },
+            { id: 'stripe', label: 'Stripe' },
+            { id: 'shopify', label: 'Shopify' },
+            { id: 'figma', label: 'Figma' },
+            { id: 'openai', label: 'OpenAI' },
+            { id: 'nginx', label: 'Nginx' },
+        ];
+    }
+
+    getTechRegistryMap() {
+        const raw = window.grapesjsTechRegistryMap;
+        if (!raw || typeof raw !== 'object') {
+            return {};
+        }
+
+        const map = {};
+        Object.entries(raw).forEach(([key, value]) => {
+            const label = String(value?.label || key).trim();
+            const url = String(value?.url || '#').trim();
+            const icon = String(value?.icon || '').trim();
+            map[String(key)] = {
+                label: label || key,
+                url: url || '#',
+                icon,
+            };
+        });
+
+        return map;
+    }
+
+    /**
+     * Dialog: bulk-fill per-card IDs in order; optional block-level IDs/slugs as extraction fallback.
+     */
+    attachPortfolioBlockDataDialog() {
+        const wrapper = this.wrapper;
+        const editor = this.editor;
+        if (!wrapper || !editor || wrapper.querySelector('[data-laragrape-portfolio-data-ui]')) {
+            return;
+        }
+
+        const controls = wrapper.querySelector('.grapesjs-controls');
+        if (!controls) {
+            return;
+        }
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('data-laragrape-portfolio-data-ui', '1');
+        btn.className = 'laragrape-portfolio-data-btn';
+        btn.title =
+            'Fill portfolio project IDs per card in order, or set block-level fallback. Per card: select card → Settings.';
+        btn.textContent = 'Portfolio block data';
+        controls.appendChild(btn);
+
+        const dialog = document.createElement('dialog');
+        dialog.className = 'laragrape-portfolio-data-dialog';
+        dialog.setAttribute('data-laragrape-portfolio-data-dialog', '1');
+        dialog.innerHTML = `
+<div class="laragrape-portfolio-data-dialog__inner">
+  <h3 class="laragrape-portfolio-data-dialog__title">Animated Portfolio — projects</h3>
+  <p class="laragrape-portfolio-data-dialog__help">
+    <strong>Per card:</strong> select a portfolio card on the canvas → <strong>Settings</strong> → <strong>Portfolio project ID</strong>.
+    Use the field below to set IDs for card 1, card 2, … in one go (comma-separated). Admin IDs: <code>/admin/portfolio-projects/{id}/edit</code>.
+  </p>
+  <label class="laragrape-portfolio-data-dialog__label">Ordered IDs for each card (1st, 2nd, 3rd, …)</label>
+  <input type="text" name="portfolio-card-ids" class="laragrape-portfolio-data-dialog__input" placeholder="e.g. 5, 12, 3 or project_5, project_12" autocomplete="off" />
+  <p class="laragrape-portfolio-data-dialog__hint">Fewer values than cards leaves remaining cards unchanged. Extra values are ignored.</p>
+  <label class="laragrape-portfolio-data-dialog__label">Block-level project IDs (fallback if no card IDs)</label>
+  <input type="text" name="portfolio-ids" class="laragrape-portfolio-data-dialog__input" placeholder="comma-separated, whole block" autocomplete="off" />
+  <label class="laragrape-portfolio-data-dialog__label">Block-level slugs (fallback, optional)</label>
+  <input type="text" name="portfolio-slugs" class="laragrape-portfolio-data-dialog__input" placeholder="comma-separated" autocomplete="off" />
+  <div class="laragrape-portfolio-data-dialog__actions">
+    <button type="button" data-action="cancel" class="laragrape-portfolio-data-dialog__btn laragrape-portfolio-data-dialog__btn--secondary">Cancel</button>
+    <button type="button" data-action="save" class="laragrape-portfolio-data-dialog__btn laragrape-portfolio-data-dialog__btn--primary">Save</button>
+  </div>
+</div>`;
+        wrapper.appendChild(dialog);
+
+        const collectPortfolioItems = (rootComp) => {
+            const acc = [];
+            const walk = (c) => {
+                if (!c) {
+                    return;
+                }
+                if (c.get?.('type') === 'animated-portfolio-item') {
+                    acc.push(c);
+                }
+                const ch = c.components?.();
+                if (ch && typeof ch.each === 'function') {
+                    ch.each(walk);
+                }
+            };
+            walk(rootComp);
+            return acc;
+        };
+
+        const getPortfolioBlockComponent = () => {
+            let comp = editor.getSelected();
+            const matches = (c) => {
+                const el = c?.getEl?.();
+                return el?.getAttribute?.('data-laragrape-block') === 'animated-portfolio';
+            };
+            if (comp && matches(comp)) {
+                return comp;
+            }
+            if (comp) {
+                let p = comp.parent?.();
+                let depth = 0;
+                while (p && depth < 20) {
+                    if (matches(p)) {
+                        return p;
+                    }
+                    p = p.parent?.();
+                    depth += 1;
+                }
+            }
+            const walk = (c, acc) => {
+                if (!c) {
+                    return acc;
+                }
+                if (matches(c)) {
+                    acc.push(c);
+                }
+                const ch = c.components?.();
+                if (ch && typeof ch.each === 'function') {
+                    ch.each((child) => walk(child, acc));
+                }
+                return acc;
+            };
+            const found = walk(editor.DomComponents.getWrapper(), []);
+            return found[0] ?? null;
+        };
+
+        const syncFormFromComponent = (comp) => {
+            if (!comp) {
+                return;
+            }
+            const items = collectPortfolioItems(comp);
+            const slotValues = items.map((ic) => {
+                const a = ic.getAttributes?.() ?? {};
+                return (a['data-portfolio-project-id'] ?? '').trim();
+            });
+            dialog.querySelector('[name="portfolio-card-ids"]').value = slotValues.join(', ');
+            const el = comp.getEl?.();
+            dialog.querySelector('[name="portfolio-ids"]').value =
+                el?.getAttribute?.('data-portfolio-project-ids') || '';
+            dialog.querySelector('[name="portfolio-slugs"]').value =
+                el?.getAttribute?.('data-portfolio-project-slugs') || '';
+        };
+
+        btn.addEventListener('click', () => {
+            const comp = getPortfolioBlockComponent();
+            if (!comp) {
+                window.alert(
+                    'No Animated Portfolio block found. Drag "Animated Portfolio" from the blocks panel onto the page, then open this dialog again.',
+                );
+                return;
+            }
+            editor.select(comp);
+            syncFormFromComponent(comp);
+            dialog.showModal();
+        });
+
+        dialog.addEventListener('click', (e) => {
+            if (e.target === dialog) {
+                dialog.close();
+            }
+        });
+
+        dialog.querySelector('[data-action="cancel"]')?.addEventListener('click', () => dialog.close());
+
+        dialog.querySelector('[data-action="save"]')?.addEventListener('click', () => {
+            const comp = getPortfolioBlockComponent();
+            if (!comp) {
+                dialog.close();
+                return;
+            }
+            const cardLine = dialog.querySelector('[name="portfolio-card-ids"]').value;
+            const ids = dialog.querySelector('[name="portfolio-ids"]').value.trim();
+            const slugs = dialog.querySelector('[name="portfolio-slugs"]').value.trim();
+            const raw = cardLine.trim();
+            let parts = [];
+            if (raw) {
+                parts = raw.includes(',')
+                    ? raw.split(',').map((s) => s.trim())
+                    : raw.split(/[\s,]+/)
+                          .map((s) => s.trim())
+                          .filter(Boolean);
+            }
+            const items = collectPortfolioItems(comp);
+            items.forEach((ic, i) => {
+                if (i < parts.length) {
+                    ic.addAttributes({ 'data-portfolio-project-id': parts[i] });
+                }
+            });
+            comp.addAttributes({
+                'data-portfolio-project-ids': ids,
+                'data-portfolio-project-slugs': slugs,
+            });
+            this.updateFilamentFormState();
+            dialog.close();
+        });
+    }
+
+    wireCanvasDarkMode() {
+        if (!this.editor) {
+            return;
+        }
+        const apply = () => syncGrapesJsCanvasDarkMode(this.editor);
+
+        apply();
+        this.editor.on('canvas:frame:load', apply);
+
+        if (typeof MutationObserver === 'undefined') {
+            return;
+        }
+
+        this._canvasDarkModeObserver?.disconnect();
+        this._canvasDarkModeObserver = new MutationObserver(apply);
+        this._canvasDarkModeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class'],
+        });
+    }
+
+    /**
+     * Animated blocks need Alpine inside the GrapesJS iframe; forms need JS (inline scripts are stripped).
+     */
+    wireCanvasAlpineLifecycle() {
+        if (!this.editor) {
+            return;
+        }
+        const refresh = () => {
+            setTimeout(() => this.refreshCanvasAlpineAndForms(), 100);
+        };
+        this.editor.on('load', refresh);
+        this.editor.on('canvas:frame:load', refresh);
+        this.editor.on('component:add', refresh);
+        this.editor.on('component:update', refresh);
+    }
+
+    initAlpineInCanvas(retries = 0) {
+        if (!this.editor) {
+            return;
+        }
+        const frame = this.editor.Canvas?.getFrameEl?.();
+        if (!frame?.contentWindow) {
+            return;
+        }
+        const win = frame.contentWindow;
+        const doc = frame.contentDocument;
+        if (!doc?.body) {
+            if (retries < 60) {
+                setTimeout(() => this.initAlpineInCanvas(retries + 1), 80);
+            }
+            return;
+        }
+        if (win.Alpine && typeof win.Alpine.initTree === 'function') {
+            try {
+                win.Alpine.initTree(doc.body);
+            } catch (e) {
+                console.warn('Alpine initTree in GrapesJS canvas failed', e);
+            }
+            return;
+        }
+        if (retries < 100) {
+            setTimeout(() => this.initAlpineInCanvas(retries + 1), 80);
+        }
+    }
+
+    refreshCanvasAlpineAndForms() {
+        syncGrapesJsCanvasDarkMode(this.editor);
+        this.initAlpineInCanvas();
+        const frame = this.editor?.Canvas?.getFrameEl?.();
+        if (frame?.contentDocument) {
+            setTimeout(() => initDynamicForms(frame.contentDocument), 60);
+        }
     }
 
     loadExistingContent() {
         const data = this.options.initialData;
-        
-        // Handle different data structures
-        let html = null;
-        let css = null;
-        
-        if (data && Object.keys(data).length > 0) {
-            // If data has html and css directly (from original_grapesjs)
-            if (data.html && data.css) {
-                html = data.html;
-                css = data.css;
+
+        const pickHtmlCss = (obj) => {
+            if (!obj || typeof obj !== 'object') {
+                return null;
             }
-            // If data has grapesjs_data with original_grapesjs
-            else if (data.grapesjs_data && data.grapesjs_data.original_grapesjs) {
-                html = data.grapesjs_data.original_grapesjs.html;
-                css = data.grapesjs_data.original_grapesjs.css;
+            const rawHtml = obj.html;
+            if (rawHtml === undefined || rawHtml === null) {
+                return null;
             }
-            // If data has grapesjs_data with html and css directly
-            else if (data.grapesjs_data && data.grapesjs_data.html) {
-                html = data.grapesjs_data.html;
-                css = data.grapesjs_data.css;
+            const html = String(rawHtml);
+            if (html.trim() === '') {
+                return null;
             }
-            // If data is wrapped in grapesjs_data object (from Filament form)
-            else if (data.grapesjs_data) {
-                const grapesjsData = data.grapesjs_data;
-                if (grapesjsData.original_grapesjs) {
-                    html = grapesjsData.original_grapesjs.html;
-                    css = grapesjsData.original_grapesjs.css;
-                } else if (grapesjsData.html) {
-                    html = grapesjsData.html;
-                    css = grapesjsData.css;
+            const rawCss = obj.css;
+            const css =
+                rawCss !== undefined && rawCss !== null ? String(rawCss) : '';
+            return { html, css };
+        };
+
+        let resolved = null;
+        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+            resolved = pickHtmlCss(data);
+            if (!resolved && data.original_grapesjs) {
+                resolved = pickHtmlCss(data.original_grapesjs);
+            }
+            if (!resolved && data.grapesjs_data) {
+                const g = data.grapesjs_data;
+                resolved = pickHtmlCss(g);
+                if (!resolved && g.original_grapesjs) {
+                    resolved = pickHtmlCss(g.original_grapesjs);
                 }
             }
         }
-        
-        // Only load content if we have actual data
-        if (html && html.trim() !== '') {
-            this.editor.setComponents(html);
+
+        if (resolved) {
+            this.editor.setComponents(resolved.html);
+            if (resolved.css.trim() !== '') {
+                this.editor.setStyle(resolved.css);
+            }
         }
-        
-        if (css && css.trim() !== '') {
-            this.editor.setStyle(css);
-        }
+        setTimeout(() => this.refreshCanvasAlpineAndForms(), 350);
     }
 
     setupChangeListeners() {
@@ -268,6 +875,13 @@ class LaraGrapeGrapesJsEditor {
                 bubbles: true
             }));
         }
+    }
+
+    /**
+     * Legacy / Filament blade hook — same as updateFilamentFormState (used before Livewire submit).
+     */
+    syncToFormBeforeSubmit() {
+        this.updateFilamentFormState();
     }
 
     async saveContent() {
@@ -546,6 +1160,22 @@ class LaraGrapeGrapesJsEditor {
 // Export globally
 window.LaraGrapeGrapesJsEditor = LaraGrapeGrapesJsEditor;
 
+/**
+ * Mirror `document.documentElement` dark mode into the GrapesJS canvas iframe so theme CSS applies.
+ */
+function syncGrapesJsCanvasDarkMode(editor) {
+    if (!editor?.Canvas?.getFrameEl) {
+        return;
+    }
+    const iframe = editor.Canvas.getFrameEl();
+    const root = iframe?.contentDocument?.documentElement;
+    if (!root) {
+        return;
+    }
+    const isDark = document.documentElement.classList.contains('dark');
+    root.classList.toggle('dark', isDark);
+}
+
 function injectStylesIntoGrapesJsIframe(editor, stylesArray) {
     const iframe = editor.Canvas.getFrameEl();
     if (!iframe) return;
@@ -566,6 +1196,7 @@ function injectStylesIntoGrapesJsIframe(editor, stylesArray) {
         }
         if (el) head.appendChild(el);
     });
+    syncGrapesJsCanvasDarkMode(editor);
 }
 
 // Global function to sync GrapesJS data before form submission
@@ -579,8 +1210,8 @@ function syncGrapesJsData() {
         }
     });
     
-    // Also try to find editors by wrapper
-    const wrappers = document.querySelectorAll('.grapejs-editor-wrapper');
+    // Wrappers hold laraGrapeEditor (class: grapesjs-editor-wrapper)
+    const wrappers = document.querySelectorAll('.grapesjs-editor-wrapper');
     wrappers.forEach(wrapper => {
         const editorInstance = wrapper.laraGrapeEditor;
         if (editorInstance && typeof editorInstance.updateFilamentFormState === 'function') {

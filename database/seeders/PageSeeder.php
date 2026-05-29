@@ -36,6 +36,19 @@ class PageSeeder extends Seeder
             'show_in_menu' => true,
             'sort_order' => 3,
         ]);
+
+        if (config('laragrape.portfolio_enabled', false)) {
+            Page::firstOrCreate([
+                'slug' => 'portfolio',
+            ], [
+                'title' => 'Portfolio',
+                'content' => '<h1>Portfolio</h1><p>Our latest work — add an Animated Portfolio or Portfolio Grid block in the admin editor.</p>',
+                'is_published' => true,
+                'show_in_menu' => true,
+                'sort_order' => 4,
+            ]);
+        }
+
         $this->command->info('Seeded example pages.');
     }
 } 

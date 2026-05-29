@@ -1,5 +1,6 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
+import { initDynamicForms, initFormFlashFromSession } from './form-blocks';
 
 // Create a store for GrapesJS editing state
 Alpine.store('grapejs', {
@@ -152,6 +153,10 @@ window.initializeFrontendEditor = initializeFrontendEditor;
 
 // Start Alpine
 Alpine.start();
+
+// Form blocks (AJAX submit + toasts; works on live pages and GrapesJS canvas)
+initDynamicForms();
+initFormFlashFromSession();
 
 // Make Alpine available globally
 window.Alpine = Alpine;

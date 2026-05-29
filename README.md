@@ -46,7 +46,7 @@ php artisan serve
 - **Live Preview**: See changes in real-time
 
 ### 🛠️ Admin Panel
-- **Filament 3**: Modern, responsive admin interface
+- **Filament 5**: Modern, responsive admin interface
 - **Page Management**: Create, edit, and publish pages
 - **Custom Blocks**: Build and manage reusable components
 - **Site Settings**: Configure header, footer, and general settings
@@ -177,7 +177,7 @@ php artisan laragrape:update --all --force
 - **Live Preview**: Real-time editing experience
 
 ### Admin Panel
-- **Modern Interface**: Filament 3 admin panel
+- **Modern Interface**: Filament 5 admin panel
 - **Page Management**: Full CRUD operations
 - **Block Builder**: Visual custom block creation
 - **Site Settings**: Comprehensive configuration
@@ -225,7 +225,7 @@ php artisan laragrape:update --all --force
 
 - **No Code Required**: Visual page building for non-developers
 - **Developer Friendly**: Clean, maintainable Laravel code
-- **Modern Stack**: Built with Laravel 12, Filament 3, and Tailwind CSS
+- **Modern Stack**: Built with Laravel 12+, Filament 5, and Tailwind CSS 4
 - **Extensible**: Easy to customize and extend
 - **Production Ready**: Robust error handling and fallbacks
 - **Active Development**: Regular updates and improvements

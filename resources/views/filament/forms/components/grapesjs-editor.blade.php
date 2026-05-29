@@ -41,28 +41,26 @@
         }
     }
 
-    if ($pageId) {
+    $portfolioEnabled = (bool) config('laragrape.portfolio_enabled', false);
+
+    if ($portfolioEnabled && is_object($record) && class_exists(\LaraGrape\Models\PortfolioProject::class) && $record instanceof \LaraGrape\Models\PortfolioProject) {
+        $pageId = $record->getKey();
+        $isCreate = false;
+        $saveUrl = route('admin.portfolio-project.save-grapesjs', $record);
+    } elseif (is_object($record) && method_exists($record, 'getKey') && $record instanceof \LaraGrape\Models\Page) {
+        $pageId = $record->getKey();
+        $isCreate = false;
+        $saveUrl = route('admin.page.save-grapesjs', $pageId);
+    } elseif ($pageId) {
         $saveUrl = route('admin.page.save-grapesjs', $pageId);
     }
-    
-    // Debug information
-    \Log::info('GrapesJS Editor Debug', [
-        'record_exists' => $record ? 'yes' : 'no',
-        'record_id' => $pageId,
-        'isCreate' => $isCreate,
-        'saveUrl' => $saveUrl,
-        'statePath' => $statePath,
-        'url' => request()->url(),
-        'route_name' => request()->route()?->getName() ?? 'unknown',
-        'route_parameters' => request()->route()?->parameters() ?? []
-    ]);
-@endphp
-@php
+
     $tailwindConfig = \LaraGrape\Models\TailwindConfig::getActive();
     $tailwindCssVars = $tailwindConfig ? $tailwindConfig->generateCss() : '';
-    $appCss = Vite::asset('resources/css/app.css');
-    $adminCss = Vite::asset('resources/css/filament/admin/theme.css');
     $utilitiesCssContent = file_exists(public_path('css/laralgrape-utilities.css')) ? file_get_contents(public_path('css/laralgrape-utilities.css')) : '';
+    $techRegistry = app(\LaraGrape\Support\TechStackRegistry::class);
+    $techRegistryOptions = $techRegistry->traitOptions();
+    $techRegistryMap = $techRegistry->editorMap();
 @endphp
 @if($tailwindConfig)
     <style>
@@ -111,10 +109,10 @@
                 @json($appCss),
                 @json($adminCss),
                 `<style>{!! $utilitiesCssContent !!}</style>`,
-                `<style>{{ $tailwindCssVars }}</style>`
+                `<style>{!! $tailwindCssVars !!}</style>`
             ];
-            // Debug: Log the styles array before GrapesJS loads
-            console.log('grapesjsCanvasStyles (backend):', window.grapesjsCanvasStyles);
+            window.grapesjsTechRegistryOptions = @json($techRegistryOptions);
+            window.grapesjsTechRegistryMap = @json($techRegistryMap);
         </script>
         <script>
             // Global function to sync GrapesJS data - can be called from anywhere
@@ -139,7 +137,8 @@
                     blocks: @json($blocks),
                     initialData: @json($state),
                     isDisabled: {{ $isDisabled ? 'true' : 'false' }},
-                    height: '{{ $height }}'
+                    height: '{{ $height }}',
+                    portfolioEnabled: {{ ($portfolioEnabled ?? false) ? 'true' : 'false' }},
                 });
 
                 // Store the editor instance globally for access

@@ -75,4 +75,24 @@ class Page extends Model
         // Use 'id' for admin routes, 'slug' for public routes
         return request()->is('admin/*') ? 'id' : 'slug';
     }
+
+    /**
+     * Structured fields for a LaraGrape block, extracted when the page was saved from GrapesJS.
+     *
+     * @return array<string, mixed>
+     */
+    public function getDynamicDataForBlock(string $blockId): array
+    {
+        $data = $this->grapesjs_data;
+        if (! is_array($data)) {
+            return [];
+        }
+
+        $byBlock = $data['block_dynamic_data'] ?? null;
+        if (! is_array($byBlock)) {
+            return [];
+        }
+
+        return $byBlock[$blockId] ?? [];
+    }
 }

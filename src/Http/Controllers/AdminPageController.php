@@ -87,27 +87,44 @@ class AdminPageController extends Controller
     }
 
     /**
-     * Serve a rendered block preview for GrapesJS/editor
-     * GET /admin/block-preview/{blockId}
-     * Uses BlockService which recursively finds blocks (including animated/, advanced/, basic/ subdirs)
+     * Serve a rendered block preview for GrapesJS/editor.
+     * GET /admin/block-preview/{blockId} or /admin/block-preview?id=
      */
-    public function blockPreview($blockId)
+    public function blockPreview(Request $request, ?string $blockId = null)
     {
+        $blockId = $request->query('id') ?? $blockId;
+        if ($blockId === null || $blockId === '') {
+            return response()->json(['error' => 'Missing block id'], 400);
+        }
+
         try {
-            Log::info('Block preview request', ['blockId' => $blockId]);
-            $html = $this->blockService->renderBlockPreview($blockId);
-            if (!$html) {
-                Log::warning('Block view not found', ['blockId' => $blockId]);
-                return response()->json(['error' => 'Block view not found: ' . $blockId], 404);
+            if (config('laragrape.debug', false)) {
+                Log::info('Block preview request', ['blockId' => $blockId]);
             }
-            return response($html);
+
+            $html = $this->blockService->renderBlockPreview($blockId);
+            if ($html !== null) {
+                return response($html);
+            }
+
+            if (str_contains($blockId, '/')) {
+                $viewPath = 'filament.blocks.'.str_replace('/', '.', $blockId);
+                if (view()->exists($viewPath)) {
+                    return response(view($viewPath, [
+                        'isEditorPreview' => true,
+                        'dynamicData' => [],
+                    ])->render());
+                }
+            }
+
+            return response()->json(['error' => 'Block view not found: '.$blockId], 404);
         } catch (\Exception $e) {
             Log::error('Failed to load block preview', [
                 'blockId' => $blockId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
             ]);
-            return response()->json(['error' => 'Failed to load preview: ' . $e->getMessage()], 500);
+
+            return response()->json(['error' => 'Failed to load preview: '.$e->getMessage()], 500);
         }
     }
 }

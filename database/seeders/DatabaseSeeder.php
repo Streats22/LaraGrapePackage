@@ -25,6 +25,10 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\SiteSettingsSeeder::class,
         ]);
 
+        if (config('laragrape.portfolio_enabled', false)) {
+            $this->call(\Database\Seeders\PortfolioProjectSeeder::class);
+        }
+
         // Seed default pages
         $page = Page::firstOrCreate(
             ['slug' => 'home'],

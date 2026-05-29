@@ -28,7 +28,8 @@ sync_boilerplate_to_package.sh
 
 # Ignore the sync exclude file
 .syncExclude
+# Local install test (not shipped with the package)
 test_laragrape_install.sh
-
 test-laragrape/
+UPGRADE-1.5.md
 smart_import_lara.php

@@ -14,7 +14,8 @@ class LaraGrapeServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $packageDir = dirname(__DIR__, 2);
+        $this->mergeConfigFrom($packageDir.'/config/laragrape.php', 'laragrape');
     }
 
     /**
@@ -25,8 +26,16 @@ class LaraGrapeServiceProvider extends ServiceProvider
         $packageDir = dirname(__DIR__, 2);
         $this->loadViewsFrom($packageDir.'/resources/views', 'LaraGrape');
 
-        $this->app->singleton(\LaraGrape\Services\FormService::class);
+        $this->app->singleton(\LaraGrape\Services\FormService::class, function ($app) {
+            if (class_exists(\App\Services\FormService::class)) {
+                return $app->make(\App\Services\FormService::class);
+            }
+
+            return new \LaraGrape\Services\FormService;
+        });
         $this->app->singleton(\LaraGrape\Services\LayoutService::class);
+        $this->app->singleton(\LaraGrape\Support\TechStackRegistry::class);
+        $this->app->singleton(\LaraGrape\Services\DynamicBlockDataService::class);
 
         // Register the block component service provider
         $this->app->register(BlockComponentServiceProvider::class);
@@ -36,7 +45,7 @@ class LaraGrapeServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                $packageDir.'/config/LaraGrape.php' => config_path('LaraGrape.php'),
+                $packageDir.'/config/laragrape.php' => config_path('laragrape.php'),
             ], 'LaraGrape-config');
             $this->publishes([
                 $packageDir.'/resources/views' => resource_path('views/vendor/LaraGrape'),
@@ -109,6 +118,8 @@ class LaraGrapeServiceProvider extends ServiceProvider
                 $packageDir.'/src/Services/BlockService.php' => app_path('Services/BlockService.php'),
                 $packageDir.'/src/Services/FormService.php' => app_path('Services/FormService.php'),
                 $packageDir.'/src/Services/GrapesJsConverterService.php' => app_path('Services/GrapesJsConverterService.php'),
+                $packageDir.'/src/Services/DynamicBlockDataService.php' => app_path('Services/DynamicBlockDataService.php'),
+                $packageDir.'/src/Support/TechStackRegistry.php' => app_path('Support/TechStackRegistry.php'),
                 $packageDir.'/src/Services/LayoutService.php' => app_path('Services/LayoutService.php'),
                 $packageDir.'/src/Services/SiteSettingsService.php' => app_path('Services/SiteSettingsService.php'),
             ], 'LaraGrape-commands');
@@ -132,6 +143,8 @@ class LaraGrapeServiceProvider extends ServiceProvider
             // Publish JS assets (grapesjs-editor.js and future JS)
             $this->publishes([
                 $packageDir.'/resources/js/grapesjs-editor.js' => resource_path('js/grapesjs-editor.js'),
+                $packageDir.'/resources/js/form-blocks.js' => resource_path('js/form-blocks.js'),
+                $packageDir.'/resources/js/bootstrap.js' => resource_path('js/bootstrap.js'),
             ], 'LaraGrape-js');
             // Publish Filament admin theme CSS
             $this->publishes([
@@ -261,6 +274,18 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/resources/views/filament/components' => resource_path('views/filament/components'),
             ], 'laragrape-filament-components');
+
+            // Optional portfolio module
+            $this->publishes([
+                $packageDir.'/database/migrations/portfolio' => database_path('migrations'),
+                $packageDir.'/src/Models/PortfolioProject.php' => app_path('Models/PortfolioProject.php'),
+                $packageDir.'/src/Filament/Resources/LaraPortfolioProjectResource.php' => app_path('Filament/Resources/PortfolioProjectResource.php'),
+                $packageDir.'/src/Filament/Resources/LaraPortfolioProjectResource/Pages' => app_path('Filament/Resources/PortfolioProjectResource/Pages'),
+                $packageDir.'/src/Http/Controllers/PortfolioProjectController.php' => app_path('Http/Controllers/PortfolioProjectController.php'),
+                $packageDir.'/src/Http/Controllers/AdminPortfolioProjectController.php' => app_path('Http/Controllers/AdminPortfolioProjectController.php'),
+                $packageDir.'/routes/portfolio.php' => base_path('routes/portfolio.php'),
+                $packageDir.'/resources/views/portfolio' => resource_path('views/portfolio'),
+            ], 'LaraGrape-portfolio');
 
             // Ensure routes include the preview route (already in web.php publish)
         }

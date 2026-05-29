@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/css/site.css',
                 'resources/css/filament-grapesjs-editor.css',
                 'resources/js/app.js',
+                'resources/js/form-blocks.js',
                 'resources/js/grapesjs-editor.js',
             ],
             refresh: true,
