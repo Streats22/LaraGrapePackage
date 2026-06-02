@@ -245,7 +245,7 @@ class LayoutService
                 'contact_phone' => null,
                 'contact_email' => null,
                 'contact_address' => null,
-                'copyright_text' => '© 2025 All rights reserved.',
+                'copyright_text' => '© 2026 All rights reserved.',
                 'show_powered_by' => true,
                 'powered_by_text' => 'Powered by LaraGrape',
                 'shadow' => 'sm',

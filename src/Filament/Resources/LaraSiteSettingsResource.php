@@ -22,6 +22,7 @@ use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\CodeEditor;
 use Filament\Forms\Components\KeyValue;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class LaraSiteSettingsResource extends Resource
@@ -36,7 +37,18 @@ class LaraSiteSettingsResource extends Resource
     
     protected static ?string $pluralModelLabel = 'Site Settings';
     
-    protected static string|\UnitEnum|null $navigationGroup = 'Design System';
+    protected static string|\UnitEnum|null $navigationGroup = 'Site';
+
+    protected static ?int $navigationSort = 10;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where(function (Builder $query): void {
+                $query->where('group', '!=', 'editor')
+                    ->orWhereNull('group');
+            });
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -220,7 +232,7 @@ class LaraSiteSettingsResource extends Resource
                                         Textarea::make('footer_content')
                                             ->label('Footer Content')
                                             ->rows(4)
-                                            ->default('© ' . date('Y') . ' LaraGrape. All rights reserved.')
+                                            ->default('© 2026 LaraGrape. All rights reserved.')
                                             ->helperText('Main footer content (supports HTML)'),
                                         
                                         Grid::make(2)

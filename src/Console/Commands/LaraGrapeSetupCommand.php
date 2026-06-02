@@ -92,6 +92,7 @@ class LaraGrapeSetupCommand extends Command
             'laragrape-form-resource',
             'laragrape-formsubmission-resource',
             'laragrape-menuset-resource',
+            'laragrape-editor-settings-page',
             'laragrape-admin-controller',
             'laragrape-filament-components',
             'LaraGrape-console-kernel',

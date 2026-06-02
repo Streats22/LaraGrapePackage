@@ -16,19 +16,26 @@ use Filament\Support\Enums\Alignment;
 use Illuminate\Contracts\Support\Htmlable;
 use LaraGrape\Support\EditorSettings as EditorSettingsStore;
 
+/**
+ * Standalone LaraGrape / GrapesJS editor settings (not Site Settings).
+ *
+ * @see https://filamentphp.com/docs/panels/pages
+ */
 class LaraEditorSettings extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-squares-2x2';
 
-    protected static ?string $navigationLabel = 'Editor settings';
+    protected static ?string $navigationLabel = 'LaraGrape editor';
 
-    protected static ?string $title = 'GrapesJS editor';
+    protected static ?string $title = 'LaraGrape editor';
 
-    protected static ?string $slug = 'editor-settings';
+    protected static ?string $slug = 'laragrape-editor';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Design System';
 
-    protected static ?int $navigationSort = 15;
+    protected static ?int $navigationSort = 5;
+
+    protected static ?string $navigationParentItem = null;
 
     /**
      * @var array<string, mixed>|null
@@ -54,13 +61,13 @@ class LaraEditorSettings extends Page
     {
         return $schema
             ->components([
-                Section::make('Block sidebar')
-                    ->description('Options for the GrapesJS block list in the page builder.')
+                Section::make('GrapesJS block sidebar')
+                    ->description('These options apply to the page builder block list (admin and frontend editor). They are stored separately from Site Settings.')
                     ->schema([
                         Toggle::make('block_preview_tooltips')
                             ->label('Block preview tooltips')
                             ->helperText(
-                                'When enabled, hovering or clicking a block in the sidebar shows a small popover with a description and styled preview (uses your Tailwind theme).',
+                                'Show a small hover popover with description and styled preview when pointing at a block in the GrapesJS sidebar.',
                             )
                             ->default(true),
                     ]),
@@ -73,14 +80,14 @@ class LaraEditorSettings extends Page
         EditorSettingsStore::persist($data);
 
         Notification::make()
-            ->title('Editor settings saved')
+            ->title('LaraGrape editor settings saved')
             ->success()
             ->send();
     }
 
     public function getTitle(): string|Htmlable
     {
-        return static::$title ?? 'GrapesJS editor';
+        return static::$title ?? 'LaraGrape editor';
     }
 
     public function content(Schema $schema): Schema

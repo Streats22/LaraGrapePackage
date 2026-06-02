@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\PageSeeder::class,
             \Database\Seeders\CustomBlockSeeder::class,
             \Database\Seeders\SiteSettingsSeeder::class,
+            \Database\Seeders\LaragrapeEditorSettingsSeeder::class,
         ]);
 
         if (config('laragrape.portfolio_enabled', false)) {

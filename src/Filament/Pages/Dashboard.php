@@ -58,9 +58,9 @@ class Dashboard extends BaseDashboard
                     'route' => 'filament.admin.resources.site-settings.index',
                 ],
                 [
-                    'label' => 'Editor settings',
+                    'label' => 'LaraGrape editor',
                     'icon' => 'heroicon-o-squares-2x2',
-                    'route' => 'filament.admin.pages.editor-settings',
+                    'route' => 'filament.admin.pages.laragrape-editor',
                 ],
             ],
         ]);

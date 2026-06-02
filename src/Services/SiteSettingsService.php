@@ -80,7 +80,7 @@ class SiteSettingsService
             'logo_image' => $this->get('footer_logo_image'),
             'background_color' => $this->get('footer_background_color', '#1f2937'),
             'text_color' => $this->get('footer_text_color', '#ffffff'),
-            'content' => $this->get('footer_content', '© ' . date('Y') . ' LaraGrape. All rights reserved.'),
+            'content' => $this->get('footer_content', '© 2026 LaraGrape. All rights reserved.'),
             'show_social' => $this->get('footer_show_social', true),
             'show_newsletter' => $this->get('footer_show_newsletter', false),
             'custom_css' => $this->get('footer_custom_css', ''),

@@ -162,7 +162,7 @@ $footerSettings = $siteSettings->getFooterSettings();
 
 // Returns:
 [
-    'footer_text' => '© 2024 Site Name',
+    'footer_text' => '© 2026 Site Name',
     'background_color' => '#f8f9fa',
     'text_color' => '#6c757d',
     'show_social' => true,

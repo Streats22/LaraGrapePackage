@@ -2,36 +2,33 @@
 
 namespace LaraGrape\Support;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
 class EditorSettings
 {
-    public const KEY_BLOCK_PREVIEW_TOOLTIPS = 'editor_block_preview_tooltips';
+    public const KEY_BLOCK_PREVIEW_TOOLTIPS = 'block_preview_tooltips';
 
     /**
-     * @return class-string<\LaraGrape\Models\SiteSettings|\App\Models\SiteSettings>
+     * @return class-string<\LaraGrape\Models\LaragrapeEditorSetting|\App\Models\LaragrapeEditorSetting>
      */
-    protected static function siteSettingsModel(): string
+    protected static function model(): string
     {
-        if (class_exists(\App\Models\SiteSettings::class)) {
-            return \App\Models\SiteSettings::class;
+        if (class_exists(\App\Models\LaragrapeEditorSetting::class)) {
+            return \App\Models\LaragrapeEditorSetting::class;
         }
 
-        return \LaraGrape\Models\SiteSettings::class;
+        return \LaraGrape\Models\LaragrapeEditorSetting::class;
     }
 
     public static function blockPreviewTooltipsEnabled(): bool
     {
-        return (bool) static::resolve(
+        return static::toBool(static::resolve(
             self::KEY_BLOCK_PREVIEW_TOOLTIPS,
             config('laragrape.editor.block_preview_tooltips', true),
-        );
+        ));
     }
 
     /**
-     * Values for the Filament editor settings form.
-     *
      * @return array{block_preview_tooltips: bool}
      */
     public static function formDefaults(): array
@@ -42,8 +39,6 @@ class EditorSettings
     }
 
     /**
-     * Settings passed into grapesjs-editor.js (Filament + frontend).
-     *
      * @return array{blockPreviewTooltips: bool}
      */
     public static function forJs(): array
@@ -58,39 +53,27 @@ class EditorSettings
      */
     public static function persist(array $data): void
     {
-        $model = static::siteSettingsModel();
-
-        if (! Schema::hasTable('site_settings')) {
+        if (! Schema::hasTable('laragrape_editor_settings')) {
             return;
         }
 
-        $model::set(
+        static::model()::set(
             self::KEY_BLOCK_PREVIEW_TOOLTIPS,
             (bool) ($data['block_preview_tooltips'] ?? true),
         );
-
-        static::ensureSettingRecord(
-            self::KEY_BLOCK_PREVIEW_TOOLTIPS,
-            'Block preview tooltips',
-            'editor',
-            'Show hover popovers with block description and styled preview in the GrapesJS block panel.',
-        );
-
-        Cache::forget('site_settings_all');
     }
 
     protected static function resolve(string $key, mixed $default): mixed
     {
-        if (! Schema::hasTable('site_settings')) {
+        if (! Schema::hasTable('laragrape_editor_settings')) {
             return $default;
         }
 
         try {
-            $model = static::siteSettingsModel();
-            $stored = $model::get($key, null);
+            $stored = static::model()::get($key, null);
 
             if ($stored !== null) {
-                return static::toBool($stored);
+                return $stored;
             }
         } catch (\Throwable) {
             return $default;
@@ -112,26 +95,5 @@ class EditorSettings
         $filtered = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
 
         return $filtered ?? (bool) $value;
-    }
-
-    protected static function ensureSettingRecord(
-        string $key,
-        string $label,
-        string $group,
-        string $description,
-    ): void {
-        $model = static::siteSettingsModel();
-
-        $model::firstOrCreate(
-            ['key' => $key],
-            [
-                'label' => $label,
-                'value' => static::blockPreviewTooltipsEnabled(),
-                'type' => 'boolean',
-                'group' => $group,
-                'description' => $description,
-                'sort_order' => 1,
-            ],
-        );
     }
 }

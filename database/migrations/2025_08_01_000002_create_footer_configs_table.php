@@ -40,7 +40,7 @@ return new class extends Migration
             $table->string('contact_phone')->nullable();
             $table->string('contact_email')->nullable();
             $table->text('contact_address')->nullable();
-            $table->string('copyright_text')->default('© 2024 All rights reserved.');
+            $table->string('copyright_text')->default('© 2026 All rights reserved.');
             $table->string('powered_by_text')->nullable();
             $table->string('background_color')->default('#1f2937');
             $table->string('dark_background_color')->nullable();

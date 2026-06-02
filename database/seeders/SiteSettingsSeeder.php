@@ -33,7 +33,7 @@ class SiteSettingsSeeder extends Seeder
             'key' => 'footer_text',
         ], [
             'label' => 'Footer Text',
-            'value' => '© 2024 LaraGrape. All rights reserved.',
+            'value' => '© 2026 LaraGrape. All rights reserved.',
             'type' => 'text',
             'group' => 'footer',
             'description' => 'Text for the footer.',
@@ -57,16 +57,6 @@ class SiteSettingsSeeder extends Seeder
             'type' => 'text',
             'group' => 'social',
             'description' => 'Twitter username.',
-            'sort_order' => 1,
-        ]);
-        SiteSettings::firstOrCreate([
-            'key' => 'editor_block_preview_tooltips',
-        ], [
-            'label' => 'Block preview tooltips',
-            'value' => config('laragrape.editor.block_preview_tooltips', true),
-            'type' => 'boolean',
-            'group' => 'editor',
-            'description' => 'Show hover popovers with block description and styled preview in the GrapesJS block panel.',
             'sort_order' => 1,
         ]);
         $this->command->info('Seeded example site settings.');

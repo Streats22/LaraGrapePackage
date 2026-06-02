@@ -484,7 +484,7 @@ class LaraFooterConfigResource extends Resource
                                 Section::make('Copyright Configuration')
                                     ->schema([
                                         TextInput::make('copyright_text')
-                                            ->default('© 2024 All rights reserved.')
+                                            ->default('© 2026 All rights reserved.')
                                             ->maxLength(255)
                                             ->label('Copyright Text')
                                             ->helperText('Copyright notice text'),
