@@ -55,46 +55,28 @@ function escapeHtml(text) {
         .replace(/"/g, '&quot;');
 }
 
-/**
- * Compact tile for the block sidebar (GrapesJS `media`). Full HTML is still used as `content` on drop.
- * @block preview="full" → skip media (legacy: tile shows full preview HTML).
- * @block preview_image="https://…" or /storage/… → image thumbnail in sidebar.
- */
+/** Icon-only sidebar tile (label comes from GrapesJS — do not duplicate). */
 function buildBlockSidebarMedia(block) {
     if (block.preview_image) {
         const src = escapeHtml(block.preview_image);
-        const label = escapeHtml(block.label || block.id || 'Block');
-        return `<div class="laragrape-block-media laragrape-block-media--image"><img src="${src}" alt="${label}" loading="lazy" /></div>`;
+        return `<img src="${src}" alt="" class="laragrape-block-thumb" loading="lazy" />`;
     }
-
     const icon = escapeHtml(block.icon || 'fas fa-cube');
-    const label = escapeHtml(block.label || block.id || 'Block');
-    const category = escapeHtml(block.category || '');
-
-    return `<div class="laragrape-block-media laragrape-block-media--icon">
-        <i class="${icon}" aria-hidden="true"></i>
-        <span class="laragrape-block-media__label">${label}</span>
-        ${category ? `<span class="laragrape-block-media__category">${category}</span>` : ''}
-    </div>`;
+    return `<i class="${icon} laragrape-block-thumb-icon" aria-hidden="true"></i>`;
 }
 
 function usesCompactSidebarPreview(block) {
-    const mode = String(block.preview_mode || 'sidebar').toLowerCase();
-    return mode !== 'full';
+    return String(block.preview_mode || 'sidebar').toLowerCase() !== 'full';
 }
 
-/** Attach tooltip + a11y attributes for GrapesJS block manager tiles. */
 function enrichBlockForManager(block) {
-    const tip = blockTooltipText(block);
     const label = String(block?.label || block?.id || 'Block').trim();
-
     return {
         ...block,
         attributes: {
             ...(block.attributes || {}),
-            title: tip,
-            'data-laragrape-tip': tip,
-            'aria-label': tip === label ? label : `${label}. ${tip}`,
+            'data-laragrape-block-id': block.id || '',
+            'aria-label': label,
         },
     };
 }
@@ -168,8 +150,8 @@ class LaraGrapeGrapesJsEditor {
             plugins.push(grapesjsParserPostcss);
         }
         
-        // Fetch editor previews; sidebar can show compact media + hover panel (see wireBlockHoverPreview).
         this._blockPreviewCache = new Map();
+        this._blockMetaById = new Map();
         const blockManagerBlocks = [];
         for (const block of this.options.blocks) {
             let dropContent = block.content || '';
@@ -178,6 +160,12 @@ class LaraGrapeGrapesJsEditor {
             }
             if (block.id) {
                 this._blockPreviewCache.set(block.id, dropContent);
+                const rawDesc = String(block.description || '').trim();
+                this._blockMetaById.set(block.id, {
+                    label: block.label || block.id,
+                    description: rawDesc || blockTooltipText(block),
+                    preview_image: block.preview_image || null,
+                });
             }
 
             const enriched = enrichBlockForManager({
@@ -224,8 +212,6 @@ class LaraGrapeGrapesJsEditor {
 
         this.wireCanvasDarkMode();
         this.wireCanvasAlpineLifecycle();
-        this.wireBlockTooltips();
-        this.wireBlockHoverPreview();
 
         // Check if disabled before loading content
         if (this.options.isDisabled) {
@@ -249,15 +235,14 @@ class LaraGrapeGrapesJsEditor {
             injectStylesIntoGrapesJsIframe(this.editor, window.grapesjsCanvasStyles);
             syncGrapesJsCanvasDarkMode(this.editor);
             this.refreshCanvasAlpineAndForms();
-            this.wireBlockTooltips();
-            this.wireBlockHoverPreview();
+            this.wireBlockHoverCard();
         }, 500);
     }
 
     /**
-     * Larger preview panel when hovering a block tile (uses cached editor preview HTML).
+     * One small hover card: title + description + mini block preview (no duplicate sidebar labels).
      */
-    wireBlockHoverPreview() {
+    wireBlockHoverCard() {
         const editor = this.editor;
         if (!editor?.BlockManager) {
             return;
@@ -267,65 +252,88 @@ class LaraGrapeGrapesJsEditor {
             (typeof editor.BlockManager.getContainer === 'function' && editor.BlockManager.getContainer()) ||
             editor.getContainer?.()?.querySelector?.('.gjs-blocks-c');
 
-        if (!container || container.dataset.laragrapeHoverPreviewBound === '1') {
+        if (!container || container.dataset.laragrapeHoverCardBound === '1') {
             return;
         }
-        container.dataset.laragrapeHoverPreviewBound = '1';
+        container.dataset.laragrapeHoverCardBound = '1';
 
-        let panelEl = document.getElementById('laragrape-gjs-block-preview-panel');
-        if (!panelEl) {
-            panelEl = document.createElement('div');
-            panelEl.id = 'laragrape-gjs-block-preview-panel';
-            panelEl.className = 'laragrape-gjs-block-preview-panel';
-            panelEl.hidden = true;
-            panelEl.innerHTML =
-                '<div class="laragrape-gjs-block-preview-panel__header"></div><div class="laragrape-gjs-block-preview-panel__body"></div>';
-            document.body.appendChild(panelEl);
+        let cardEl = document.getElementById('laragrape-gjs-block-hover-card');
+        if (!cardEl) {
+            cardEl = document.createElement('div');
+            cardEl.id = 'laragrape-gjs-block-hover-card';
+            cardEl.className = 'laragrape-gjs-block-hover-card';
+            cardEl.hidden = true;
+            cardEl.innerHTML = `
+                <p class="laragrape-gjs-block-hover-card__title"></p>
+                <p class="laragrape-gjs-block-hover-card__desc"></p>
+                <div class="laragrape-gjs-block-hover-card__preview-wrap">
+                    <div class="laragrape-gjs-block-hover-card__preview"></div>
+                </div>
+            `;
+            document.body.appendChild(cardEl);
         }
 
-        const headerEl = panelEl.querySelector('.laragrape-gjs-block-preview-panel__header');
-        const bodyEl = panelEl.querySelector('.laragrape-gjs-block-preview-panel__body');
+        const titleEl = cardEl.querySelector('.laragrape-gjs-block-hover-card__title');
+        const descEl = cardEl.querySelector('.laragrape-gjs-block-hover-card__desc');
+        const previewEl = cardEl.querySelector('.laragrape-gjs-block-hover-card__preview');
+        const previewWrap = cardEl.querySelector('.laragrape-gjs-block-hover-card__preview-wrap');
+
         let showTimer = null;
         let hideTimer = null;
 
-        const hidePanel = () => {
+        const hideCard = () => {
             if (showTimer) {
                 clearTimeout(showTimer);
                 showTimer = null;
             }
-            panelEl.hidden = true;
+            cardEl.hidden = true;
         };
 
-        const showPanel = (blockEl, blockId) => {
-            const html = this._blockPreviewCache?.get(blockId);
-            if (!html || !String(html).trim()) {
-                return;
-            }
-
-            const label =
-                blockEl.querySelector('.laragrape-block-media__label')?.textContent ||
-                blockEl.getAttribute('aria-label') ||
-                blockId;
-
-            headerEl.textContent = label;
-            bodyEl.innerHTML = html;
-
-            panelEl.hidden = false;
-
+        const positionCard = (blockEl) => {
             const rect = blockEl.getBoundingClientRect();
-            const panelWidth = 320;
-            let left = rect.right + 12;
-            if (left + panelWidth > window.innerWidth - 12) {
-                left = Math.max(12, rect.left - panelWidth - 12);
+            const cardWidth = 220;
+            let left = rect.right + 8;
+            if (left + cardWidth > window.innerWidth - 8) {
+                left = Math.max(8, rect.left - cardWidth - 8);
             }
-            let top = rect.top;
-            const maxTop = window.innerHeight - panelEl.offsetHeight - 12;
-            if (top > maxTop) {
-                top = Math.max(12, maxTop);
+            cardEl.style.left = `${left}px`;
+            cardEl.style.top = `${Math.max(8, rect.top)}px`;
+        };
+
+        const showCard = (blockEl, blockId) => {
+            const meta = this._blockMetaById?.get(blockId);
+            const label = meta?.label || blockId;
+            const description = meta?.description || '';
+            const html = this._blockPreviewCache?.get(blockId) || '';
+            const previewImage = meta?.preview_image;
+
+            titleEl.textContent = label;
+
+            const showDesc =
+                description &&
+                description !== label &&
+                !description.startsWith(`Drag “${label}”`);
+            descEl.textContent = showDesc ? description : '';
+            descEl.hidden = !showDesc;
+
+            previewWrap.classList.toggle(
+                'laragrape-gjs-block-hover-card__preview-wrap--image',
+                Boolean(previewImage),
+            );
+
+            if (previewImage) {
+                previewEl.innerHTML = `<img src="${escapeHtml(previewImage)}" alt="" />`;
+                previewWrap.hidden = false;
+            } else if (html && String(html).trim()) {
+                previewEl.innerHTML = html;
+                previewWrap.hidden = false;
+            } else {
+                previewEl.innerHTML = '';
+                previewWrap.hidden = true;
             }
 
-            panelEl.style.left = `${left}px`;
-            panelEl.style.top = `${top}px`;
+            positionCard(blockEl);
+            cardEl.hidden = false;
         };
 
         container.addEventListener('mouseover', (event) => {
@@ -333,9 +341,8 @@ class LaraGrapeGrapesJsEditor {
             if (!blockEl || !container.contains(blockEl)) {
                 return;
             }
-
             const blockId = blockEl.getAttribute('id');
-            if (!blockId || !this._blockPreviewCache?.has(blockId)) {
+            if (!blockId || !this._blockMetaById?.has(blockId)) {
                 return;
             }
 
@@ -343,15 +350,14 @@ class LaraGrapeGrapesJsEditor {
                 clearTimeout(hideTimer);
                 hideTimer = null;
             }
-
             if (showTimer) {
                 clearTimeout(showTimer);
             }
 
             showTimer = setTimeout(() => {
-                showPanel(blockEl, blockId);
+                showCard(blockEl, blockId);
                 showTimer = null;
-            }, 400);
+            }, 350);
         });
 
         container.addEventListener('mouseout', (event) => {
@@ -360,103 +366,26 @@ class LaraGrapeGrapesJsEditor {
                 return;
             }
             const to = event.relatedTarget;
-            if (to && (fromBlock.contains(to) || panelEl.contains(to))) {
+            if (to && (fromBlock.contains(to) || cardEl.contains(to))) {
                 return;
             }
-
             if (showTimer) {
                 clearTimeout(showTimer);
                 showTimer = null;
             }
-
             hideTimer = setTimeout(() => {
-                hidePanel();
+                hideCard();
                 hideTimer = null;
-            }, 200);
+            }, 150);
         });
 
-        panelEl.addEventListener('mouseenter', () => {
+        cardEl.addEventListener('mouseenter', () => {
             if (hideTimer) {
                 clearTimeout(hideTimer);
                 hideTimer = null;
             }
         });
-
-        panelEl.addEventListener('mouseleave', () => {
-            hidePanel();
-        });
-    }
-
-    /**
-     * Hover tooltips on block manager tiles (uses data-laragrape-tip / @block description).
-     */
-    wireBlockTooltips() {
-        const editor = this.editor;
-        if (!editor?.BlockManager) {
-            return;
-        }
-
-        const container =
-            (typeof editor.BlockManager.getContainer === 'function' && editor.BlockManager.getContainer()) ||
-            editor.getContainer?.()?.querySelector?.('.gjs-blocks-c');
-
-        if (!container) {
-            return;
-        }
-
-        if (container.dataset.laragrapeTipsBound === '1') {
-            return;
-        }
-        container.dataset.laragrapeTipsBound = '1';
-
-        let tipEl = document.getElementById('laragrape-gjs-block-tooltip');
-        if (!tipEl) {
-            tipEl = document.createElement('div');
-            tipEl.id = 'laragrape-gjs-block-tooltip';
-            tipEl.className = 'laragrape-gjs-block-tooltip';
-            tipEl.setAttribute('role', 'tooltip');
-            tipEl.hidden = true;
-            document.body.appendChild(tipEl);
-        }
-        this._blockTooltipEl = tipEl;
-
-        const showTip = (text, anchorRect) => {
-            const copy = String(text || '').trim();
-            if (!copy) {
-                return;
-            }
-            tipEl.textContent = copy;
-            tipEl.hidden = false;
-            const centerX = anchorRect.left + anchorRect.width / 2;
-            tipEl.style.left = `${centerX}px`;
-            tipEl.style.top = `${anchorRect.bottom + 8}px`;
-        };
-
-        const hideTip = () => {
-            tipEl.hidden = true;
-        };
-
-        container.addEventListener('mouseover', (event) => {
-            const blockEl = event.target.closest?.('.gjs-block');
-            if (!blockEl || !container.contains(blockEl)) {
-                return;
-            }
-            const text =
-                blockEl.getAttribute('data-laragrape-tip') || blockEl.getAttribute('title') || '';
-            showTip(text, blockEl.getBoundingClientRect());
-        });
-
-        container.addEventListener('mouseout', (event) => {
-            const fromBlock = event.target.closest?.('.gjs-block');
-            if (!fromBlock) {
-                return;
-            }
-            const to = event.relatedTarget;
-            if (to && fromBlock.contains(to)) {
-                return;
-            }
-            hideTip();
-        });
+        cardEl.addEventListener('mouseleave', () => hideCard());
     }
 
     /**
