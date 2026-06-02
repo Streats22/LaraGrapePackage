@@ -110,6 +110,7 @@ class LaraGrapeServiceProvider extends ServiceProvider
                 $packageDir.'/resources/css/site.css' => resource_path('css/site.css'),
                 $packageDir.'/resources/css/app.css' => resource_path('css/app.css'),
                 $packageDir.'/resources/css/filament-grapesjs-editor.css' => resource_path('css/filament-grapesjs-editor.css'),
+                $packageDir.'/resources/css/grapesjs-block-popover.css' => resource_path('css/grapesjs-block-popover.css'),
             ], 'LaraGrape-css');
             // Publish PHP service/command files
             $this->publishes([
@@ -120,6 +121,7 @@ class LaraGrapeServiceProvider extends ServiceProvider
                 $packageDir.'/src/Services/GrapesJsConverterService.php' => app_path('Services/GrapesJsConverterService.php'),
                 $packageDir.'/src/Services/DynamicBlockDataService.php' => app_path('Services/DynamicBlockDataService.php'),
                 $packageDir.'/src/Support/TechStackRegistry.php' => app_path('Support/TechStackRegistry.php'),
+                $packageDir.'/src/Support/EditorSettings.php' => app_path('Support/EditorSettings.php'),
                 $packageDir.'/src/Services/LayoutService.php' => app_path('Services/LayoutService.php'),
                 $packageDir.'/src/Services/SiteSettingsService.php' => app_path('Services/SiteSettingsService.php'),
             ], 'LaraGrape-commands');
@@ -167,6 +169,10 @@ class LaraGrapeServiceProvider extends ServiceProvider
             $this->publishes([
                 $packageDir.'/src/Filament/Pages' => app_path('Filament/Pages'),
             ], 'laragrape-filament-pages');
+
+            $this->publishes([
+                $packageDir.'/src/Filament/Pages/LaraEditorSettings.php' => app_path('Filament/Pages/EditorSettings.php'),
+            ], 'laragrape-editor-settings-page');
 
             $this->publishes([
                 $packageDir.'/src/Filament/Forms' => app_path('Filament/Forms'),

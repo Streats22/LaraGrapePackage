@@ -57,6 +57,11 @@ class Dashboard extends BaseDashboard
                     'icon' => 'heroicon-o-cog-6-tooth',
                     'route' => 'filament.admin.resources.site-settings.index',
                 ],
+                [
+                    'label' => 'Editor settings',
+                    'icon' => 'heroicon-o-squares-2x2',
+                    'route' => 'filament.admin.pages.editor-settings',
+                ],
             ],
         ]);
     }

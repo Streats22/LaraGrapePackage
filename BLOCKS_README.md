@@ -69,6 +69,7 @@ Each block file must start with a metadata comment for automatic discovery:
 - ✅ **Automatic Discovery**: Blocks are automatically loaded from the file system
 - ✅ **Category Organization**: Blocks appear organized by category in the block manager
 - ✅ **Live Preview**: Block previews are generated automatically
+- ✅ **Preview tooltips** (optional): Hover/click a block in the sidebar for a small styled popover (`description` from `@block`). Toggle in **Admin → Editor settings**, or set `LARAGRAPE_BLOCK_PREVIEW_TOOLTIPS=false` in `.env`.
 - ✅ **Error Handling**: Graceful fallbacks if blocks fail to load
 
 ### Editable Elements

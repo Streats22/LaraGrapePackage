@@ -67,9 +67,22 @@ Alpine.data('grapejsEditBar', () => ({
                 console.log('Initializing GrapesJS editor...');
                 window.initializeFrontendEditor();
                 window.editorInitialized = true;
+            } else if (window.frontendGrapesJsEditor) {
+                window.frontendGrapesJsEditor.refreshBlockPreviewPopover?.();
             }
-            
-            // Wait for editor to be ready
+
+            const refreshEditorUi = () => {
+                const instance = window.frontendGrapesJsEditor;
+                if (!instance?.editor) {
+                    return;
+                }
+                instance.editor.refresh();
+                instance.refreshBlockPreviewPopover?.();
+            };
+
+            setTimeout(refreshEditorUi, 400);
+            setTimeout(refreshEditorUi, 1000);
+
             this.waitForEditor();
         });
     },
@@ -136,13 +149,19 @@ Alpine.data('grapejsEditBar', () => ({
 // Frontend GrapesJS Editor Initialization
 function initializeFrontendEditor() {
     if (typeof grapesjs !== 'undefined' && typeof window.LaraGrapeGrapesJsEditor !== 'undefined') {
+        const editorSettings = window.laragrapeEditorSettings || {};
         window.frontendGrapesJsEditor = new window.LaraGrapeGrapesJsEditor({
             containerId: 'grapejs-frontend-editor',
             mode: 'frontend',
+            height: 'min(80vh, 900px)',
             saveUrl: window.saveGrapesjsUrl,
             blocks: window.grapesjsBlocks,
-            initialData: window.pageGrapesjsData
+            initialData: window.pageGrapesjsData,
+            blockPreviewTooltips: editorSettings.blockPreviewTooltips !== false,
         });
+        setTimeout(() => {
+            window.frontendGrapesJsEditor?.refreshBlockPreviewPopover?.();
+        }, 600);
     } else {
         setTimeout(initializeFrontendEditor, 200);
     }

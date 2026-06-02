@@ -10,6 +10,19 @@ return [
 
     'portfolio_enabled' => env('LARAGRAPE_PORTFOLIO', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | GrapesJS editor (admin + frontend page builder)
+    |--------------------------------------------------------------------------
+    |
+    | Defaults here; override per site in Admin → Editor settings (site_settings).
+    | Env fallbacks apply when no database value exists.
+    |
+    */
+    'editor' => [
+        'block_preview_tooltips' => env('LARAGRAPE_BLOCK_PREVIEW_TOOLTIPS', true),
+    ],
+
     'tech_stack' => [
         'defaults' => ['laravel', 'tailwind', 'alpine'],
         'fallback' => [

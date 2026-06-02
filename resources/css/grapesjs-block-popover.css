@@ -1,0 +1,131 @@
+/* Detached hover tooltip (GrapesJS block sidebar — admin + frontend editor) */
+.laragrape-gjs-block-popover {
+    position: fixed;
+    z-index: 999999;
+    width: 196px;
+    max-width: min(196px, calc(100vw - 16px));
+    pointer-events: none;
+    box-sizing: border-box;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.laragrape-gjs-block-popover--visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.laragrape-gjs-block-popover--left {
+    transform: translateX(4px);
+}
+
+.laragrape-gjs-block-popover--left.laragrape-gjs-block-popover--visible {
+    transform: translateX(0);
+}
+
+.laragrape-gjs-block-popover[hidden] {
+    display: none !important;
+}
+
+.laragrape-gjs-block-popover__arrow {
+    position: absolute;
+    left: -5px;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    margin-top: -5px;
+    background: #1e293b;
+    border-left: 1px solid #334155;
+    border-bottom: 1px solid #334155;
+    transform: rotate(45deg);
+    box-sizing: border-box;
+}
+
+.laragrape-gjs-block-popover--left .laragrape-gjs-block-popover__arrow {
+    left: auto;
+    right: -5px;
+    border-left: none;
+    border-bottom: none;
+    border-right: 1px solid #334155;
+    border-top: 1px solid #334155;
+}
+
+.laragrape-gjs-block-popover__body {
+    margin-left: 4px;
+    padding: 0.4rem 0.45rem;
+    background: #1e293b;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.35);
+}
+
+.laragrape-gjs-block-popover--left .laragrape-gjs-block-popover__body {
+    margin-left: 0;
+    margin-right: 4px;
+}
+
+.laragrape-gjs-block-popover__desc {
+    margin: 0 0 0.35rem;
+    font-size: 0.65rem;
+    line-height: 1.35;
+    font-weight: 500;
+    color: #e2e8f0;
+}
+
+.laragrape-gjs-block-popover__desc[hidden] {
+    display: none;
+}
+
+.laragrape-gjs-block-popover__preview-box {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    min-height: 40px;
+    max-height: 80px;
+    border-radius: 4px;
+    background: #fff;
+    border: 1px solid #475569;
+}
+
+.laragrape-gjs-block-popover__preview-box[hidden] {
+    display: none;
+}
+
+.laragrape-gjs-block-popover__frame {
+    border: 0;
+    display: block;
+    pointer-events: none;
+    background: transparent;
+}
+
+.laragrape-gjs-block-popover__preview-box--image {
+    max-height: 64px;
+    min-height: 0;
+    background: #f8fafc;
+}
+
+.laragrape-gjs-block-popover__preview-box--image img {
+    display: block;
+    width: 100%;
+    max-height: 64px;
+    object-fit: contain;
+}
+
+.laragrape-gjs-block-popover__loading {
+    display: block;
+    padding: 0.5rem;
+    font-size: 0.6rem;
+    color: #94a3b8;
+    text-align: center;
+}
+
+.dark .laragrape-gjs-block-popover__body {
+    background: #0f172a;
+    border-color: #475569;
+}
+
+.dark .laragrape-gjs-block-popover__arrow {
+    background: #0f172a;
+}

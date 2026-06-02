@@ -42,6 +42,7 @@
     }
 
     $portfolioEnabled = (bool) config('laragrape.portfolio_enabled', false);
+    $editorSettings = \LaraGrape\Support\EditorSettings::forJs();
 
     if ($portfolioEnabled && is_object($record) && class_exists(\LaraGrape\Models\PortfolioProject::class) && $record instanceof \LaraGrape\Models\PortfolioProject) {
         $pageId = $record->getKey();
@@ -107,12 +108,14 @@
         <script>
             window.grapesjsCanvasStyles = [
                 @json($appCss),
+                @json($siteCss),
                 @json($adminCss),
                 `<style>{!! $utilitiesCssContent !!}</style>`,
                 `<style>{!! $tailwindCssVars !!}</style>`
             ];
             window.grapesjsTechRegistryOptions = @json($techRegistryOptions);
             window.grapesjsTechRegistryMap = @json($techRegistryMap);
+            window.laragrapeEditorSettings = @json($editorSettings);
         </script>
         <script>
             // Global function to sync GrapesJS data - can be called from anywhere
@@ -139,6 +142,7 @@
                     isDisabled: {{ $isDisabled ? 'true' : 'false' }},
                     height: '{{ $height }}',
                     portfolioEnabled: {{ ($portfolioEnabled ?? false) ? 'true' : 'false' }},
+                    blockPreviewTooltips: @json($editorSettings['blockPreviewTooltips'] ?? true),
                 });
 
                 // Store the editor instance globally for access

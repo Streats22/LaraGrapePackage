@@ -48,6 +48,7 @@
         $tailwindConfig = \App\Models\TailwindConfig::getActive();
         $tailwindCssVars = $tailwindConfig ? $tailwindConfig->generateCss() : '';
         $appCss = Vite::asset('resources/css/app.css');
+        $siteCss = Vite::asset('resources/css/site.css');
         $utilitiesCss = asset('css/laralgrape-utilities.css');
         $utilitiesCssContent = file_exists(public_path('css/laralgrape-utilities.css')) ? file_get_contents(public_path('css/laralgrape-utilities.css')) : '';
     @endphp
@@ -122,9 +123,11 @@
     <script>
         window.grapesjsCanvasStyles = [
             @json($appCss),
+            @json($siteCss),
             `<style>{!! $utilitiesCssContent !!}</style>`,
             `<style>{!! $tailwindCssVars !!}</style>`
         ];
+        window.laragrapeEditorSettings = @json(\LaraGrape\Support\EditorSettings::forJs());
         // Debug: Log the styles array before GrapesJS loads
         console.log('grapesjsCanvasStyles:', window.grapesjsCanvasStyles);
     </script>

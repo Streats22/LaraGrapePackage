@@ -55,22 +55,46 @@ function escapeHtml(text) {
         .replace(/"/g, '&quot;');
 }
 
-/** Icon-only sidebar tile (label comes from GrapesJS — do not duplicate). */
-function buildBlockSidebarMedia(block) {
-    if (block.preview_image) {
-        const src = escapeHtml(block.preview_image);
-        return `<img src="${src}" alt="" class="laragrape-block-thumb" loading="lazy" />`;
+/** Resolve LaraGrape block id from a GrapesJS sidebar `.gjs-block` element (no HTML `id` on tiles). */
+function resolveBlockIdFromEl(blockEl, metaById, editor) {
+    if (!blockEl) {
+        return null;
     }
-    const icon = escapeHtml(block.icon || 'fas fa-cube');
-    return `<i class="${icon} laragrape-block-thumb-icon" aria-hidden="true"></i>`;
-}
 
-function usesCompactSidebarPreview(block) {
-    return String(block.preview_mode || 'sidebar').toLowerCase() !== 'full';
+    const fromData = blockEl.getAttribute('data-laragrape-block-id');
+    if (fromData && metaById?.has(fromData)) {
+        return fromData;
+    }
+
+    const bm = editor?.BlockManager || editor?.Blocks;
+    if (bm?.get) {
+        const models = bm.getAll?.()?.models || [];
+        for (const model of models) {
+            const view = model.view;
+            if (view?.el === blockEl) {
+                const id = model.id || model.get?.('id');
+                if (id && metaById?.has(id)) {
+                    return id;
+                }
+            }
+        }
+    }
+
+    const labelText = blockEl.textContent?.trim();
+    if (labelText && metaById) {
+        for (const [id, meta] of metaById.entries()) {
+            if (meta.label === labelText) {
+                return id;
+            }
+        }
+    }
+
+    return null;
 }
 
 function enrichBlockForManager(block) {
     const label = String(block?.label || block?.id || 'Block').trim();
+
     return {
         ...block,
         attributes: {
@@ -94,6 +118,7 @@ class LaraGrapeGrapesJsEditor {
             height: '100vh',
             onSave: null, // custom save handler
             portfolioEnabled: false,
+            blockPreviewTooltips: true,
             ...options
         };
         
@@ -173,10 +198,6 @@ class LaraGrapeGrapesJsEditor {
                 content: dropContent,
             });
 
-            if (usesCompactSidebarPreview(block)) {
-                enriched.media = buildBlockSidebarMedia(block);
-            }
-
             blockManagerBlocks.push(enriched);
         }
         
@@ -231,161 +252,297 @@ class LaraGrapeGrapesJsEditor {
         setTimeout(() => {
             this.editor.refresh();
         }, 100);
+        this.editor.on('load', () => this.scheduleBlockPreviewPopoverWire());
+
+        if (!this.options.blockPreviewTooltips) {
+            document.getElementById('laragrape-gjs-block-popover')?.remove();
+        } else {
+            this.scheduleBlockPreviewPopoverWire();
+        }
+
         setTimeout(() => {
             injectStylesIntoGrapesJsIframe(this.editor, window.grapesjsCanvasStyles);
             syncGrapesJsCanvasDarkMode(this.editor);
             this.refreshCanvasAlpineAndForms();
-            this.wireBlockHoverCard();
+            this.scheduleBlockPreviewPopoverWire();
         }, 500);
     }
 
-    /**
-     * One small hover card: title + description + mini block preview (no duplicate sidebar labels).
-     */
-    wireBlockHoverCard() {
+    getBlockSidebarContainer() {
         const editor = this.editor;
-        if (!editor?.BlockManager) {
+        const bm = editor?.BlockManager || editor?.Blocks;
+        if (!bm) {
+            return null;
+        }
+
+        return (
+            (typeof bm.getContainer === 'function' && bm.getContainer()) ||
+            editor?.getContainer?.()?.querySelector?.('.gjs-blocks-c, .gjs-blocks') ||
+            null
+        );
+    }
+
+    scheduleBlockPreviewPopoverWire() {
+        if (!this.options.blockPreviewTooltips) {
+            return;
+        }
+        clearTimeout(this._blockPreviewWireTimer);
+        this._blockPreviewWireTimer = setTimeout(() => this.wireBlockPreviewPopover(), 150);
+    }
+
+    refreshBlockPreviewPopover() {
+        this._blockPreviewAbort?.abort();
+        this._blockPreviewAbort = null;
+        const container = this.getBlockSidebarContainer();
+        if (container) {
+            delete container.dataset.laragrapeBlockPopoverBound;
+        }
+        if (this.editor) {
+            this.editor.refresh();
+        }
+        this.scheduleBlockPreviewPopoverWire();
+    }
+
+    async ensureBlockPreviewHtml(blockId) {
+        const block = this.options.blocks?.find((b) => b.id === blockId);
+        if (block?.is_custom && block.content) {
+            this._blockPreviewCache?.set(blockId, block.content);
+            return block.content;
+        }
+
+        const cached = this._blockPreviewCache?.get(blockId);
+        if (cached && String(cached).trim() && !String(cached).includes('Preview error')) {
+            return cached;
+        }
+
+        const html = await fetchBlockPreview(blockId);
+        this._blockPreviewCache?.set(blockId, html);
+        return html;
+    }
+
+    /**
+     * Floating tooltip popover beside a sidebar block (hover or click) — not part of the tile UI.
+     */
+    wireBlockPreviewPopover() {
+        if (!this.options.blockPreviewTooltips) {
             return;
         }
 
-        const container =
-            (typeof editor.BlockManager.getContainer === 'function' && editor.BlockManager.getContainer()) ||
-            editor.getContainer?.()?.querySelector?.('.gjs-blocks-c');
-
-        if (!container || container.dataset.laragrapeHoverCardBound === '1') {
+        const editor = this.editor;
+        if (!editor) {
             return;
         }
-        container.dataset.laragrapeHoverCardBound = '1';
 
-        let cardEl = document.getElementById('laragrape-gjs-block-hover-card');
-        if (!cardEl) {
-            cardEl = document.createElement('div');
-            cardEl.id = 'laragrape-gjs-block-hover-card';
-            cardEl.className = 'laragrape-gjs-block-hover-card';
-            cardEl.hidden = true;
-            cardEl.innerHTML = `
-                <p class="laragrape-gjs-block-hover-card__title"></p>
-                <p class="laragrape-gjs-block-hover-card__desc"></p>
-                <div class="laragrape-gjs-block-hover-card__preview-wrap">
-                    <div class="laragrape-gjs-block-hover-card__preview"></div>
+        const container = this.getBlockSidebarContainer();
+        if (!container) {
+            return;
+        }
+
+        if (container.dataset.laragrapeBlockPopoverBound === '1') {
+            return;
+        }
+        container.dataset.laragrapeBlockPopoverBound = '1';
+
+        this._blockPreviewAbort?.abort();
+        this._blockPreviewAbort = new AbortController();
+        const { signal } = this._blockPreviewAbort;
+        let hoveredBlockId = null;
+
+        let popEl = document.getElementById('laragrape-gjs-block-popover');
+        if (!popEl) {
+            popEl = document.createElement('div');
+            popEl.id = 'laragrape-gjs-block-popover';
+            popEl.className = 'laragrape-gjs-block-popover';
+            popEl.setAttribute('role', 'tooltip');
+            popEl.hidden = true;
+            popEl.innerHTML = `
+                <span class="laragrape-gjs-block-popover__arrow" aria-hidden="true"></span>
+                <div class="laragrape-gjs-block-popover__body">
+                    <p class="laragrape-gjs-block-popover__desc"></p>
+                    <div class="laragrape-gjs-block-popover__preview-box"></div>
                 </div>
             `;
-            document.body.appendChild(cardEl);
+            document.body.appendChild(popEl);
         }
 
-        const titleEl = cardEl.querySelector('.laragrape-gjs-block-hover-card__title');
-        const descEl = cardEl.querySelector('.laragrape-gjs-block-hover-card__desc');
-        const previewEl = cardEl.querySelector('.laragrape-gjs-block-hover-card__preview');
-        const previewWrap = cardEl.querySelector('.laragrape-gjs-block-hover-card__preview-wrap');
+        const descEl = popEl.querySelector('.laragrape-gjs-block-popover__desc');
+        const previewBox = popEl.querySelector('.laragrape-gjs-block-popover__preview-box');
 
         let showTimer = null;
         let hideTimer = null;
+        let activeBlockId = null;
+        let anchorEl = null;
 
-        const hideCard = () => {
+        const hidePopover = () => {
             if (showTimer) {
                 clearTimeout(showTimer);
                 showTimer = null;
             }
-            cardEl.hidden = true;
+            activeBlockId = null;
+            anchorEl = null;
+            popEl.hidden = true;
+            popEl.classList.remove('laragrape-gjs-block-popover--visible');
         };
 
-        const positionCard = (blockEl) => {
+        const positionPopover = (blockEl) => {
             const rect = blockEl.getBoundingClientRect();
-            const cardWidth = 220;
-            let left = rect.right + 8;
-            if (left + cardWidth > window.innerWidth - 8) {
-                left = Math.max(8, rect.left - cardWidth - 8);
+            const gap = 10;
+            const popWidth = 196;
+
+            let left = rect.right + gap;
+            popEl.classList.remove('laragrape-gjs-block-popover--left');
+
+            if (left + popWidth > window.innerWidth - 8) {
+                left = Math.max(8, rect.left - popWidth - gap);
+                popEl.classList.add('laragrape-gjs-block-popover--left');
             }
-            cardEl.style.left = `${left}px`;
-            cardEl.style.top = `${Math.max(8, rect.top)}px`;
+
+            popEl.style.left = `${left}px`;
+
+            const popHeight = popEl.offsetHeight || 120;
+            let top = rect.top + rect.height / 2 - popHeight / 2;
+            top = Math.max(8, Math.min(top, window.innerHeight - popHeight - 8));
+            popEl.style.top = `${top}px`;
         };
 
-        const showCard = (blockEl, blockId) => {
+        const showPopover = async (blockEl, blockId) => {
             const meta = this._blockMetaById?.get(blockId);
             const label = meta?.label || blockId;
             const description = meta?.description || '';
-            const html = this._blockPreviewCache?.get(blockId) || '';
             const previewImage = meta?.preview_image;
 
-            titleEl.textContent = label;
+            activeBlockId = blockId;
+            anchorEl = blockEl;
 
             const showDesc =
                 description &&
                 description !== label &&
                 !description.startsWith(`Drag “${label}”`);
-            descEl.textContent = showDesc ? description : '';
-            descEl.hidden = !showDesc;
+            descEl.textContent = showDesc ? description : label;
+            descEl.hidden = false;
 
-            previewWrap.classList.toggle(
-                'laragrape-gjs-block-hover-card__preview-wrap--image',
+            previewBox.classList.toggle(
+                'laragrape-gjs-block-popover__preview-box--image',
                 Boolean(previewImage),
             );
+            previewBox.hidden = false;
+            setPopoverPreviewLoading(previewBox);
+
+            popEl.hidden = false;
+            requestAnimationFrame(() => {
+                positionPopover(blockEl);
+                popEl.classList.add('laragrape-gjs-block-popover--visible');
+            });
 
             if (previewImage) {
-                previewEl.innerHTML = `<img src="${escapeHtml(previewImage)}" alt="" />`;
-                previewWrap.hidden = false;
-            } else if (html && String(html).trim()) {
-                previewEl.innerHTML = html;
-                previewWrap.hidden = false;
-            } else {
-                previewEl.innerHTML = '';
-                previewWrap.hidden = true;
+                setPopoverPreviewImage(previewBox, previewImage);
+                positionPopover(blockEl);
+                return;
             }
 
-            positionCard(blockEl);
-            cardEl.hidden = false;
+            const html = await this.ensureBlockPreviewHtml(blockId);
+            if (activeBlockId !== blockId) {
+                return;
+            }
+
+            if (html && String(html).trim()) {
+                await setPopoverPreviewHtml(previewBox, html);
+                previewBox.hidden = false;
+            } else {
+                clearPopoverPreview(previewBox);
+                previewBox.hidden = true;
+            }
+            positionPopover(blockEl);
         };
 
-        container.addEventListener('mouseover', (event) => {
+        const scheduleShow = (blockEl, blockId, immediate = false) => {
+            if (hideTimer) {
+                clearTimeout(hideTimer);
+                hideTimer = null;
+            }
+            if (showTimer) {
+                clearTimeout(showTimer);
+            }
+            showTimer = setTimeout(() => {
+                showPopover(blockEl, blockId);
+                showTimer = null;
+            }, immediate ? 0 : 220);
+        };
+
+        const onBlockTarget = (event) => {
             const blockEl = event.target.closest?.('.gjs-block');
             if (!blockEl || !container.contains(blockEl)) {
-                return;
+                return null;
             }
-            const blockId = blockEl.getAttribute('id');
-            if (!blockId || !this._blockMetaById?.has(blockId)) {
-                return;
+            const blockId = resolveBlockIdFromEl(blockEl, this._blockMetaById, editor);
+            if (!blockId) {
+                return null;
             }
+            return { blockEl, blockId };
+        };
 
-            if (hideTimer) {
-                clearTimeout(hideTimer);
-                hideTimer = null;
-            }
-            if (showTimer) {
-                clearTimeout(showTimer);
-            }
+        container.addEventListener(
+            'mouseover',
+            (event) => {
+                const target = onBlockTarget(event);
+                if (!target) {
+                    return;
+                }
+                if (target.blockId === hoveredBlockId) {
+                    return;
+                }
+                hoveredBlockId = target.blockId;
+                scheduleShow(target.blockEl, target.blockId);
+            },
+            { signal },
+        );
 
-            showTimer = setTimeout(() => {
-                showCard(blockEl, blockId);
-                showTimer = null;
-            }, 350);
-        });
+        container.addEventListener(
+            'mouseout',
+            (event) => {
+                const fromBlock = event.target.closest?.('.gjs-block');
+                if (!fromBlock) {
+                    return;
+                }
+                const to = event.relatedTarget;
+                if (to && fromBlock.contains(to)) {
+                    return;
+                }
+                if (to?.closest?.('.gjs-block') === fromBlock) {
+                    return;
+                }
+                hoveredBlockId = null;
+                if (showTimer) {
+                    clearTimeout(showTimer);
+                    showTimer = null;
+                }
+                hideTimer = setTimeout(hidePopover, 100);
+            },
+            { signal },
+        );
 
-        container.addEventListener('mouseout', (event) => {
-            const fromBlock = event.target.closest?.('.gjs-block');
-            if (!fromBlock) {
-                return;
-            }
-            const to = event.relatedTarget;
-            if (to && (fromBlock.contains(to) || cardEl.contains(to))) {
-                return;
-            }
-            if (showTimer) {
-                clearTimeout(showTimer);
-                showTimer = null;
-            }
-            hideTimer = setTimeout(() => {
-                hideCard();
-                hideTimer = null;
-            }, 150);
-        });
+        container.addEventListener(
+            'click',
+            (event) => {
+                const target = onBlockTarget(event);
+                if (!target) {
+                    return;
+                }
+                hoveredBlockId = target.blockId;
+                scheduleShow(target.blockEl, target.blockId, true);
+            },
+            { signal },
+        );
 
-        cardEl.addEventListener('mouseenter', () => {
-            if (hideTimer) {
-                clearTimeout(hideTimer);
-                hideTimer = null;
-            }
-        });
-        cardEl.addEventListener('mouseleave', () => hideCard());
+        window.addEventListener(
+            'scroll',
+            () => {
+                if (!popEl.hidden && anchorEl) {
+                    positionPopover(anchorEl);
+                }
+            },
+            { capture: true, signal },
+        );
     }
 
     /**
@@ -1398,28 +1555,155 @@ function syncGrapesJsCanvasDarkMode(editor) {
     }
     const isDark = document.documentElement.classList.contains('dark');
     root.classList.toggle('dark', isDark);
+    syncLaragrapePreviewFramesDarkMode();
+}
+
+/** Same Tailwind / theme styles as the GrapesJS canvas (app.css, utilities, CSS vars). */
+function injectLaragrapeCanvasStyles(targetDocument, stylesArray) {
+    if (!targetDocument?.head) {
+        return;
+    }
+    const head = targetDocument.head;
+    Array.from(head.querySelectorAll('[data-laragrape-injected-style]')).forEach((el) => el.remove());
+
+    (stylesArray || []).forEach((style) => {
+        if (!style) {
+            return;
+        }
+        const value = String(style);
+        let el;
+        if (value.startsWith('<style')) {
+            el = targetDocument.createElement('style');
+            el.setAttribute('data-laragrape-injected-style', 'true');
+            el.innerHTML = value.replace(/^<style[^>]*>|<\/style>$/g, '');
+        } else if (value.endsWith('.css')) {
+            el = targetDocument.createElement('link');
+            el.setAttribute('data-laragrape-injected-style', 'true');
+            el.rel = 'stylesheet';
+            el.href = value;
+        }
+        if (el) {
+            head.appendChild(el);
+        }
+    });
+
+    if (!head.querySelector('[data-laragrape-injected-style="base"]')) {
+        const base = targetDocument.createElement('style');
+        base.setAttribute('data-laragrape-injected-style', 'base');
+        base.textContent =
+            'html,body{margin:0;padding:0;overflow:hidden;background:transparent;}' +
+            'body{padding:4px;box-sizing:border-box;}';
+        head.appendChild(base);
+    }
+
+    const isDark = document.documentElement.classList.contains('dark');
+    targetDocument.documentElement.classList.toggle('dark', isDark);
+}
+
+function syncLaragrapePreviewFramesDarkMode() {
+    const isDark = document.documentElement.classList.contains('dark');
+    document.querySelectorAll('iframe.laragrape-gjs-block-popover__frame').forEach((frame) => {
+        const root = frame.contentDocument?.documentElement;
+        if (root) {
+            root.classList.toggle('dark', isDark);
+        }
+    });
+}
+
+function ensurePopoverPreviewIframe(previewBox) {
+    let frame = previewBox.querySelector('iframe.laragrape-gjs-block-popover__frame');
+    if (!frame) {
+        frame = document.createElement('iframe');
+        frame.className = 'laragrape-gjs-block-popover__frame';
+        frame.setAttribute('tabindex', '-1');
+        frame.setAttribute('title', 'Block preview');
+        previewBox.appendChild(frame);
+    }
+    if (frame.contentDocument) {
+        injectLaragrapeCanvasStyles(frame.contentDocument, window.grapesjsCanvasStyles);
+    }
+    return frame;
+}
+
+function setPopoverPreviewLoading(previewBox) {
+    previewBox.innerHTML = '<span class="laragrape-gjs-block-popover__loading">…</span>';
+}
+
+function clearPopoverPreview(previewBox) {
+    previewBox.innerHTML = '';
+}
+
+function setPopoverPreviewImage(previewBox, src) {
+    clearPopoverPreview(previewBox);
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = '';
+    previewBox.appendChild(img);
+}
+
+function whenPreviewFrameStylesReady(frame) {
+    return new Promise((resolve) => {
+        const doc = frame.contentDocument;
+        if (!doc) {
+            resolve();
+            return;
+        }
+        const links = Array.from(doc.querySelectorAll('link[rel="stylesheet"]'));
+        if (!links.length) {
+            resolve();
+            return;
+        }
+        let pending = links.length;
+        const done = () => {
+            pending -= 1;
+            if (pending <= 0) {
+                resolve();
+            }
+        };
+        links.forEach((link) => {
+            if (link.sheet) {
+                done();
+            } else {
+                link.addEventListener('load', done, { once: true });
+                link.addEventListener('error', done, { once: true });
+            }
+        });
+        setTimeout(resolve, 1200);
+    });
+}
+
+async function setPopoverPreviewHtml(previewBox, html) {
+    const frame = ensurePopoverPreviewIframe(previewBox);
+    const doc = frame.contentDocument;
+    if (!doc) {
+        return;
+    }
+
+    injectLaragrapeCanvasStyles(doc, window.grapesjsCanvasStyles);
+    doc.body.innerHTML = html;
+
+    await whenPreviewFrameStylesReady(frame);
+
+    const viewportWidth = 520;
+    const scale = (previewBox.clientWidth || 176) / viewportWidth;
+    frame.style.width = `${viewportWidth}px`;
+    frame.style.transform = `scale(${scale})`;
+    frame.style.transformOrigin = 'top left';
+    frame.style.border = '0';
+    frame.style.display = 'block';
+
+    const contentHeight = doc.body.scrollHeight || 48;
+    frame.style.height = `${contentHeight}px`;
+    const visualHeight = Math.min(contentHeight * scale, 80);
+    previewBox.style.height = `${Math.max(visualHeight, 40)}px`;
 }
 
 function injectStylesIntoGrapesJsIframe(editor, stylesArray) {
     const iframe = editor.Canvas.getFrameEl();
-    if (!iframe) return;
-    const head = iframe.contentDocument.head;
-    // Remove any previously injected styles to avoid duplicates
-    Array.from(head.querySelectorAll('[data-grapey-injected]')).forEach(el => el.remove());
-    stylesArray.forEach(style => {
-        let el;
-        if (style.startsWith('<style')) {
-            el = document.createElement('style');
-            el.setAttribute('data-grapey-injected', 'true');
-            el.innerHTML = style.replace(/^<style[^>]*>|<\/style>$/g, '');
-        } else if (style.endsWith('.css')) {
-            el = document.createElement('link');
-            el.setAttribute('data-grapey-injected', 'true');
-            el.rel = 'stylesheet';
-            el.href = style;
-        }
-        if (el) head.appendChild(el);
-    });
+    if (!iframe?.contentDocument) {
+        return;
+    }
+    injectLaragrapeCanvasStyles(iframe.contentDocument, stylesArray);
     syncGrapesJsCanvasDarkMode(editor);
 }
 

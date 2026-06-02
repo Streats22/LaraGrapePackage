@@ -462,14 +462,18 @@ class LaraGrapeSetupCommand extends Command
                 }
             }
             
-            // Clean up any duplicate Lara* files that might have been created
+            // Clean up duplicate Lara* files only when the non-prefixed version already exists.
+            // We keep Lara* files otherwise, so they can be safely renamed in the next step.
             foreach ($allPublishedDirs as $dir) {
                 if (is_dir($dir)) {
                     $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir));
                     foreach ($rii as $file) {
                         if ($file->isFile() && $file->getExtension() === 'php' && strpos($file->getFilename(), 'Lara') === 0 && file_exists($file->getPathname())) {
-                            $this->info('Removing duplicate file: ' . $file->getFilename());
-                            unlink($file->getPathname());
+                            $targetPath = dirname($file->getPathname()) . '/' . substr($file->getFilename(), 4);
+                            if (file_exists($targetPath)) {
+                                $this->info('Removing duplicate file: ' . $file->getFilename());
+                                unlink($file->getPathname());
+                            }
                         }
                     }
                 }
