@@ -25,6 +25,80 @@ async function fetchBlockPreview(blockId) {
     }
 }
 
+/**
+ * Tooltip text for a block in the sidebar (from @block description in Blade, or sensible defaults).
+ */
+function blockTooltipText(block) {
+    const label = String(block?.label || block?.id || 'Block').trim();
+    const description = String(block?.description || '').trim();
+
+    if (description) {
+        return description;
+    }
+
+    const id = String(block?.id || '');
+    if (id.startsWith('form-')) {
+        return `Form “${label}”. Drag onto the page to add it.`;
+    }
+    if (block?.is_custom) {
+        return `Custom block “${label}”. Drag onto the canvas.`;
+    }
+
+    return `Drag “${label}” onto the canvas.`;
+}
+
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+/**
+ * Compact tile for the block sidebar (GrapesJS `media`). Full HTML is still used as `content` on drop.
+ * @block preview="full" → skip media (legacy: tile shows full preview HTML).
+ * @block preview_image="https://…" or /storage/… → image thumbnail in sidebar.
+ */
+function buildBlockSidebarMedia(block) {
+    if (block.preview_image) {
+        const src = escapeHtml(block.preview_image);
+        const label = escapeHtml(block.label || block.id || 'Block');
+        return `<div class="laragrape-block-media laragrape-block-media--image"><img src="${src}" alt="${label}" loading="lazy" /></div>`;
+    }
+
+    const icon = escapeHtml(block.icon || 'fas fa-cube');
+    const label = escapeHtml(block.label || block.id || 'Block');
+    const category = escapeHtml(block.category || '');
+
+    return `<div class="laragrape-block-media laragrape-block-media--icon">
+        <i class="${icon}" aria-hidden="true"></i>
+        <span class="laragrape-block-media__label">${label}</span>
+        ${category ? `<span class="laragrape-block-media__category">${category}</span>` : ''}
+    </div>`;
+}
+
+function usesCompactSidebarPreview(block) {
+    const mode = String(block.preview_mode || 'sidebar').toLowerCase();
+    return mode !== 'full';
+}
+
+/** Attach tooltip + a11y attributes for GrapesJS block manager tiles. */
+function enrichBlockForManager(block) {
+    const tip = blockTooltipText(block);
+    const label = String(block?.label || block?.id || 'Block').trim();
+
+    return {
+        ...block,
+        attributes: {
+            ...(block.attributes || {}),
+            title: tip,
+            'data-laragrape-tip': tip,
+            'aria-label': tip === label ? label : `${label}. ${tip}`,
+        },
+    };
+}
+
 class LaraGrapeGrapesJsEditor {
     constructor(options = {}) {
         this.options = {
@@ -94,16 +168,28 @@ class LaraGrapeGrapesJsEditor {
             plugins.push(grapesjsParserPostcss);
         }
         
-        // Instead of using static blocks, fetch previews dynamically
+        // Fetch editor previews; sidebar can show compact media + hover panel (see wireBlockHoverPreview).
+        this._blockPreviewCache = new Map();
         const blockManagerBlocks = [];
         for (const block of this.options.blocks) {
-            // Only fetch preview for file-based blocks (not custom or dynamic blocks)
+            let dropContent = block.content || '';
             if (block.id && !block.is_custom) {
-                const html = await fetchBlockPreview(block.id);
-                blockManagerBlocks.push({ ...block, content: html });
-            } else {
-                blockManagerBlocks.push(block);
+                dropContent = await fetchBlockPreview(block.id);
             }
+            if (block.id) {
+                this._blockPreviewCache.set(block.id, dropContent);
+            }
+
+            const enriched = enrichBlockForManager({
+                ...block,
+                content: dropContent,
+            });
+
+            if (usesCompactSidebarPreview(block)) {
+                enriched.media = buildBlockSidebarMedia(block);
+            }
+
+            blockManagerBlocks.push(enriched);
         }
         
         this.editor = grapesjs.init({
@@ -138,7 +224,9 @@ class LaraGrapeGrapesJsEditor {
 
         this.wireCanvasDarkMode();
         this.wireCanvasAlpineLifecycle();
-        
+        this.wireBlockTooltips();
+        this.wireBlockHoverPreview();
+
         // Check if disabled before loading content
         if (this.options.isDisabled) {
             this.editor.Commands.run('core:canvas-clear');
@@ -161,7 +249,214 @@ class LaraGrapeGrapesJsEditor {
             injectStylesIntoGrapesJsIframe(this.editor, window.grapesjsCanvasStyles);
             syncGrapesJsCanvasDarkMode(this.editor);
             this.refreshCanvasAlpineAndForms();
+            this.wireBlockTooltips();
+            this.wireBlockHoverPreview();
         }, 500);
+    }
+
+    /**
+     * Larger preview panel when hovering a block tile (uses cached editor preview HTML).
+     */
+    wireBlockHoverPreview() {
+        const editor = this.editor;
+        if (!editor?.BlockManager) {
+            return;
+        }
+
+        const container =
+            (typeof editor.BlockManager.getContainer === 'function' && editor.BlockManager.getContainer()) ||
+            editor.getContainer?.()?.querySelector?.('.gjs-blocks-c');
+
+        if (!container || container.dataset.laragrapeHoverPreviewBound === '1') {
+            return;
+        }
+        container.dataset.laragrapeHoverPreviewBound = '1';
+
+        let panelEl = document.getElementById('laragrape-gjs-block-preview-panel');
+        if (!panelEl) {
+            panelEl = document.createElement('div');
+            panelEl.id = 'laragrape-gjs-block-preview-panel';
+            panelEl.className = 'laragrape-gjs-block-preview-panel';
+            panelEl.hidden = true;
+            panelEl.innerHTML =
+                '<div class="laragrape-gjs-block-preview-panel__header"></div><div class="laragrape-gjs-block-preview-panel__body"></div>';
+            document.body.appendChild(panelEl);
+        }
+
+        const headerEl = panelEl.querySelector('.laragrape-gjs-block-preview-panel__header');
+        const bodyEl = panelEl.querySelector('.laragrape-gjs-block-preview-panel__body');
+        let showTimer = null;
+        let hideTimer = null;
+
+        const hidePanel = () => {
+            if (showTimer) {
+                clearTimeout(showTimer);
+                showTimer = null;
+            }
+            panelEl.hidden = true;
+        };
+
+        const showPanel = (blockEl, blockId) => {
+            const html = this._blockPreviewCache?.get(blockId);
+            if (!html || !String(html).trim()) {
+                return;
+            }
+
+            const label =
+                blockEl.querySelector('.laragrape-block-media__label')?.textContent ||
+                blockEl.getAttribute('aria-label') ||
+                blockId;
+
+            headerEl.textContent = label;
+            bodyEl.innerHTML = html;
+
+            panelEl.hidden = false;
+
+            const rect = blockEl.getBoundingClientRect();
+            const panelWidth = 320;
+            let left = rect.right + 12;
+            if (left + panelWidth > window.innerWidth - 12) {
+                left = Math.max(12, rect.left - panelWidth - 12);
+            }
+            let top = rect.top;
+            const maxTop = window.innerHeight - panelEl.offsetHeight - 12;
+            if (top > maxTop) {
+                top = Math.max(12, maxTop);
+            }
+
+            panelEl.style.left = `${left}px`;
+            panelEl.style.top = `${top}px`;
+        };
+
+        container.addEventListener('mouseover', (event) => {
+            const blockEl = event.target.closest?.('.gjs-block');
+            if (!blockEl || !container.contains(blockEl)) {
+                return;
+            }
+
+            const blockId = blockEl.getAttribute('id');
+            if (!blockId || !this._blockPreviewCache?.has(blockId)) {
+                return;
+            }
+
+            if (hideTimer) {
+                clearTimeout(hideTimer);
+                hideTimer = null;
+            }
+
+            if (showTimer) {
+                clearTimeout(showTimer);
+            }
+
+            showTimer = setTimeout(() => {
+                showPanel(blockEl, blockId);
+                showTimer = null;
+            }, 400);
+        });
+
+        container.addEventListener('mouseout', (event) => {
+            const fromBlock = event.target.closest?.('.gjs-block');
+            if (!fromBlock) {
+                return;
+            }
+            const to = event.relatedTarget;
+            if (to && (fromBlock.contains(to) || panelEl.contains(to))) {
+                return;
+            }
+
+            if (showTimer) {
+                clearTimeout(showTimer);
+                showTimer = null;
+            }
+
+            hideTimer = setTimeout(() => {
+                hidePanel();
+                hideTimer = null;
+            }, 200);
+        });
+
+        panelEl.addEventListener('mouseenter', () => {
+            if (hideTimer) {
+                clearTimeout(hideTimer);
+                hideTimer = null;
+            }
+        });
+
+        panelEl.addEventListener('mouseleave', () => {
+            hidePanel();
+        });
+    }
+
+    /**
+     * Hover tooltips on block manager tiles (uses data-laragrape-tip / @block description).
+     */
+    wireBlockTooltips() {
+        const editor = this.editor;
+        if (!editor?.BlockManager) {
+            return;
+        }
+
+        const container =
+            (typeof editor.BlockManager.getContainer === 'function' && editor.BlockManager.getContainer()) ||
+            editor.getContainer?.()?.querySelector?.('.gjs-blocks-c');
+
+        if (!container) {
+            return;
+        }
+
+        if (container.dataset.laragrapeTipsBound === '1') {
+            return;
+        }
+        container.dataset.laragrapeTipsBound = '1';
+
+        let tipEl = document.getElementById('laragrape-gjs-block-tooltip');
+        if (!tipEl) {
+            tipEl = document.createElement('div');
+            tipEl.id = 'laragrape-gjs-block-tooltip';
+            tipEl.className = 'laragrape-gjs-block-tooltip';
+            tipEl.setAttribute('role', 'tooltip');
+            tipEl.hidden = true;
+            document.body.appendChild(tipEl);
+        }
+        this._blockTooltipEl = tipEl;
+
+        const showTip = (text, anchorRect) => {
+            const copy = String(text || '').trim();
+            if (!copy) {
+                return;
+            }
+            tipEl.textContent = copy;
+            tipEl.hidden = false;
+            const centerX = anchorRect.left + anchorRect.width / 2;
+            tipEl.style.left = `${centerX}px`;
+            tipEl.style.top = `${anchorRect.bottom + 8}px`;
+        };
+
+        const hideTip = () => {
+            tipEl.hidden = true;
+        };
+
+        container.addEventListener('mouseover', (event) => {
+            const blockEl = event.target.closest?.('.gjs-block');
+            if (!blockEl || !container.contains(blockEl)) {
+                return;
+            }
+            const text =
+                blockEl.getAttribute('data-laragrape-tip') || blockEl.getAttribute('title') || '';
+            showTip(text, blockEl.getBoundingClientRect());
+        });
+
+        container.addEventListener('mouseout', (event) => {
+            const fromBlock = event.target.closest?.('.gjs-block');
+            if (!fromBlock) {
+                return;
+            }
+            const to = event.relatedTarget;
+            if (to && fromBlock.contains(to)) {
+                return;
+            }
+            hideTip();
+        });
     }
 
     /**

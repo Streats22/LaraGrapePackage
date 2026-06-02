@@ -58,6 +58,8 @@ class BlockService
                     'attributes' => $customBlock->attributes ?? [],
                     'description' => $customBlock->description,
                     'icon' => $customBlock->icon,
+                    'preview_mode' => 'sidebar',
+                    'preview_image' => null,
                     'is_custom' => true,
                     'custom_block_id' => $customBlock->id,
                 ];
@@ -151,6 +153,8 @@ class BlockService
             'attributes' => $metadata['attributes'] ?? [],
             'description' => $metadata['description'] ?? '',
             'icon' => $metadata['icon'] ?? null,
+            'preview_mode' => $metadata['preview'] ?? 'sidebar',
+            'preview_image' => $metadata['preview_image'] ?? null,
             'is_custom' => false,
         ];
     }
@@ -224,6 +228,8 @@ class BlockService
                     'attributes' => $block['attributes'],
                     'description' => $block['description'],
                     'icon' => $block['icon'] ?? $this->getDefaultIconForCategory($category),
+                    'preview_mode' => $block['preview_mode'] ?? 'sidebar',
+                    'preview_image' => $block['preview_image'] ?? null,
                     'is_custom' => $block['is_custom'] ?? false,
                 ];
             }

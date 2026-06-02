@@ -110,6 +110,8 @@ class CustomBlock extends Model
             'attributes' => $this->attributes ?? [],
             'description' => $this->description,
             'icon' => $this->icon,
+            'preview_mode' => 'sidebar',
+            'is_custom' => true,
         ];
     }
 
