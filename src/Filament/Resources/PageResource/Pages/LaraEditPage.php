@@ -2,15 +2,19 @@
 
 namespace LaraGrape\Filament\Resources\PageResource\Pages;
 
-use LaraGrape\Filament\Resources\PageResource;
-use LaraGrape\Services\GrapesJsConverterService;
+use LaraGrape\Filament\Resources\LaraPageResource;
+use LaraGrape\Filament\Resources\PageResource\Concerns\ProcessesPageEditorData;
 use Filament\Actions;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use LaraGrape\Support\EditorSettings;
 
 class LaraEditPage extends EditRecord
 {
-    protected static string $resource = PageResource::class;
+    use ProcessesPageEditorData;
+
+    protected static string $resource = LaraPageResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -27,53 +31,43 @@ class LaraEditPage extends EditRecord
                 ->submit('save')
                 ->color('primary')
                 ->extraAttributes([
-                    'onclick' => 'if(window.syncGrapesJsData) window.syncGrapesJsData(); return true;'
+                    'onclick' => 'if(window.syncGrapesJsData) window.syncGrapesJsData(); return true;',
                 ]),
         ];
     }
-    
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        if (! isset($data['editor_mode']) || $data['editor_mode'] === '') {
+            $data['editor_mode'] = EditorSettings::defaultPageEditorMode();
+        }
+
+        return $this->hydrateBlockLayoutFromStoredContent($data);
+    }
+
+    protected function afterFill(): void
+    {
+        $state = $this->form->getState();
+        $storedHtml = $this->record->grapesjs_data['html']
+            ?? $this->record->grapesjs_data['original_grapesjs']['html']
+            ?? null;
+
+        if (
+            ($state['editor_mode'] ?? '') === EditorSettings::PAGE_MODE_BLOCK
+            && empty($state['block_layout'])
+            && is_string($storedHtml)
+            && trim($storedHtml) !== ''
+        ) {
+            Notification::make()
+                ->title('Block list could not be imported from the visual layout')
+                ->body('Add blocks manually in the Block Builder tab, or switch back to Visual mode.')
+                ->warning()
+                ->send();
+        }
+    }
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        // Debug logging
-        \Log::info('EditPage mutateFormDataBeforeSave', [
-            'data' => $data,
-            'grapesjs_data_exists' => isset($data['grapesjs_data']),
-            'grapesjs_data_type' => isset($data['grapesjs_data']) ? gettype($data['grapesjs_data']) : 'not set'
-        ]);
-        
-        // Handle GrapesJS data
-        if (isset($data['grapesjs_data']) && is_array($data['grapesjs_data'])) {
-            $grapesjsData = $data['grapesjs_data'];
-            
-            // Get the converter service
-            $converterService = app(GrapesJsConverterService::class);
-            
-            // Process the data for saving (convert to Blade components)
-            $processedData = $converterService->processForSaving($grapesjsData);
-            
-            // Extract HTML and CSS from processed data
-            $data['grapesjs_html'] = $processedData['html'] ?? null;
-            $data['grapesjs_css'] = $processedData['css'] ?? null;
-            
-            // Keep the full processed data structure
-            $data['grapesjs_data'] = $processedData;
-            
-            // Also save Blade content
-            $data['blade_content'] = $converterService->convertToBlade($processedData);
-            
-            \Log::info('GrapesJS data processed for edit', [
-                'original_data' => $grapesjsData,
-                'processed_data' => $processedData,
-                'html' => $data['grapesjs_html'],
-                'css' => $data['grapesjs_css'],
-                'blade_content' => $data['blade_content'],
-            ]);
-        } else {
-            \Log::warning('GrapesJS data not found or not array for edit', [
-                'grapesjs_data' => $data['grapesjs_data'] ?? 'not set'
-            ]);
-        }
-        
-        return $data;
+        return $this->processPageEditorDataForSave($data);
     }
 }

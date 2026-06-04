@@ -5,6 +5,7 @@ namespace LaraGrape\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use LaraGrape\Services\FormService;
 
 class Form extends Model
 {
@@ -64,7 +65,7 @@ class Form extends Model
 
     public function getGrapesJsConfig(): array
     {
-        $formService = app(\LaraGrape\Services\FormService::class);
+        $formService = app(FormService::class);
 
         return [
             'id' => 'dynamic-form-' . $this->id,

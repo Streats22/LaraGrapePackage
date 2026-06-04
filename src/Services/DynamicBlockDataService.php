@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Log;
 
 class DynamicBlockDataService
 {
+    public function __construct(
+        protected TechStackRegistry $techStackRegistry,
+    ) {}
+
     /**
      * Extract dynamic data from GrapesJS content for animated blocks
      */
@@ -53,8 +57,6 @@ class DynamicBlockDataService
         $dom = new DOMDocument;
         @$dom->loadHTML('<?xml encoding="UTF-8">'.$html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         $xpath = new DOMXPath($dom);
-        $registry = app(\LaraGrape\Support\TechStackRegistry::class);
-
         $defaultTitle = 'Our Tech Stack';
         $defaultSubtitle = 'Technologies we work with';
 
@@ -111,7 +113,7 @@ class DynamicBlockDataService
             $defaultSubtitle
         );
 
-        $defaultKeys = $registry->defaultKeys();
+        $defaultKeys = $this->techStackRegistry->defaultKeys();
         $cards = $xpath->query("//*[@data-gjs-type='animated-tech-item' or @data-tech-key]");
         $items = [];
 
@@ -137,9 +139,9 @@ class DynamicBlockDataService
                     $name = '';
                 }
 
-                $techKey = $registry->normalizeKey(trim($card->getAttribute('data-tech-key')));
+                $techKey = $this->techStackRegistry->normalizeKey(trim($card->getAttribute('data-tech-key')));
                 if ($techKey === '' && $name !== '') {
-                    $techKey = $registry->inferKeyFromName($name);
+                    $techKey = $this->techStackRegistry->inferKeyFromName($name);
                 }
                 if ($techKey === '') {
                     $techKey = $defaultKeys[$index] ?? ($defaultKeys[0] ?? 'nuxt');
@@ -164,7 +166,7 @@ class DynamicBlockDataService
                 if (in_array($normalizedName, ['technology', 'techonoly', 'tech'], true)) {
                     $name = '';
                 }
-                $techKey = $name !== '' ? $registry->inferKeyFromName($name) : '';
+                $techKey = $name !== '' ? $this->techStackRegistry->inferKeyFromName($name) : '';
                 if ($techKey === '') {
                     $techKey = $defaultKeys[$i - 1] ?? ($defaultKeys[0] ?? 'nuxt');
                 }
@@ -187,7 +189,7 @@ class DynamicBlockDataService
 
         foreach ($items as $index => $item) {
             if (($item['name'] ?? '') === '') {
-                $meta = $registry->resolve((string) ($item['techKey'] ?? ''));
+                $meta = $this->techStackRegistry->resolve((string) ($item['techKey'] ?? ''));
                 $items[$index]['name'] = (string) ($meta['label'] ?? 'Technology');
             }
             if (($item['techKey'] ?? '') === '') {
@@ -197,7 +199,7 @@ class DynamicBlockDataService
 
         $techItems = [];
         foreach ($items as $index => $item) {
-            $meta = $registry->resolve((string) ($item['techKey'] ?? ''));
+            $meta = $this->techStackRegistry->resolve((string) ($item['techKey'] ?? ''));
             $iconNode = $xpath->query("//*[@data-gjs-name='tech-icon-".($index + 1)."']");
             $iconText = '';
             if ($iconNode->length > 0) {

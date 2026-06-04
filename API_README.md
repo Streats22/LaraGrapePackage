@@ -402,10 +402,34 @@ App\Filament\Resources\PageResource
 ```
 
 #### Key Features
-- Tabbed interface (Basic Info, Visual Editor, Content, SEO)
-- GrapesJS editor integration
+- Tabbed interface (Basic Info, Visual Editor, Block Builder, Content, SEO)
+- GrapesJS visual editor integration
+- Backend block list builder (`block_layout` JSON on pages)
+- Per-page `editor_mode` (`visual` | `block`) when site policy is `both`
 - SEO management
 - Publishing controls
+
+#### Editor settings (`LaraGrape editor` Filament page)
+
+Stored in `laragrape_editor_settings` (not `site_settings`):
+
+| Key | Description |
+|-----|-------------|
+| `block_preview_tooltips` | Hover previews in GrapesJS block sidebar |
+| `block_builder_enabled` | Master switch for the block list builder |
+| `editor_mode_policy` | `visual_only`, `block_only`, `both`, `visual`, `block` |
+
+`block_only` disables the frontend GrapesJS edit bar and save endpoint.
+
+#### Page `block_layout` shape
+
+```json
+[
+  { "block_id": "hero", "instance_key": "hero__0", "props": {} }
+]
+```
+
+Saving from Block Builder compiles this list to `grapesjs_data` and `blade_content` via `BlockLayoutService`.
 
 ### CustomBlockResource
 

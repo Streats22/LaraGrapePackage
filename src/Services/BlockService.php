@@ -2,19 +2,27 @@
 
 namespace LaraGrape\Services;
 
-use LaraGrape\Models\CustomBlock;
-use Illuminate\Support\Facades\File;
+use Exception;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
+use LaraGrape\Models\CustomBlock;
+use LaraGrape\Support\BlockBuilderSchema;
+use LaraGrape\Support\HostModelResolver;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use SplFileInfo;
 use Throwable;
 
 class BlockService
 {
     protected string $blocksPath;
-    
-    public function __construct()
-    {
+
+    public function __construct(
+        protected BlockHtmlPatcher $blockHtmlPatcher,
+    ) {
         $this->blocksPath = resource_path('views/filament/blocks');
     }
     
@@ -64,7 +72,7 @@ class BlockService
                     'custom_block_id' => $customBlock->id,
                 ];
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Silently ignore database errors during package discovery
             // This can happen when migrations haven't been run yet
         }
@@ -78,8 +86,8 @@ class BlockService
     protected function scanBlocksRecursively(string $basePath): array
     {
         $blocks = [];
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($basePath, \RecursiveDirectoryIterator::SKIP_DOTS)
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($basePath, RecursiveDirectoryIterator::SKIP_DOTS)
         );
 
         foreach ($iterator as $file) {
@@ -123,7 +131,7 @@ class BlockService
     /**
      * Parse a block file to extract metadata and content
      */
-    protected function parseBlockFile(\SplFileInfo $file): ?array
+    protected function parseBlockFile(SplFileInfo $file): ?array
     {
         $content = File::get($file->getPathname());
         $filename = $file->getBasename('.blade.php');
@@ -237,9 +245,7 @@ class BlockService
 
         try {
             if (Schema::hasTable('forms')) {
-                $formClass = class_exists(\App\Models\Form::class)
-                    ? \App\Models\Form::class
-                    : \LaraGrape\Models\Form::class;
+                $formClass = HostModelResolver::form();
 
                 $forms = $formClass::query()
                     ->where('is_active', true)
@@ -341,24 +347,139 @@ class BlockService
      */
     public function renderBlockPreview(string $blockId): ?string
     {
-        if (!File::exists($this->blocksPath)) {
+        if (! File::exists($this->blocksPath)) {
             return null;
         }
         // Find the block file by id (searches recursively including animated/, advanced/, basic/)
         $blockFile = $this->findBlockFileById($blockId);
-        if (!$blockFile) {
+        if (! $blockFile) {
             return null;
         }
         $lastModified = filemtime($blockFile);
-        $cacheKey = 'block_preview_' . $blockId . '_' . $lastModified;
+        $cacheKey = 'block_preview_'.$blockId.'_'.$lastModified;
+
         return Cache::rememberForever($cacheKey, function () use ($blockFile) {
             $viewName = $this->bladeViewNameFromPath($blockFile);
+
             try {
                 return view($viewName, ['isEditorPreview' => true])->render();
-            } catch (\Throwable $e) {
-                return '<div style="color:red;">Block preview error: ' . e($e->getMessage()) . '</div>';
+            } catch (Throwable $e) {
+                return '<div style="color:red;">Block preview error: '.e($e->getMessage()).'</div>';
             }
         });
+    }
+
+    /**
+     * Render a block from its Blade view for the admin block list builder (Gutenberg-style preview).
+     *
+     * @param  array<string, mixed>  $options  dynamic_data, custom_html, is_block_builder_preview, etc.
+     */
+    public function renderBlockPreviewForBuilder(string $blockId, array $options = []): ?string
+    {
+        $dynamicData = is_array($options['dynamic_data'] ?? null) ? $options['dynamic_data'] : [];
+        $customHtml = trim((string) ($options['custom_html'] ?? ''));
+
+        if ($customHtml !== '') {
+            return $customHtml;
+        }
+
+        $isBlockBuilderPreview = (bool) ($options['is_block_builder_preview'] ?? false);
+        $supportsDynamic = BlockBuilderSchema::supportsDynamicData($blockId);
+        $useLiveTemplate = ! $isBlockBuilderPreview && $supportsDynamic && $dynamicData !== [];
+
+        $viewData = [
+            'isEditorPreview' => $isBlockBuilderPreview || ! $useLiveTemplate,
+            'dynamicData' => $dynamicData,
+            'isBlockBuilderPreview' => $isBlockBuilderPreview,
+        ];
+
+        if ($blockId === 'button' && $dynamicData !== []) {
+            $viewData['slot'] = $dynamicData['label'] ?? 'Button (edit me)';
+            $viewData['tooltip'] = $dynamicData['tooltip'] ?? 'Click me!';
+            $viewData['isEditorPreview'] = true;
+        }
+
+        if ($blockId === 'hero' && $dynamicData !== []) {
+            $viewData['background'] = $dynamicData['background'] ?? null;
+            $viewData['isEditorPreview'] = true;
+        }
+
+        if ($blockId === 'text' && isset($dynamicData['body'])) {
+            $viewData['slot'] = (string) $dynamicData['body'];
+            $viewData['isEditorPreview'] = true;
+        }
+
+        $viewName = $this->resolveBlockViewName($blockId);
+        if ($viewName !== null) {
+            try {
+                $html = view($viewName, $viewData)->render();
+
+                if ($isBlockBuilderPreview && $dynamicData !== []) {
+                    $html = $this->blockHtmlPatcher->patchForBlockBuilder($blockId, $html, $dynamicData);
+                } elseif ($blockId === 'hero' && $dynamicData !== []) {
+                    $html = $this->blockHtmlPatcher->patchHeroLayout($html, $dynamicData);
+                } elseif ($blockId === 'animated-testimonials' && $dynamicData !== []) {
+                    $html = $this->blockHtmlPatcher->patchTestimonialsTitle($html, $dynamicData);
+                }
+
+                return $html;
+            } catch (Throwable $e) {
+                return '<div class="text-danger-600 text-sm p-4">Block preview error: '.e($e->getMessage()).'</div>';
+            }
+        }
+
+        if (str_starts_with($blockId, 'custom-')) {
+            try {
+                $slug = substr($blockId, 7);
+                $custom = CustomBlock::query()->where('slug', $slug)->active()->first();
+                if ($custom) {
+                    return $custom->getCompleteContent();
+                }
+            } catch (Throwable) {
+                // Database may be unavailable during package discovery.
+            }
+        }
+
+        foreach ($this->getGrapesJsBlocks() as $block) {
+            if (($block['id'] ?? '') === $blockId) {
+                $content = $block['content'] ?? null;
+
+                return is_string($content) && trim($content) !== '' ? $content : null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve a renderable view name for a block id (app views, then package LaraGrape:: views).
+     */
+    public function resolveBlockViewName(string $blockId): ?string
+    {
+        if (File::exists($this->blocksPath)) {
+            $blockFile = $this->findBlockFileById($blockId);
+            if ($blockFile) {
+                $viewName = $this->bladeViewNameFromPath($blockFile);
+                if (View::exists($viewName)) {
+                    return $viewName;
+                }
+            }
+        }
+
+        $packageDir = dirname(__DIR__, 2);
+        $packageBlocksPath = $packageDir.'/resources/views/filament/blocks';
+        if (File::exists($packageBlocksPath)) {
+            $blockFile = $this->findBlockFileInPath($blockId, $packageBlocksPath);
+            if ($blockFile) {
+                $relative = str_replace($packageDir.'/resources/views/', '', $blockFile);
+                $viewName = 'LaraGrape::'.str_replace(['/', '.blade.php'], ['.', ''], $relative);
+                if (View::exists($viewName)) {
+                    return $viewName;
+                }
+            }
+        }
+
+        return $this->getViewNameForBlockId($blockId);
     }
 
     /**
@@ -366,8 +487,8 @@ class BlockService
      */
     protected function findBlockFileById(string $blockId): ?string
     {
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->blocksPath, \RecursiveDirectoryIterator::SKIP_DOTS)
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($this->blocksPath, RecursiveDirectoryIterator::SKIP_DOTS)
         );
         foreach ($iterator as $file) {
             if ($file->isFile() && str_ends_with($file->getFilename(), '.blade.php')) {
@@ -401,7 +522,7 @@ class BlockService
         $blockFile = $this->findBlockFileById($blockId);
         if ($blockFile) {
             $viewName = $this->bladeViewNameFromPath($blockFile);
-            if (\Illuminate\Support\Facades\View::exists($viewName)) {
+            if (View::exists($viewName)) {
                 return $viewName;
             }
         }
@@ -414,7 +535,7 @@ class BlockService
             if ($blockFile) {
                 $relative = str_replace($packageDir . '/resources/views/', '', $blockFile);
                 $viewName = 'LaraGrape::' . str_replace(['/', '.blade.php'], ['.', ''], $relative);
-                if (\Illuminate\Support\Facades\View::exists($viewName)) {
+                if (View::exists($viewName)) {
                     return $viewName;
                 }
             }
@@ -428,8 +549,8 @@ class BlockService
      */
     protected function findBlockFileInPath(string $blockId, string $basePath): ?string
     {
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($basePath, \RecursiveDirectoryIterator::SKIP_DOTS)
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($basePath, RecursiveDirectoryIterator::SKIP_DOTS)
         );
         foreach ($iterator as $file) {
             if ($file->isFile() && str_ends_with($file->getFilename(), '.blade.php')) {

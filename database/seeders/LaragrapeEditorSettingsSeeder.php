@@ -25,6 +25,16 @@ class LaragrapeEditorSettingsSeeder extends Seeder
             ['value' => config('laragrape.editor.block_preview_tooltips', true)],
         );
 
+        $model::query()->firstOrCreate(
+            ['key' => EditorSettings::KEY_BLOCK_BUILDER_ENABLED],
+            ['value' => config('laragrape.editor.block_builder_enabled', false)],
+        );
+
+        $model::query()->firstOrCreate(
+            ['key' => EditorSettings::KEY_EDITOR_MODE_POLICY],
+            ['value' => config('laragrape.editor.editor_mode_policy', EditorSettings::POLICY_VISUAL_ONLY)],
+        );
+
         $this->command?->info('Seeded LaraGrape editor settings.');
     }
 }

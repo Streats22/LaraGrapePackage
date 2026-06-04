@@ -15,12 +15,14 @@ return [
     | GrapesJS editor (admin + frontend page builder)
     |--------------------------------------------------------------------------
     |
-    | Defaults here; override per site in Admin → Editor settings (site_settings).
+    | Defaults here; override per site in Admin → LaraGrape editor settings.
     | Env fallbacks apply when no database value exists.
     |
     */
     'editor' => [
         'block_preview_tooltips' => env('LARAGRAPE_BLOCK_PREVIEW_TOOLTIPS', true),
+        'block_builder_enabled' => env('LARAGRAPE_BLOCK_BUILDER_ENABLED', false),
+        'editor_mode_policy' => env('LARAGRAPE_EDITOR_MODE_POLICY', 'visual_only'),
     ],
 
     'tech_stack' => [

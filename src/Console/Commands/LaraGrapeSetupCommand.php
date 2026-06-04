@@ -2,8 +2,11 @@
 
 namespace LaraGrape\Console\Commands;
 
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schema;
+use LaraGrape\Support\HostModelResolver;
 
 class LaraGrapeSetupCommand extends Command
 {
@@ -746,60 +749,18 @@ class LaraGrapeSetupCommand extends Command
         // Final namespace pass after all late publishes (portfolio, JS, layout, etc.)
         $this->postProcessPublishedNamespaces();
 
-        // Update getPages() in resource files to use the correct page class names
-        $this->info('📝 Post-processing resource files...');
+        $this->info('🔄 Refreshing Composer autoload...');
         try {
-            $resourceFiles = [
-                base_path('app/Filament/Resources/CustomBlockResource.php'),
-                base_path('app/Filament/Resources/PageResource.php'),
-                base_path('app/Filament/Resources/SiteSettingsResource.php'),
-                base_path('app/Filament/Resources/TailwindConfigResource.php'),
-                base_path('app/Filament/Resources/HeaderConfigResource.php'),
-                base_path('app/Filament/Resources/FooterConfigResource.php'),
-                base_path('app/Filament/Resources/FormResource.php'),
-                base_path('app/Filament/Resources/FormSubmissionResource.php'),
-                base_path('app/Filament/Resources/MenuSetResource.php'),
-            ];
-            $processedCount = 0;
-            foreach ($resourceFiles as $resourceFile) {
-                if (file_exists($resourceFile)) {
-                    $contents = file_get_contents($resourceFile);
-                    // Update Pages references in getPages() to use correct class names
-                    $contents = str_replace('Pages\\LaraListCustomBlocks::', 'Pages\\ListCustomBlocks::', $contents);
-                    $contents = str_replace('Pages\\LaraCreateCustomBlock::', 'Pages\\CreateCustomBlock::', $contents);
-                    $contents = str_replace('Pages\\LaraEditCustomBlock::', 'Pages\\EditCustomBlock::', $contents);
-                    $contents = str_replace('Pages\\LaraListPages::', 'Pages\\ListPages::', $contents);
-                    $contents = str_replace('Pages\\LaraCreatePage::', 'Pages\\CreatePage::', $contents);
-                    $contents = str_replace('Pages\\LaraEditPage::', 'Pages\\EditPage::', $contents);
-                    $contents = str_replace('Pages\\LaraListSiteSettings::', 'Pages\\ListSiteSettings::', $contents);
-                    $contents = str_replace('Pages\\LaraCreateSiteSettings::', 'Pages\\CreateSiteSettings::', $contents);
-                    $contents = str_replace('Pages\\LaraEditSiteSettings::', 'Pages\\EditSiteSettings::', $contents);
-                    $contents = str_replace('Pages\\LaraListTailwindConfigs::', 'Pages\\ListTailwindConfigs::', $contents);
-                    $contents = str_replace('Pages\\LaraCreateTailwindConfig::', 'Pages\\CreateTailwindConfig::', $contents);
-                    $contents = str_replace('Pages\\LaraEditTailwindConfig::', 'Pages\\EditTailwindConfig::', $contents);
-                    $contents = str_replace('Pages\\LaraListHeaderConfigs::', 'Pages\\ListHeaderConfigs::', $contents);
-                    $contents = str_replace('Pages\\LaraCreateHeaderConfig::', 'Pages\\CreateHeaderConfig::', $contents);
-                    $contents = str_replace('Pages\\LaraEditHeaderConfig::', 'Pages\\EditHeaderConfig::', $contents);
-                    $contents = str_replace('Pages\\LaraListFooterConfigs::', 'Pages\\ListFooterConfigs::', $contents);
-                    $contents = str_replace('Pages\\LaraCreateFooterConfig::', 'Pages\\CreateFooterConfig::', $contents);
-                    $contents = str_replace('Pages\\LaraEditFooterConfig::', 'Pages\\EditFooterConfig::', $contents);
-                    $contents = str_replace('Pages\\LaraListForms::', 'Pages\\ListForms::', $contents);
-                    $contents = str_replace('Pages\\LaraCreateForm::', 'Pages\\CreateForm::', $contents);
-                    $contents = str_replace('Pages\\LaraEditForm::', 'Pages\\EditForm::', $contents);
-                    $contents = str_replace('Pages\\LaraListFormSubmissions::', 'Pages\\ListFormSubmissions::', $contents);
-                    $contents = str_replace('Pages\\LaraCreateFormSubmission::', 'Pages\\CreateFormSubmission::', $contents);
-                    $contents = str_replace('Pages\\LaraEditFormSubmission::', 'Pages\\EditFormSubmission::', $contents);
-                    $contents = str_replace('Pages\\LaraListMenuSets::', 'Pages\\ListMenuSets::', $contents);
-                    $contents = str_replace('Pages\\LaraCreateMenuSet::', 'Pages\\CreateMenuSet::', $contents);
-                    $contents = str_replace('Pages\\LaraEditMenuSet::', 'Pages\\EditMenuSet::', $contents);
-                    file_put_contents($resourceFile, $contents);
-                    $processedCount++;
-                }
+            exec('composer dump-autoload -o', $composerOutput, $composerExit);
+            if ($composerExit === 0) {
+                $this->info('✅ Composer autoload refreshed.');
+            } else {
+                $this->warn('⚠️  composer dump-autoload failed; run it manually if you see class redeclare errors.');
             }
-            $this->info("✅ Updated getPages() in $processedCount resource files");
         } catch (\Exception $e) {
-            $this->warn('⚠️  Post-processing resource files failed: ' . $e->getMessage());
+            $this->warn('⚠️  composer dump-autoload failed: '.$e->getMessage());
         }
+
     }
 
     private function postProcessWebRoutes(): void
@@ -853,13 +814,16 @@ class LaraGrapeSetupCommand extends Command
         $this->info('🔧 Post-processing published app code (LaraGrape\\ → App\\)...');
 
         $updated = $this->rewritePublishedAppPhpFiles();
+        $filamentUpdated = $this->normalizePublishedFilamentClassNames();
+        $this->postProcessResourceGetPages();
 
         $this->postProcessWebRoutes();
         $this->postProcessPublishedSeeders();
 
-        $this->info($updated > 0
-            ? "✅ Rewrote LaraGrape namespaces in {$updated} file(s) under app/."
-            : '✅ No LaraGrape namespaces left under app/ (already App\\).');
+        $totalUpdated = $updated + $filamentUpdated;
+        $this->info($totalUpdated > 0
+            ? "✅ Post-processed {$totalUpdated} file(s) under app/ (namespaces and Filament class names)."
+            : '✅ Published app code already uses App\\ namespaces and Filament class names.');
     }
 
     /**
@@ -927,6 +891,108 @@ class LaraGrapeSetupCommand extends Command
         return $contents;
     }
 
+    /**
+     * Published Filament files are copied as Lara* classes into *Resource.php paths.
+     * Filament discovery requires the PHP class name to match the filename (PageResource.php → PageResource).
+     *
+     * @return int Number of files updated
+     */
+    private function normalizePublishedFilamentClassNames(): int
+    {
+        $dirs = [
+            base_path('app/Filament/Resources'),
+            base_path('app/Filament/Pages'),
+            base_path('app/Filament/Forms'),
+        ];
+
+        $updated = 0;
+
+        foreach ($dirs as $dir) {
+            if (! is_dir($dir)) {
+                continue;
+            }
+
+            $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir));
+
+            foreach ($rii as $file) {
+                if (! $file->isFile() || $file->getExtension() !== 'php') {
+                    continue;
+                }
+
+                $path = $file->getPathname();
+                $contents = file_get_contents($path);
+                $normalized = $contents;
+
+                $normalized = preg_replace('/class Lara([A-Z][A-Za-z0-9_]*)/', 'class $1', $normalized);
+                // References such as LaraPageResource::class and Pages\LaraListPages::route()
+                $normalized = preg_replace('/(?<![\\\\])Lara([A-Z][A-Za-z0-9_]*)/', '$1', $normalized);
+
+                if ($normalized !== $contents) {
+                    file_put_contents($path, $normalized);
+                    $updated++;
+                }
+            }
+        }
+
+        return $updated;
+    }
+
+    private function postProcessResourceGetPages(): void
+    {
+        $this->info('📝 Post-processing Filament resource getPages() routes...');
+
+        try {
+            $resourceFiles = glob(base_path('app/Filament/Resources/*Resource.php')) ?: [];
+            $processedCount = 0;
+
+            foreach ($resourceFiles as $resourceFile) {
+                if (! file_exists($resourceFile)) {
+                    continue;
+                }
+
+                $contents = file_get_contents($resourceFile);
+                $original = $contents;
+
+                $contents = str_replace('Pages\\LaraListCustomBlocks::', 'Pages\\ListCustomBlocks::', $contents);
+                $contents = str_replace('Pages\\LaraCreateCustomBlock::', 'Pages\\CreateCustomBlock::', $contents);
+                $contents = str_replace('Pages\\LaraEditCustomBlock::', 'Pages\\EditCustomBlock::', $contents);
+                $contents = str_replace('Pages\\LaraListPages::', 'Pages\\ListPages::', $contents);
+                $contents = str_replace('Pages\\LaraCreatePage::', 'Pages\\CreatePage::', $contents);
+                $contents = str_replace('Pages\\LaraEditPage::', 'Pages\\EditPage::', $contents);
+                $contents = str_replace('Pages\\LaraListSiteSettings::', 'Pages\\ListSiteSettings::', $contents);
+                $contents = str_replace('Pages\\LaraCreateSiteSettings::', 'Pages\\CreateSiteSettings::', $contents);
+                $contents = str_replace('Pages\\LaraEditSiteSettings::', 'Pages\\EditSiteSettings::', $contents);
+                $contents = str_replace('Pages\\LaraListTailwindConfigs::', 'Pages\\ListTailwindConfigs::', $contents);
+                $contents = str_replace('Pages\\LaraCreateTailwindConfig::', 'Pages\\CreateTailwindConfig::', $contents);
+                $contents = str_replace('Pages\\LaraEditTailwindConfig::', 'Pages\\EditTailwindConfig::', $contents);
+                $contents = str_replace('Pages\\LaraListHeaderConfigs::', 'Pages\\ListHeaderConfigs::', $contents);
+                $contents = str_replace('Pages\\LaraCreateHeaderConfig::', 'Pages\\CreateHeaderConfig::', $contents);
+                $contents = str_replace('Pages\\LaraEditHeaderConfig::', 'Pages\\EditHeaderConfig::', $contents);
+                $contents = str_replace('Pages\\LaraListFooterConfigs::', 'Pages\\ListFooterConfigs::', $contents);
+                $contents = str_replace('Pages\\LaraCreateFooterConfig::', 'Pages\\CreateFooterConfig::', $contents);
+                $contents = str_replace('Pages\\LaraEditFooterConfig::', 'Pages\\EditFooterConfig::', $contents);
+                $contents = str_replace('Pages\\LaraListForms::', 'Pages\\ListForms::', $contents);
+                $contents = str_replace('Pages\\LaraCreateForm::', 'Pages\\CreateForm::', $contents);
+                $contents = str_replace('Pages\\LaraEditForm::', 'Pages\\EditForm::', $contents);
+                $contents = str_replace('Pages\\LaraListFormSubmissions::', 'Pages\\ListFormSubmissions::', $contents);
+                $contents = str_replace('Pages\\LaraCreateFormSubmission::', 'Pages\\CreateFormSubmission::', $contents);
+                $contents = str_replace('Pages\\LaraEditFormSubmission::', 'Pages\\EditFormSubmission::', $contents);
+                $contents = str_replace('Pages\\LaraListMenuSets::', 'Pages\\ListMenuSets::', $contents);
+                $contents = str_replace('Pages\\LaraCreateMenuSet::', 'Pages\\CreateMenuSet::', $contents);
+                $contents = str_replace('Pages\\LaraEditMenuSet::', 'Pages\\EditMenuSet::', $contents);
+
+                if ($contents !== $original) {
+                    file_put_contents($resourceFile, $contents);
+                    $processedCount++;
+                }
+            }
+
+            $this->info("✅ Updated getPages() in {$processedCount} resource file(s)");
+        } catch (\Exception $e) {
+            $this->warn('⚠️  Post-processing resource files failed: '.$e->getMessage());
+        }
+    }
+
     private function enablePortfolioInEnv(): void
     {
         $envPath = base_path('.env');
@@ -962,7 +1028,7 @@ class LaraGrapeSetupCommand extends Command
             return;
         }
 
-        if (! \Illuminate\Support\Facades\Schema::hasTable('portfolio_projects')) {
+        if (! Schema::hasTable('portfolio_projects')) {
             $this->warn('⚠️  portfolio_projects table missing; run php artisan migrate');
 
             return;
@@ -973,11 +1039,11 @@ class LaraGrapeSetupCommand extends Command
                 '--class' => 'Database\\Seeders\\PortfolioProjectSeeder',
                 '--force' => true,
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->warn('⚠️  Portfolio project seeding failed: '.$e->getMessage());
         }
 
-        $pageModel = class_exists(\App\Models\Page::class) ? \App\Models\Page::class : \LaraGrape\Models\Page::class;
+        $pageModel = HostModelResolver::page();
         $pageModel::firstOrCreate(
             ['slug' => 'portfolio'],
             [

@@ -1,5 +1,8 @@
 @php
         use Illuminate\Support\Facades\Blade;
+        use LaraGrape\Support\EditorSettings;
+
+        $frontendEditorEnabled = auth()->check() && EditorSettings::allowsFrontendEditor();
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -35,9 +38,11 @@
     <!-- Font Awesome for GrapesJS icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- GrapesJS CSS for frontend editor -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/grapesjs@0.22.8/dist/css/grapes.min.css">
-    
+    @if($frontendEditorEnabled)
+        <!-- GrapesJS CSS for frontend editor -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/grapesjs@0.22.8/dist/css/grapes.min.css">
+    @endif
+
     <!-- Vite Assets -->
     @vite([
         'resources/css/app.css', 
@@ -67,7 +72,7 @@
     <link rel="stylesheet" href="{{ asset('css/laralgrape-utilities.css') }}">
 </head>
 <body class="bg-gradient-to-br from-primary-50 via-white to-secondary/10 text-primary-900 antialiased min-h-screen flex flex-col dark:bg-black dark:text-primary-50" x-data="siteLayout()">
-    @if(auth()->check())
+    @if($frontendEditorEnabled)
         @include('components.layout.grapejs-edit-bar')
     @endif
 
@@ -104,7 +109,7 @@
             @endif
         </div>
         
-        @if(auth()->check())
+        @if($frontendEditorEnabled)
             <!-- GrapesJS Editor Container (hidden by default) -->
             <div 
                 class="grapejs-editor-wrapper" 
@@ -131,19 +136,18 @@
         // Debug: Log the styles array before GrapesJS loads
         console.log('grapesjsCanvasStyles:', window.grapesjsCanvasStyles);
     </script>
-    @if(auth()->check())
+    @if($frontendEditorEnabled)
         @php
             $blockService = app(\App\Services\BlockService::class);
             $grapesjsBlocks = $blockService->getGrapesJsBlocks();
         @endphp
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/grapesjs@0.22.8/dist/css/grapes.min.css">
         <script src="https://unpkg.com/grapesjs@0.22.8/dist/grapes.min.js"></script>
         <script type="module" src="{{ Vite::asset('resources/js/grapesjs-editor.js') }}"></script>
         <script>
             window.grapesjsBlocks = @json($grapesjsBlocks);
             window.pageGrapesjsData = @json($editingData ?? []);
             window.saveGrapesjsUrl = "{{ route('page.save-grapesjs', ['slug' => $page->slug]) }}";
-            
+
             // Don't initialize immediately - wait for edit mode to be activated
             window.editorInitialized = false;
         </script>

@@ -31,8 +31,15 @@ Alpine.data('grapejsEditBar', () => ({
     originalScroll: 0,
     grapejsEditor: null,
     saveStatus: '', // 'success', 'error', or ''
-    
+    frontendEditorEnabled: true,
+
     init() {
+        const editorSettings = window.laragrapeEditorSettings || {};
+        this.frontendEditorEnabled = editorSettings.frontendEditorEnabled !== false;
+        if (!this.frontendEditorEnabled) {
+            return;
+        }
+
         console.log('Alpine grapejsEditBar initialized');
         // Sync local state with store
         this.isEditing = this.$store.grapejs.isEditing;
@@ -56,6 +63,10 @@ Alpine.data('grapejsEditBar', () => ({
     },
     
     startEditing() {
+        if (!this.frontendEditorEnabled) {
+            return;
+        }
+
         console.log('Starting editing...');
         this.isEditing = true;
         this.$store.grapejs.isEditing = true;
@@ -148,6 +159,11 @@ Alpine.data('grapejsEditBar', () => ({
 
 // Frontend GrapesJS Editor Initialization
 function initializeFrontendEditor() {
+    const editorSettings = window.laragrapeEditorSettings || {};
+    if (editorSettings.frontendEditorEnabled === false) {
+        return;
+    }
+
     if (typeof grapesjs !== 'undefined' && typeof window.LaraGrapeGrapesJsEditor !== 'undefined') {
         const editorSettings = window.laragrapeEditorSettings || {};
         window.frontendGrapesJsEditor = new window.LaraGrapeGrapesJsEditor({

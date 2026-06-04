@@ -13,6 +13,7 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/js/form-blocks.js',
                 'resources/js/grapesjs-editor.js',
+                'resources/js/block-builder-preview.js',
             ],
             refresh: true,
         }),

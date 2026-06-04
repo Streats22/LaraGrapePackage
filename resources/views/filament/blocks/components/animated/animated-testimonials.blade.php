@@ -158,7 +158,7 @@
      }' 
      x-init="
          currentIndex = 0;
-         if (!window.IS_GRAPESJS_EDITOR && !document.body.classList.contains('is-grapesjs-canvas')) {
+         if (!@json($isBlockBuilderPreview ?? false) && !window.IS_GRAPESJS_EDITOR && !document.body.classList.contains('is-grapesjs-canvas')) {
              setInterval(() => {
                  if (testimonials && testimonials.length > 0) {
              currentIndex = (currentIndex + 1) % testimonials.length;

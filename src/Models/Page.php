@@ -15,6 +15,8 @@ class Page extends Model
         'slug',
         'content',
         'grapesjs_data',
+        'editor_mode',
+        'block_layout',
         'grapesjs_css',
         'grapesjs_html',
         'template',
@@ -31,7 +33,8 @@ class Page extends Model
 
     protected $casts = [
         'grapesjs_data' => 'array',
-        'grapesjs_css' => 'string', 
+        'block_layout' => 'array',
+        'grapesjs_css' => 'string',
         'grapesjs_html' => 'string',
         'is_published' => 'boolean',
         'show_in_menu' => 'boolean',

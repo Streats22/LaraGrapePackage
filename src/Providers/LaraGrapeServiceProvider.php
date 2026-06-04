@@ -2,10 +2,19 @@
 
 namespace LaraGrape\Providers;
 
+use App\Services\FormService as AppFormService;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Support\ServiceProvider;
+use LaraGrape\Console\Commands\ClearLayoutCacheCommand;
+use LaraGrape\Console\Commands\LaraGrapeSetupCommand;
+use LaraGrape\Console\Commands\LaraGrapeUpdateCommand;
 use LaraGrape\Providers\BlockComponentServiceProvider;
+use LaraGrape\Services\BlockLayoutService;
+use LaraGrape\Services\DynamicBlockDataService;
+use LaraGrape\Services\FormService;
+use LaraGrape\Services\LayoutService;
+use LaraGrape\Support\TechStackRegistry;
 
 class LaraGrapeServiceProvider extends ServiceProvider
 {
@@ -26,22 +35,22 @@ class LaraGrapeServiceProvider extends ServiceProvider
         $packageDir = dirname(__DIR__, 2);
         $this->loadViewsFrom($packageDir.'/resources/views', 'LaraGrape');
 
-        $this->app->singleton(\LaraGrape\Services\FormService::class, function ($app) {
-            if (class_exists(\App\Services\FormService::class)) {
-                return $app->make(\App\Services\FormService::class);
+        $this->app->singleton(FormService::class, function ($app) {
+            if (class_exists(AppFormService::class)) {
+                return $app->make(AppFormService::class);
             }
 
-            return new \LaraGrape\Services\FormService;
+            return new FormService;
         });
-        $this->app->singleton(\LaraGrape\Services\LayoutService::class);
-        $this->app->singleton(\LaraGrape\Support\TechStackRegistry::class);
-        $this->app->singleton(\LaraGrape\Services\DynamicBlockDataService::class);
+        $this->app->singleton(LayoutService::class);
+        $this->app->singleton(TechStackRegistry::class);
+        $this->app->singleton(DynamicBlockDataService::class);
+        $this->app->singleton(BlockLayoutService::class);
 
         // Register the block component service provider
         $this->app->register(BlockComponentServiceProvider::class);
-        
-        // GrapesJS is now loaded directly in the Blade view
-        // No need to register additional assets here
+
+        $this->registerBlockBuilderFilamentAssets();
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -101,9 +110,9 @@ class LaraGrapeServiceProvider extends ServiceProvider
                 $packageDir.'/src/Http/Controllers' => app_path('Http/Controllers'),
             ], 'LaraGrape-controllers');
             $this->commands([
-                \LaraGrape\Console\Commands\LaraGrapeSetupCommand::class,
-                \LaraGrape\Console\Commands\LaraGrapeUpdateCommand::class,
-                \LaraGrape\Console\Commands\ClearLayoutCacheCommand::class,
+                LaraGrapeSetupCommand::class,
+                LaraGrapeUpdateCommand::class,
+                ClearLayoutCacheCommand::class,
             ]);
             // Publish CSS assets (site.css, app.css, filament-grapesjs-editor.css)
             $this->publishes([
@@ -119,9 +128,14 @@ class LaraGrapeServiceProvider extends ServiceProvider
                 $packageDir.'/src/Services/BlockService.php' => app_path('Services/BlockService.php'),
                 $packageDir.'/src/Services/FormService.php' => app_path('Services/FormService.php'),
                 $packageDir.'/src/Services/GrapesJsConverterService.php' => app_path('Services/GrapesJsConverterService.php'),
+                $packageDir.'/src/Services/BlockLayoutService.php' => app_path('Services/BlockLayoutService.php'),
+                $packageDir.'/src/Services/BlockHtmlPatcher.php' => app_path('Services/BlockHtmlPatcher.php'),
                 $packageDir.'/src/Services/DynamicBlockDataService.php' => app_path('Services/DynamicBlockDataService.php'),
                 $packageDir.'/src/Support/TechStackRegistry.php' => app_path('Support/TechStackRegistry.php'),
                 $packageDir.'/src/Support/EditorSettings.php' => app_path('Support/EditorSettings.php'),
+                $packageDir.'/src/Support/BlockBuilderSchema.php' => app_path('Support/BlockBuilderSchema.php'),
+                $packageDir.'/src/Support/BlockBuilderCanvasStyles.php' => app_path('Support/BlockBuilderCanvasStyles.php'),
+                $packageDir.'/src/Support/HostModelResolver.php' => app_path('Support/HostModelResolver.php'),
                 $packageDir.'/src/Services/LayoutService.php' => app_path('Services/LayoutService.php'),
                 $packageDir.'/src/Services/SiteSettingsService.php' => app_path('Services/SiteSettingsService.php'),
             ], 'LaraGrape-commands');
@@ -145,6 +159,7 @@ class LaraGrapeServiceProvider extends ServiceProvider
             // Publish JS assets (grapesjs-editor.js and future JS)
             $this->publishes([
                 $packageDir.'/resources/js/grapesjs-editor.js' => resource_path('js/grapesjs-editor.js'),
+                $packageDir.'/resources/js/block-builder-preview.js' => resource_path('js/block-builder-preview.js'),
                 $packageDir.'/resources/js/form-blocks.js' => resource_path('js/form-blocks.js'),
                 $packageDir.'/resources/js/bootstrap.js' => resource_path('js/bootstrap.js'),
             ], 'LaraGrape-js');
@@ -295,5 +310,18 @@ class LaraGrapeServiceProvider extends ServiceProvider
 
             // Ensure routes include the preview route (already in web.php publish)
         }
+    }
+
+    protected function registerBlockBuilderFilamentAssets(): void
+    {
+        if (! class_exists(FilamentAsset::class)) {
+            return;
+        }
+
+        $packageDir = dirname(__DIR__, 2);
+
+        FilamentAsset::register([
+            Js::make('laragrape-block-builder-preview', $packageDir.'/resources/js/block-builder-preview.js'),
+        ], 'laragrape');
     }
 }

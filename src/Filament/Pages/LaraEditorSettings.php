@@ -3,6 +3,7 @@
 namespace LaraGrape\Filament\Pages;
 
 use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -70,6 +71,27 @@ class LaraEditorSettings extends Page
                                 'Show a small hover popover with description and styled preview when pointing at a block in the GrapesJS sidebar.',
                             )
                             ->default(true),
+                    ]),
+                Section::make('Page editing modes')
+                    ->description('Control whether pages are edited with the visual GrapesJS canvas, the backend block list builder, or both.')
+                    ->schema([
+                        Toggle::make('block_builder_enabled')
+                            ->label('Enable block style builder')
+                            ->helperText('When off, the block list builder is hidden everywhere.')
+                            ->default(false)
+                            ->live(),
+                        Select::make('editor_mode_policy')
+                            ->label('Editor mode policy')
+                            ->options([
+                                EditorSettingsStore::POLICY_VISUAL_ONLY => 'Visual only — GrapesJS in admin; frontend editing allowed',
+                                EditorSettingsStore::POLICY_BLOCK_ONLY => 'Block only — block list in admin; no frontend GrapesJS',
+                                EditorSettingsStore::POLICY_BOTH => 'Both — per-page choice of visual or block in admin; frontend visual',
+                                EditorSettingsStore::POLICY_VISUAL => 'Visual (default) — visual editor; new pages default to visual',
+                                EditorSettingsStore::POLICY_BLOCK => 'Block (default) — block builder when enabled; new pages default to block',
+                            ])
+                            ->default(EditorSettingsStore::POLICY_VISUAL_ONLY)
+                            ->required()
+                            ->helperText('Block only disables the frontend edit bar and GrapesJS assets on public pages.'),
                     ]),
             ]);
     }

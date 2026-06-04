@@ -4,19 +4,19 @@ namespace LaraGrape\Http\Controllers;
 
 use LaraGrape\Models\Page;
 use LaraGrape\Services\GrapesJsConverterService;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Illuminate\Http\Response;
+use LaraGrape\Support\EditorSettings;
+use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 class PageController extends Controller
 {
-    protected GrapesJsConverterService $converterService;
-    
-    public function __construct(GrapesJsConverterService $converterService)
-    {
-        $this->converterService = $converterService;
-    }
+    public function __construct(
+        protected GrapesJsConverterService $converterService,
+    ) {}
 
     /**
      * Display a page by its slug
@@ -70,23 +70,29 @@ class PageController extends Controller
     public function saveGrapesJs(Request $request, string $slug): JsonResponse
     {
         // Debug logging
-        \Log::info('GrapesJS save request', [
+        $user = $request->user();
+
+        Log::info('GrapesJS save request', [
             'slug' => $slug,
-            'user' => auth()->id(),
-            'request_data' => $request->all()
+            'user' => $user?->getAuthIdentifier(),
+            'request_data' => $request->all(),
         ]);
-        
-        // Check authentication
-        if (!auth()->check()) {
-            \Log::warning('Unauthorized GrapesJS save attempt', ['slug' => $slug]);
+
+        if ($user === null) {
+            Log::warning('Unauthorized GrapesJS save attempt', ['slug' => $slug]);
+
             return response()->json(['error' => 'Authentication required'], 401);
         }
-        
+
+        if (! EditorSettings::allowsFrontendEditor()) {
+            return response()->json(['error' => 'Frontend editor is disabled for this site'], 403);
+        }
+
         // Find the page
         $page = Page::where('slug', $slug)->first();
         
         if (!$page) {
-            \Log::error('Page not found for save', ['slug' => $slug]);
+            Log::error('Page not found for save', ['slug' => $slug]);
             return response()->json(['error' => 'Page not found'], 404);
         }
         
@@ -102,7 +108,7 @@ class PageController extends Controller
                 'html' => $request->input('html'),
                 'css' => $request->input('css', ''),
                 'saved_at' => now()->toISOString(),
-                'saved_by' => auth()->id(),
+                'saved_by' => $user->getAuthIdentifier(),
             ];
             
             // Process the data for saving (convert to Blade components)
@@ -111,7 +117,7 @@ class PageController extends Controller
             // Convert to Blade content (string)
             $bladeContent = $this->converterService->convertToBlade($processedData);
             
-            \Log::info('Saving GrapesJS data', [
+            Log::info('Saving GrapesJS data', [
                 'page_id' => $page->id,
                 'grapesjs_data' => $processedData,
                 'blade_content' => $bladeContent,
@@ -124,7 +130,7 @@ class PageController extends Controller
                 'updated_at' => now(),
             ]);
             
-            \Log::info('GrapesJS data saved successfully', ['page_id' => $page->id]);
+            Log::info('GrapesJS data saved successfully', ['page_id' => $page->id]);
             
             return response()->json([
                 'success' => true,
@@ -132,8 +138,8 @@ class PageController extends Controller
                 'saved_at' => now()->toISOString(),
             ]);
             
-        } catch (\Exception $e) {
-            \Log::error('Failed to save GrapesJS data', [
+        } catch (Exception $e) {
+            Log::error('Failed to save GrapesJS data', [
                 'page_id' => $page->id ?? null,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
