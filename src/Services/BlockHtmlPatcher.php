@@ -123,8 +123,123 @@ class BlockHtmlPatcher
                 'title' => 'grid-title',
                 'subtitle' => 'grid-subtitle',
             ]),
+            'animated-stats' => $this->patchAnimatedStatsBuilder($html, $dynamicData),
+            'simple-animated-counter' => $this->patchSimpleCounterBuilder($html, $dynamicData),
             default => $this->patchGenericBuilderFields($html, $dynamicData),
         };
+    }
+
+    /**
+     * @param  array<string, mixed>  $dynamicData
+     */
+    public function patchSimpleCounterBuilder(string $html, array $dynamicData): string
+    {
+        $html = $this->patchByGjsNames($html, [
+            'title' => (string) ($dynamicData['title'] ?? ''),
+        ], [
+            'title' => 'counter-title',
+        ]);
+
+        $items = $dynamicData['counters'] ?? [];
+        if (! is_array($items)) {
+            return $html;
+        }
+
+        foreach ($items as $index => $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $n = $index + 1;
+            if ($n > 6) {
+                break;
+            }
+
+            $html = $this->patchByGjsNames($html, [
+                'value' => (string) ($item['value'] ?? ''),
+                'label' => (string) ($item['label'] ?? ''),
+            ], [
+                'value' => "counter-value-{$n}",
+                'label' => "counter-label-{$n}",
+            ]);
+        }
+
+        return $html;
+    }
+
+    /**
+     * @param  array<string, mixed>  $dynamicData
+     */
+    public function patchAnimatedStatsBuilder(string $html, array $dynamicData): string
+    {
+        $html = $this->patchByGjsNames($html, [
+            'title' => (string) ($dynamicData['title'] ?? ''),
+            'subtitle' => (string) ($dynamicData['subtitle'] ?? ''),
+        ], [
+            'title' => 'stats-title',
+            'subtitle' => 'stats-subtitle',
+        ]);
+
+        $items = $dynamicData['stats'] ?? [];
+        if (! is_array($items)) {
+            return $html;
+        }
+
+        foreach ($items as $index => $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $n = $index + 1;
+            if ($n > 8) {
+                break;
+            }
+
+            [$number, $suffix] = $this->parseStatValue($item);
+
+            $html = $this->patchByGjsNames($html, [
+                'number' => $number,
+                'suffix' => $suffix,
+                'label' => (string) ($item['label'] ?? ''),
+            ], [
+                'number' => "stat-number-{$n}",
+                'suffix' => "stat-suffix-{$n}",
+                'label' => "stat-label-{$n}",
+            ]);
+        }
+
+        return $html;
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @return array{0: string, 1: string}
+     */
+    protected function parseStatValue(array $item): array
+    {
+        $value = trim((string) ($item['value'] ?? ''));
+        $suffix = trim((string) ($item['suffix'] ?? ''));
+
+        if ($value !== '' && preg_match('/^(\d+(?:\.\d+)?)(.*)$/u', $value, $matches)) {
+            $parsedSuffix = trim((string) ($matches[2] ?? ''));
+
+            return [
+                (string) $matches[1],
+                $parsedSuffix !== '' ? $parsedSuffix : ($suffix !== '' ? $suffix : '+'),
+            ];
+        }
+
+        $number = trim((string) ($item['number'] ?? $value));
+
+        if ($number === '' && $value !== '') {
+            $number = preg_replace('/\D+/', '', $value) ?? '';
+        }
+
+        if ($suffix === '' && $value !== '' && preg_match('/(\+|%|k|M)$/iu', $value, $suffixMatch)) {
+            $suffix = $suffixMatch[1];
+        }
+
+        return [$number, $suffix !== '' ? $suffix : '+'];
     }
 
     /**

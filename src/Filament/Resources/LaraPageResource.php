@@ -141,7 +141,6 @@ class LaraPageResource extends Resource
                                                     ->required()
                                                     ->live(),
                                                 Fieldset::make('Content')
-                                                    ->description('Edit the text and values for this block. The preview updates as you type.')
                                                     ->schema(fn (Get $get): array => BlockBuilderSchema::fieldsFor($get('block_id')))
                                                     ->statePath('dynamic_data')
                                                     ->visible(fn (Get $get): bool => filled($get('block_id')))

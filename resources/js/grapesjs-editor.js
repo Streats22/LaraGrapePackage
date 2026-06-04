@@ -125,7 +125,9 @@ class LaraGrapeGrapesJsEditor {
         this.editor = null;
         this.wrapper = null;
         this.fullscreenBtn = null;
-        
+        this._fullscreenPlaceholder = null;
+        this._fullscreenHeader = null;
+
         // Initialize the editor
         this.init();
     }
@@ -1459,42 +1461,160 @@ class LaraGrapeGrapesJsEditor {
         }, 5000); // Sync every 5 seconds
     }
 
+    teleportWrapperToBody() {
+        if (!this.wrapper || this.wrapper.parentElement === document.body) {
+            return;
+        }
+
+        if (!this._fullscreenPlaceholder) {
+            this._fullscreenPlaceholder = document.createComment('laragrape-gjs-fullscreen');
+            this.wrapper.parentNode?.insertBefore(this._fullscreenPlaceholder, this.wrapper);
+        }
+
+        document.body.appendChild(this.wrapper);
+    }
+
+    restoreWrapperFromBody() {
+        if (
+            !this.wrapper
+            || !this._fullscreenPlaceholder?.parentNode
+            || this.wrapper.parentElement !== document.body
+        ) {
+            return;
+        }
+
+        this._fullscreenPlaceholder.parentNode.insertBefore(
+            this.wrapper,
+            this._fullscreenPlaceholder.nextSibling,
+        );
+    }
+
+    ensureFullscreenHeader() {
+        if (!this.wrapper) {
+            return null;
+        }
+
+        let header = this.wrapper.querySelector('.laragrape-gjs-fullscreen-bar');
+        if (header) {
+            header.hidden = false;
+
+            return header;
+        }
+
+        header = document.createElement('div');
+        header.className = 'laragrape-gjs-fullscreen-bar';
+        header.innerHTML = `
+            <span class="laragrape-gjs-fullscreen-bar__title">Page editor</span>
+            <div class="laragrape-gjs-fullscreen-bar__actions">
+                <button type="button" class="laragrape-gjs-fullscreen-bar__save grapesjs-save-btn">Save</button>
+                <button type="button" class="laragrape-gjs-fullscreen-bar__exit" data-laragrape-exit-fullscreen>Close (Esc)</button>
+            </div>
+        `;
+
+        header.querySelector('[data-laragrape-exit-fullscreen]')?.addEventListener('click', () => {
+            this.exitFullscreen();
+        });
+
+        const headerSaveBtn = header.querySelector('.grapesjs-save-btn');
+        if (headerSaveBtn && this.options.mode === 'backend') {
+            headerSaveBtn.addEventListener('click', () => {
+                this.saveContent();
+            });
+        } else if (headerSaveBtn) {
+            headerSaveBtn.remove();
+        }
+
+        this.wrapper.insertBefore(header, this.wrapper.firstChild);
+        this._fullscreenHeader = header;
+
+        return header;
+    }
+
+    hideFullscreenHeader() {
+        const header = this.wrapper?.querySelector('.laragrape-gjs-fullscreen-bar');
+        if (header) {
+            header.hidden = true;
+        }
+    }
+
+    refreshFullscreenEditorLayout() {
+        const editorDiv = this.wrapper?.querySelector('.grapesjs-editor');
+        if (editorDiv) {
+            editorDiv.style.height = 'calc(100vh - 3.5rem)';
+        }
+
+        this.editor?.refresh?.();
+    }
+
     toggleFullscreen() {
-        if (!this.wrapper) return;
-        const fullscreenIcon = this.fullscreenBtn?.querySelector('.fullscreen-icon');
-        const exitIcon = this.fullscreenBtn?.querySelector('.exit-fullscreen-icon');
-        const editorDiv = this.wrapper.querySelector('.grapesjs-editor');
+        if (!this.wrapper) {
+            return;
+        }
+
         if (this.wrapper.classList.contains('fullscreen')) {
             this.exitFullscreen();
         } else {
             this.enterFullscreen();
         }
     }
-    
+
     enterFullscreen() {
-        if (!this.wrapper) return;
+        if (!this.wrapper) {
+            return;
+        }
+
         const fullscreenIcon = this.fullscreenBtn?.querySelector('.fullscreen-icon');
         const exitIcon = this.fullscreenBtn?.querySelector('.exit-fullscreen-icon');
         const editorDiv = this.wrapper.querySelector('.grapesjs-editor');
+
+        this.teleportWrapperToBody();
         this.wrapper.classList.add('fullscreen');
-        if (fullscreenIcon) fullscreenIcon.style.display = 'none';
-        if (exitIcon) exitIcon.style.display = 'block';
-        if (this.fullscreenBtn) this.fullscreenBtn.title = 'Exit Fullscreen';
-        if (editorDiv) editorDiv.style.height = 'calc(100vh - 120px)';
-        document.body.style.overflow = 'hidden';
+        document.body.classList.add('laragrape-gjs-fullscreen-active');
+        this.ensureFullscreenHeader();
+
+        if (fullscreenIcon) {
+            fullscreenIcon.style.display = 'none';
+        }
+        if (exitIcon) {
+            exitIcon.style.display = 'block';
+        }
+        if (this.fullscreenBtn) {
+            this.fullscreenBtn.title = 'Exit Fullscreen';
+        }
+
+        this.refreshFullscreenEditorLayout();
+
+        requestAnimationFrame(() => {
+            this.editor?.refresh?.();
+        });
     }
-    
+
     exitFullscreen() {
-        if (!this.wrapper) return;
+        if (!this.wrapper) {
+            return;
+        }
+
         const fullscreenIcon = this.fullscreenBtn?.querySelector('.fullscreen-icon');
         const exitIcon = this.fullscreenBtn?.querySelector('.exit-fullscreen-icon');
         const editorDiv = this.wrapper.querySelector('.grapesjs-editor');
+
         this.wrapper.classList.remove('fullscreen');
-        if (fullscreenIcon) fullscreenIcon.style.display = 'block';
-        if (exitIcon) exitIcon.style.display = 'none';
-        if (this.fullscreenBtn) this.fullscreenBtn.title = 'Toggle Fullscreen Mode (Press Escape to exit)';
-        if (editorDiv) editorDiv.style.height = editorDiv.dataset.height || '600px';
-        document.body.style.overflow = '';
+        document.body.classList.remove('laragrape-gjs-fullscreen-active');
+        this.hideFullscreenHeader();
+        this.restoreWrapperFromBody();
+
+        if (fullscreenIcon) {
+            fullscreenIcon.style.display = 'block';
+        }
+        if (exitIcon) {
+            exitIcon.style.display = 'none';
+        }
+        if (this.fullscreenBtn) {
+            this.fullscreenBtn.title = 'Toggle Fullscreen Mode (Press Escape to exit)';
+        }
+        if (editorDiv) {
+            editorDiv.style.height = editorDiv.dataset.height || editorDiv.style.height || '600px';
+        }
     }
     
     destroy() {

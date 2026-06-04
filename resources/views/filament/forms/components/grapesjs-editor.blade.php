@@ -264,16 +264,22 @@
             transition: all 0.3s ease;
         }
         
+        body.laragrape-gjs-fullscreen-active {
+            overflow: hidden;
+        }
+
         .grapesjs-editor-wrapper.fullscreen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            z-index: 99999 !important;
-            background: var(--grapey-primary-50, #fff);
+            z-index: 999999 !important;
+            background: rgb(17 24 39);
             box-sizing: border-box;
             isolation: isolate;
+            display: flex;
+            flex-direction: column;
         }
         
         .grapesjs-controls {
@@ -331,10 +337,16 @@
         }
         
         .grapesjs-editor-wrapper.fullscreen .grapesjs-editor {
-            height: calc(100vh - 120px) !important;
+            flex: 1;
+            height: auto !important;
+            min-height: 0 !important;
             border-radius: 0;
             border: none;
             z-index: 99999 !important;
+        }
+
+        .grapesjs-editor-wrapper.fullscreen .grapesjs-controls {
+            top: 4.5rem;
         }
         
         @media (max-width: 1024px) {

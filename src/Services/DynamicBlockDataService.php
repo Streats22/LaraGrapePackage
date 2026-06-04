@@ -35,6 +35,8 @@ class DynamicBlockDataService
                 return $this->extractCardsData($html);
             case 'animated-stats':
                 return $this->extractStatsData($html);
+            case 'simple-animated-counter':
+                return $this->extractSimpleCounterData($html);
             case 'animated-progress-bars':
                 return $this->extractProgressData($html);
             case 'animated-portfolio':
@@ -1818,7 +1820,107 @@ class DynamicBlockDataService
         return [
             'title' => $title,
             'subtitle' => $subtitle,
-            'stats' => $stats,
+            'stats' => array_map(static function (array $stat): array {
+                return [
+                    'value' => (string) ($stat['number'] ?? ''),
+                    'suffix' => (string) ($stat['suffix'] ?? '+'),
+                    'label' => (string) ($stat['label'] ?? ''),
+                ];
+            }, $stats),
+        ];
+    }
+
+    /**
+     * @return array{title: string, counters: list<array{value: string, label: string}>}
+     */
+    private function extractSimpleCounterData(string $html): array
+    {
+        $dom = new DOMDocument;
+        @$dom->loadHTML('<?xml encoding="UTF-8">'.$html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $xpath = new DOMXPath($dom);
+
+        $title = 'Our Numbers';
+        $titleNodes = $xpath->query("//*[@data-gjs-name='counter-title']");
+        if ($titleNodes->length > 0) {
+            $titleText = trim($titleNodes->item(0)?->textContent ?? '');
+            if ($titleText !== '') {
+                $title = $titleText;
+            }
+        } else {
+            $h2Nodes = $xpath->query("//div[contains(@class, 'simple-counter-block')]//h2");
+            if ($h2Nodes->length > 0) {
+                $titleText = trim($h2Nodes->item(0)?->textContent ?? '');
+                if ($titleText !== '') {
+                    $title = $titleText;
+                }
+            }
+        }
+
+        $defaultValues = ['150+', '50+', '5+'];
+        $defaultLabels = ['Projects Completed', 'Happy Clients', 'Years Experience'];
+        $counters = [];
+
+        for ($i = 1; $i <= 6; $i++) {
+            $valueNodes = $xpath->query("//*[@data-gjs-name='counter-value-{$i}']");
+            $labelNodes = $xpath->query("//*[@data-gjs-name='counter-label-{$i}']");
+
+            if ($valueNodes->length === 0 && $labelNodes->length === 0) {
+                if ($i > 3) {
+                    break;
+                }
+
+                $cards = $xpath->query("//div[contains(@class, 'simple-counter-block')]//div[contains(@class, 'counter-item')]");
+                if ($cards->length >= $i) {
+                    $card = $cards->item($i - 1);
+                    $valueText = '';
+                    $labelText = '';
+                    if ($card instanceof DOMElement) {
+                        $valueEl = $xpath->query(".//div[contains(@class, 'text-4xl')]", $card);
+                        $labelEl = $xpath->query(".//div[contains(@class, 'text-lg')]", $card);
+                        if ($valueEl->length > 0) {
+                            $valueText = trim($valueEl->item(0)?->textContent ?? '');
+                        }
+                        if ($labelEl->length > 0) {
+                            $labelText = trim($labelEl->item(0)?->textContent ?? '');
+                        }
+                    }
+
+                    if ($valueText === '' && $labelText === '') {
+                        break;
+                    }
+
+                    $counters[] = [
+                        'value' => $valueText !== '' ? $valueText : ($defaultValues[$i - 1] ?? ''),
+                        'label' => $labelText !== '' ? $labelText : ($defaultLabels[$i - 1] ?? 'Counter'),
+                    ];
+
+                    continue;
+                }
+
+                break;
+            }
+
+            $value = trim($valueNodes->item(0)?->textContent ?? '');
+            $label = trim($labelNodes->item(0)?->textContent ?? '');
+
+            $counters[] = [
+                'value' => $value !== '' ? $value : ($defaultValues[$i - 1] ?? ''),
+                'label' => $label !== '' ? $label : ($defaultLabels[$i - 1] ?? 'Counter'),
+            ];
+        }
+
+        if ($counters === []) {
+            foreach ($defaultValues as $index => $defaultValue) {
+                $counters[] = [
+                    'value' => $defaultValue,
+                    'label' => $defaultLabels[$index] ?? 'Counter',
+                ];
+            }
+        }
+
+        return [
+            'title' => $title,
+            'counters' => $counters,
         ];
     }
 

@@ -28,6 +28,7 @@
 
     <div
         class="laragrape-block-builder-fs-overlay"
+        data-laragrape-preview-chrome="{{ $previewId }}"
         x-show="fullscreenOpen"
         x-cloak
         x-transition.opacity

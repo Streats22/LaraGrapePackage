@@ -1,21 +1,21 @@
 {{-- @block id="simple-animated-counter" label="Simple Animated Counter" description="A simple animated counter that works with GrapesJS" --}}
 @php $isEditorPreview = $isEditorPreview ?? false; @endphp
 @if($isEditorPreview)
-<div class="simple-counter-block py-12" style="background-color: var(--laralgrape-primary-50);">
+<div class="simple-counter-block py-12" style="background-color: var(--laralgrape-primary-50);" data-laragrape-block="simple-animated-counter">
     <div class="container mx-auto px-4 text-center">
-        <h2 class="text-3xl font-bold mb-8" style="color: var(--laralgrape-primary-900);">Our Numbers</h2>
+        <h2 class="text-3xl font-bold mb-8" style="color: var(--laralgrape-primary-900);" data-gjs-type="text" data-gjs-name="counter-title">Our Numbers</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="counter-item p-6 rounded-lg shadow-lg" style="background-color: var(--laralgrape-primary-100);">
-                <div class="text-4xl font-bold mb-2" style="color: var(--laralgrape-accent);">150+</div>
-                <div class="text-lg font-semibold" style="color: var(--laralgrape-primary-700);">Projects Completed</div>
+            <div class="counter-item p-6 rounded-lg shadow-lg" style="background-color: var(--laralgrape-primary-100);" data-gjs-type="default" data-gjs-droppable="false">
+                <div class="text-4xl font-bold mb-2" style="color: var(--laralgrape-accent);" data-gjs-type="text" data-gjs-name="counter-value-1">150+</div>
+                <div class="text-lg font-semibold" style="color: var(--laralgrape-primary-700);" data-gjs-type="text" data-gjs-name="counter-label-1">Projects Completed</div>
             </div>
-            <div class="counter-item p-6 rounded-lg shadow-lg" style="background-color: var(--laralgrape-primary-100);">
-                <div class="text-4xl font-bold mb-2" style="color: var(--laralgrape-accent);">50+</div>
-                <div class="text-lg font-semibold" style="color: var(--laralgrape-primary-700);">Happy Clients</div>
+            <div class="counter-item p-6 rounded-lg shadow-lg" style="background-color: var(--laralgrape-primary-100);" data-gjs-type="default" data-gjs-droppable="false">
+                <div class="text-4xl font-bold mb-2" style="color: var(--laralgrape-accent);" data-gjs-type="text" data-gjs-name="counter-value-2">50+</div>
+                <div class="text-lg font-semibold" style="color: var(--laralgrape-primary-700);" data-gjs-type="text" data-gjs-name="counter-label-2">Happy Clients</div>
             </div>
-            <div class="counter-item p-6 rounded-lg shadow-lg" style="background-color: var(--laralgrape-primary-100);">
-                <div class="text-4xl font-bold mb-2" style="color: var(--laralgrape-accent);">5+</div>
-                <div class="text-lg font-semibold" style="color: var(--laralgrape-primary-700);">Years Experience</div>
+            <div class="counter-item p-6 rounded-lg shadow-lg" style="background-color: var(--laralgrape-primary-100);" data-gjs-type="default" data-gjs-droppable="false">
+                <div class="text-4xl font-bold mb-2" style="color: var(--laralgrape-accent);" data-gjs-type="text" data-gjs-name="counter-value-3">5+</div>
+                <div class="text-lg font-semibold" style="color: var(--laralgrape-primary-700);" data-gjs-type="text" data-gjs-name="counter-label-3">Years Experience</div>
             </div>
         </div>
     </div>

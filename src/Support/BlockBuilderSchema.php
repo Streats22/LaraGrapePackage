@@ -70,6 +70,7 @@ class BlockBuilderSchema
             'animated-pricing', 'animated-pricing-clean' => static::pricingFields(),
             'animated-cards' => static::cardsFields(),
             'animated-stats' => static::statsFields(),
+            'simple-animated-counter' => static::simpleCounterFields(),
             'animated-hero', 'animated-full-image-hero' => static::animatedHeroFields(),
             'animated-tech-stack' => static::techStackFields(),
             'hero' => static::heroFields(),
@@ -211,20 +212,71 @@ class BlockBuilderSchema
     protected static function statsFields(): array
     {
         return [
+            TextInput::make('title')
+                ->label('Section title')
+                ->default('Our Impact')
+                ->maxLength(255),
+            TextInput::make('subtitle')
+                ->label('Subtitle')
+                ->default('Numbers that speak for our success and expertise')
+                ->maxLength(500),
             Repeater::make('stats')
                 ->label('Statistics')
                 ->schema(static::withLive([
                     TextInput::make('value')
-                        ->label('Value')
+                        ->label('Number (e.g. 150 or 99%)')
+                        ->required(),
+                    TextInput::make('suffix')
+                        ->label('Suffix (optional, e.g. + or %)')
+                        ->maxLength(8),
+                    TextInput::make('label')
+                        ->label('Label')
+                        ->required(),
+                ]))
+                ->default([
+                    ['value' => '150', 'suffix' => '+', 'label' => 'Projects Completed'],
+                    ['value' => '50', 'suffix' => '+', 'label' => 'Happy Clients'],
+                    ['value' => '5', 'suffix' => '+', 'label' => 'Years Experience'],
+                    ['value' => '99', 'suffix' => '%', 'label' => 'Client Satisfaction'],
+                ])
+                ->defaultItems(4)
+                ->minItems(1)
+                ->maxItems(8)
+                ->collapsible()
+                ->itemLabel(fn (array $state): ?string => $state['label'] ?? 'Stat'),
+        ];
+    }
+
+    /**
+     * @return array<int, Component>
+     */
+    protected static function simpleCounterFields(): array
+    {
+        return [
+            TextInput::make('title')
+                ->label('Section title')
+                ->default('Our Numbers')
+                ->maxLength(255),
+            Repeater::make('counters')
+                ->label('Counters')
+                ->schema(static::withLive([
+                    TextInput::make('value')
+                        ->label('Number (e.g. 150+)')
                         ->required(),
                     TextInput::make('label')
                         ->label('Label')
                         ->required(),
                 ]))
-                ->defaultItems(4)
+                ->default([
+                    ['value' => '150+', 'label' => 'Projects Completed'],
+                    ['value' => '50+', 'label' => 'Happy Clients'],
+                    ['value' => '5+', 'label' => 'Years Experience'],
+                ])
+                ->defaultItems(3)
                 ->minItems(1)
-                ->maxItems(8)
-                ->collapsible(),
+                ->maxItems(6)
+                ->collapsible()
+                ->itemLabel(fn (array $state): ?string => $state['label'] ?? 'Counter'),
         ];
     }
 

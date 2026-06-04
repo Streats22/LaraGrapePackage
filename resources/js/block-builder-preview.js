@@ -4,7 +4,11 @@
 
 const LARAGRAPE_PREVIEW_VIEWPORT_WIDTH = 1280;
 
-function injectLaragrapeCanvasStyles(targetDocument, stylesArray) {
+function isFullscreenPreviewFrame(iframe) {
+    return Boolean(iframe?.closest('.laragrape-block-builder-preview-mount--fullscreen'));
+}
+
+function injectLaragrapeCanvasStyles(targetDocument, stylesArray, compact = false) {
     if (!targetDocument?.head) {
         return;
     }
@@ -49,8 +53,36 @@ function injectLaragrapeCanvasStyles(targetDocument, stylesArray) {
         head.appendChild(base);
     }
 
+    if (compact) {
+        const compactRules = targetDocument.createElement('style');
+        compactRules.setAttribute('data-laragrape-injected-style', 'compact');
+        compactRules.textContent =
+            'html,body{min-height:0!important;height:auto!important;}' +
+            '.laragrape-block-preview-root{min-height:0!important;height:auto!important;}' +
+            '.laragrape-block-preview-root [class*="min-h-screen"],' +
+            '.laragrape-block-preview-root [class*="min-h-\\["],' +
+            '.laragrape-block-preview-root [class*="100svh"],' +
+            '.laragrape-block-preview-root [class*="100vh"]{min-height:auto!important;height:auto!important;}' +
+            '.laragrape-block-preview-root section{min-height:auto!important;}';
+        head.appendChild(compactRules);
+    }
+
     const isDark = document.documentElement.classList.contains('dark');
     targetDocument.documentElement.classList.toggle('dark', isDark);
+}
+
+function measurePreviewContentHeight(doc, compact) {
+    const root = doc.querySelector('.laragrape-block-preview-root');
+
+    if (compact && root) {
+        const height = Math.ceil(
+            Math.max(root.scrollHeight, root.offsetHeight, root.getBoundingClientRect().height),
+        );
+
+        return Math.max(height, 48);
+    }
+
+    return Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight, 80);
 }
 
 function applyIframeScale(iframe, doc) {
@@ -59,11 +91,26 @@ function applyIframeScale(iframe, doc) {
         return;
     }
 
-    const contentHeight = Math.max(
-        doc.body.scrollHeight,
-        doc.documentElement.scrollHeight,
-        80,
-    );
+    const isFullscreen = isFullscreenPreviewFrame(iframe);
+    const contentHeight = measurePreviewContentHeight(doc, !isFullscreen);
+
+    if (isFullscreen) {
+        const hostWidth = Math.min(
+            scaler.clientWidth || LARAGRAPE_PREVIEW_VIEWPORT_WIDTH,
+            LARAGRAPE_PREVIEW_VIEWPORT_WIDTH,
+        );
+        iframe.style.width = `${hostWidth}px`;
+        iframe.style.maxWidth = '100%';
+        iframe.style.height = `${contentHeight}px`;
+        iframe.style.transform = 'none';
+        iframe.style.transformOrigin = 'top left';
+        scaler.style.height = `${contentHeight}px`;
+        scaler.style.maxWidth = `${LARAGRAPE_PREVIEW_VIEWPORT_WIDTH}px`;
+        scaler.style.margin = '0 auto';
+
+        return;
+    }
+
     const hostWidth = scaler.clientWidth || LARAGRAPE_PREVIEW_VIEWPORT_WIDTH;
     const scale = Math.min(1, hostWidth / LARAGRAPE_PREVIEW_VIEWPORT_WIDTH);
 
@@ -72,9 +119,11 @@ function applyIframeScale(iframe, doc) {
     iframe.style.transform = `scale(${scale})`;
     iframe.style.transformOrigin = 'top left';
     scaler.style.height = `${Math.ceil(contentHeight * scale)}px`;
+    scaler.style.maxWidth = '';
+    scaler.style.margin = '';
 }
 
-function writeIframePreview(iframe, html, styles) {
+function writeIframePreview(iframe, html, styles, compact = true) {
     const doc = iframe.contentDocument;
     if (!doc) {
         return;
@@ -84,7 +133,7 @@ function writeIframePreview(iframe, html, styles) {
     doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"></head><body></body></html>');
     doc.close();
 
-    injectLaragrapeCanvasStyles(doc, styles);
+    injectLaragrapeCanvasStyles(doc, styles, compact);
 
     const root = doc.createElement('div');
     root.className = 'laragrape-block-preview-root not-prose max-w-none';
@@ -145,7 +194,8 @@ function mountBlockBuilderPreviewHost(host) {
     host.innerHTML = '';
     host.appendChild(scaler);
 
-    writeIframePreview(iframe, html, styles);
+    const compact = !host.closest('.laragrape-block-builder-preview-mount--fullscreen');
+    writeIframePreview(iframe, html, styles, compact);
 }
 
 function mountBlockBuilderPreviewHosts() {
@@ -203,18 +253,56 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('laragrapeBlockBuilderPreviewChrome', (previewId) => ({
         fullscreenOpen: false,
         previewId,
+        _fsPlaceholder: null,
+
+        teleportOverlayToBody() {
+            const overlay = this.$el.querySelector('.laragrape-block-builder-fs-overlay');
+            if (!overlay || overlay.parentElement === document.body) {
+                return overlay;
+            }
+
+            if (!this._fsPlaceholder) {
+                this._fsPlaceholder = document.createComment('laragrape-fs-overlay');
+                overlay.parentNode?.insertBefore(this._fsPlaceholder, overlay);
+            }
+
+            document.body.appendChild(overlay);
+
+            return overlay;
+        },
+
+        restoreOverlayFromBody() {
+            const overlay = document.querySelector(
+                `.laragrape-block-builder-fs-overlay[data-laragrape-preview-chrome="${this.previewId}"]`,
+            ) || this.$el.querySelector('.laragrape-block-builder-fs-overlay');
+
+            if (
+                !overlay
+                || !this._fsPlaceholder?.parentNode
+                || overlay.parentElement !== document.body
+            ) {
+                return;
+            }
+
+            this._fsPlaceholder.parentNode.insertBefore(
+                overlay,
+                this._fsPlaceholder.nextSibling,
+            );
+        },
 
         openFullscreen() {
             this.fullscreenOpen = true;
-            document.body.style.overflow = 'hidden';
+            document.body.classList.add('laragrape-block-builder-fs-active');
             this.$nextTick(() => {
+                this.teleportOverlayToBody();
                 window.mountLaragrapeBlockBuilderPreviews?.();
             });
         },
 
         closeFullscreen() {
             this.fullscreenOpen = false;
-            document.body.style.overflow = '';
+            document.body.classList.remove('laragrape-block-builder-fs-active');
+            this.restoreOverlayFromBody();
         },
     }));
 });
