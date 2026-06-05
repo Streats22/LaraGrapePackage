@@ -5,6 +5,7 @@ namespace LaraGrape\Services;
 use LaraGrape\Support\TechStackRegistry;
 use DOMDocument;
 use DOMElement;
+use DOMNode;
 use DOMXPath;
 use Illuminate\Support\Facades\Log;
 
@@ -13,6 +14,20 @@ class DynamicBlockDataService
     public function __construct(
         protected TechStackRegistry $techStackRegistry,
     ) {}
+
+    protected function elementAttribute(?DOMNode $node, string $attribute): string
+    {
+        if (! $node instanceof DOMElement) {
+            return '';
+        }
+
+        return $node->getAttribute($attribute);
+    }
+
+    protected function elementHasAttribute(?DOMNode $node, string $attribute): bool
+    {
+        return $node instanceof DOMElement && $node->hasAttribute($attribute);
+    }
 
     /**
      * Extract dynamic data from GrapesJS content for animated blocks
@@ -24,7 +39,14 @@ class DynamicBlockDataService
         // Extract data based on block type
         switch ($blockId) {
             case 'animated-pricing':
+            case 'animated-pricing-clean':
+            case 'interactive-pricing':
+            case 'pricing':
                 return $this->extractPricingData($html);
+            case 'service-showcase':
+                return $this->extractServiceShowcaseData($html);
+            case 'technology-stack':
+                return $this->extractTechnologyStackShowcaseData($html);
             case 'animated-faq':
                 return $this->extractFaqData($html);
             case 'animated-testimonials':
@@ -755,7 +777,7 @@ class DynamicBlockDataService
                         $featureText = trim($liSpan->textContent);
 
                         // Get the actual text, not Alpine.js expressions
-                        if (empty($featureText) || preg_match('/x-text/', $liSpan->getAttribute('x-text') ?? '')) {
+                        if (empty($featureText) || preg_match('/x-text/', $this->elementAttribute($liSpan, 'x-text'))) {
                             // Try to get text from child nodes
                             $childText = '';
                             foreach ($liSpan->childNodes as $child) {
@@ -836,7 +858,7 @@ class DynamicBlockDataService
                             if (! empty($spanText) &&
                                 $spanText !== 'Get Started' &&
                                 $spanText !== 'Selected' &&
-                                ! preg_match('/x-text/', $span->getAttribute('x-text') ?? '') &&
+                                ! preg_match('/x-text/', $this->elementAttribute($span, 'x-text')) &&
                                 ! preg_match('/plans\[/', $spanText)) {
                                 $buttonText = $spanText;
                                 break;
@@ -848,7 +870,7 @@ class DynamicBlockDataService
                     if ($buttonText === 'Get Started' && ! empty($buttonTextContent) &&
                         $buttonTextContent !== 'Get Started' &&
                         $buttonTextContent !== 'Selected' &&
-                        ! preg_match('/x-text/', $buttonElement->getAttribute('x-text') ?? '')) {
+                        ! preg_match('/x-text/', $this->elementAttribute($buttonElement, 'x-text'))) {
                         $buttonText = $buttonTextContent;
                     }
                 }
@@ -877,7 +899,13 @@ class DynamicBlockDataService
                 'name' => $name,
                 'price' => $price,
                 'period' => $period,
-                'features' => $planFeatures,
+                'features' => array_map(static function (mixed $feature): array {
+                    return [
+                        'text' => is_array($feature)
+                            ? (string) ($feature['text'] ?? '')
+                            : (string) $feature,
+                    ];
+                }, $planFeatures),
                 'popular' => $i === 2, // Middle plan is popular
                 'buttonText' => $buttonText,
             ];
@@ -890,7 +918,19 @@ class DynamicBlockDataService
             'plan_prices' => array_column($plans, 'price'),
         ]);
 
-        return ['plans' => $plans];
+        $title = 'Choose Your Plan';
+        $titleNodes = $xpath->query("//*[@data-gjs-name='pricing-title']");
+        if ($titleNodes->length > 0) {
+            $titleText = trim($titleNodes->item(0)?->textContent ?? '');
+            if ($titleText !== '') {
+                $title = $titleText;
+            }
+        }
+
+        return [
+            'title' => $title,
+            'plans' => $plans,
+        ];
     }
 
     /**
@@ -1109,7 +1149,7 @@ class DynamicBlockDataService
         $testimonialsBlock = null;
         // Prefer block with x-data (live version) over editor preview
         foreach ($testimonialsBlocks as $block) {
-            if ($block->hasAttribute('x-data')) {
+            if ($this->elementHasAttribute($block, 'x-data')) {
                 $testimonialsBlock = $block;
                 break;
             }
@@ -1365,7 +1405,87 @@ class DynamicBlockDataService
             'titles' => array_column($steps, 'title'),
         ]);
 
-        return ['steps' => $steps];
+        $titleNodes = $xpath->query("//*[@data-gjs-name='timeline-title']");
+        $subtitleNodes = $xpath->query("//*[@data-gjs-name='timeline-subtitle']");
+
+        $result = ['steps' => $steps];
+        if ($titleNodes->length > 0) {
+            $title = trim($titleNodes->item(0)?->textContent ?? '');
+            if ($title !== '') {
+                $result['title'] = $title;
+            }
+        }
+        if ($subtitleNodes->length > 0) {
+            $subtitle = trim($subtitleNodes->item(0)?->textContent ?? '');
+            if ($subtitle !== '') {
+                $result['subtitle'] = $subtitle;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function extractServiceShowcaseData(string $html): array
+    {
+        $dom = new DOMDocument;
+        @$dom->loadHTML('<?xml encoding="UTF-8">'.$html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $xpath = new DOMXPath($dom);
+
+        $read = function (string $gjsName) use ($xpath): string {
+            $nodes = $xpath->query("//*[@data-gjs-name='{$gjsName}']");
+            if ($nodes->length === 0) {
+                return '';
+            }
+
+            return trim($nodes->item(0)?->textContent ?? '');
+        };
+
+        $services = [];
+        for ($i = 1; $i <= 6; $i++) {
+            $title = $read("service-{$i}-title");
+            if ($title === '') {
+                continue;
+            }
+
+            $services[] = [
+                'title' => $title,
+                'description' => $read("service-{$i}-description"),
+                'button' => $read("service-{$i}-button"),
+            ];
+        }
+
+        return array_filter([
+            'title' => $read('services-title'),
+            'subtitle' => $read('services-subtitle'),
+            'services' => $services !== [] ? $services : null,
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function extractTechnologyStackShowcaseData(string $html): array
+    {
+        $dom = new DOMDocument;
+        @$dom->loadHTML('<?xml encoding="UTF-8">'.$html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $xpath = new DOMXPath($dom);
+
+        $read = function (string $gjsName) use ($xpath): string {
+            $nodes = $xpath->query("//*[@data-gjs-name='{$gjsName}']");
+            if ($nodes->length === 0) {
+                return '';
+            }
+
+            return trim($nodes->item(0)?->textContent ?? '');
+        };
+
+        return array_filter([
+            'title' => $read('tech-stack-title'),
+            'subtitle' => $read('tech-stack-subtitle'),
+        ]);
     }
 
     /**
@@ -1493,7 +1613,7 @@ class DynamicBlockDataService
                     } else {
                         // Last resort: try to extract from the x-text attribute's fallback
                         // The x-text might be: cards && cards[0] ? cards[0].description : 'Actual Description Text'
-                        $xTextAttr = $descriptionElement->getAttribute('x-text');
+                        $xTextAttr = $this->elementAttribute($descriptionElement, 'x-text');
                         if ($xTextAttr) {
                             // Try to extract the fallback text from x-text (the part after the colon)
                             // Pattern: ... : 'fallback text'
@@ -1514,8 +1634,8 @@ class DynamicBlockDataService
                     'card_index' => $i,
                     'description' => $description,
                     'raw_textContent' => trim($descriptionElement->textContent),
-                    'has_x_text' => ! empty($descriptionElement->getAttribute('x-text')),
-                    'x_text_attr' => $descriptionElement->getAttribute('x-text'),
+                    'has_x_text' => $this->elementAttribute($descriptionElement, 'x-text') !== '',
+                    'x_text_attr' => $this->elementAttribute($descriptionElement, 'x-text'),
                     'descriptionText_after_cleaning' => $descriptionText ?? 'empty',
                     'child_nodes_count' => $descriptionElement->childNodes->length,
                 ]);
@@ -1561,7 +1681,7 @@ class DynamicBlockDataService
                         // Skip Alpine.js expressions and default text
                         if (! empty($spanText) &&
                             $spanText !== 'Learn More' &&
-                            ! preg_match('/x-text/', $span->getAttribute('x-text') ?? '') &&
+                            ! preg_match('/x-text/', $this->elementAttribute($span, 'x-text')) &&
                             ! preg_match('/cards\[/', $spanText)) {
                             $buttonText = $spanText;
                             break;
@@ -2052,7 +2172,7 @@ class DynamicBlockDataService
                 // Also check the style attribute of the progress bar
                 $progressBars = $xpath->query(".//div[contains(@class, 'bg-accent')]", $item);
                 if ($progressBars->length > 0) {
-                    $styleAttr = $progressBars->item(0)->getAttribute('style');
+                    $styleAttr = $this->elementAttribute($progressBars->item(0), 'style');
                     if (preg_match('/width:\s*(\d+)%/', $styleAttr, $matches)) {
                         $percentage = (int) $matches[1];
                     }
@@ -2103,6 +2223,39 @@ class DynamicBlockDataService
         }
 
         $out = [];
+
+        $titleNodes = $xpath->query(".//*[@data-gjs-name='portfolio-title']", $el);
+        if ($titleNodes->length > 0) {
+            $title = trim($titleNodes->item(0)?->textContent ?? '');
+            if ($title !== '') {
+                $out['title'] = $title;
+            }
+        }
+
+        $subtitleNodes = $xpath->query(".//*[@data-gjs-name='portfolio-subtitle']", $el);
+        if ($subtitleNodes->length > 0) {
+            $subtitle = trim($subtitleNodes->item(0)?->textContent ?? '');
+            if ($subtitle !== '') {
+                $out['subtitle'] = $subtitle;
+            }
+        }
+
+        $projects = [];
+        for ($i = 1; $i <= 6; $i++) {
+            $projectTitle = $xpath->query(".//*[@data-gjs-name='project-title-{$i}']", $el);
+            if ($projectTitle->length === 0) {
+                continue;
+            }
+
+            $projects[] = array_filter([
+                'title' => trim($projectTitle->item(0)?->textContent ?? ''),
+                'description' => trim($xpath->query(".//*[@data-gjs-name='project-description-{$i}']", $el)->item(0)?->textContent ?? ''),
+                'link' => trim($xpath->query(".//*[@data-gjs-name='project-link-{$i}']", $el)->item(0)?->textContent ?? ''),
+            ]);
+        }
+        if ($projects !== []) {
+            $out['projects'] = $projects;
+        }
 
         $cardNodes = $xpath->query('.//*[@data-gjs-type="animated-portfolio-item"]', $el);
         if ($cardNodes->length === 0) {

@@ -414,7 +414,7 @@ class BlockService
             try {
                 $html = view($viewName, $viewData)->render();
 
-                if ($isBlockBuilderPreview && $dynamicData !== []) {
+                if ($isBlockBuilderPreview && $dynamicData !== [] && BlockBuilderSchema::supportsLivePreviewPatch($blockId)) {
                     $html = $this->blockHtmlPatcher->patchForBlockBuilder($blockId, $html, $dynamicData);
                 } elseif ($blockId === 'hero' && $dynamicData !== []) {
                     $html = $this->blockHtmlPatcher->patchHeroLayout($html, $dynamicData);

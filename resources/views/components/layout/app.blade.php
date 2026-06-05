@@ -87,8 +87,19 @@
             x-show="!$store.grapejs?.isEditing"
             x-transition
         >
-            @if (!empty($page->blade_content))
-                {!! Blade::render($page->blade_content, ['page' => $page]) !!}
+            @php
+                $bladeToRender = $page->blade_content;
+                if (empty($bladeToRender) && ! empty($page->block_layout) && is_array($page->block_layout)) {
+                    try {
+                        $bladeToRender = app(\LaraGrape\Services\BlockLayoutService::class)
+                            ->processBlockLayoutForSave($page->block_layout)['blade_content'] ?? null;
+                    } catch (\Throwable) {
+                        $bladeToRender = null;
+                    }
+                }
+            @endphp
+            @if (!empty($bladeToRender))
+                {!! Blade::render($bladeToRender, ['page' => $page]) !!}
             @else
                 <!-- Default content when no blade_content exists -->
                 <div class="container mx-auto px-4">

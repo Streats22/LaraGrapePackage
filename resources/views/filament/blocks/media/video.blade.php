@@ -4,11 +4,12 @@
 <div class="video-block py-8 border-l-8 border-accent shadow-lg">
     <div class="container mx-auto px-4">
         <div class="max-w-4xl mx-auto">
-            <h3 class="text-2xl font-extrabold mb-6 text-center text-primary-900">Video Title</h3>
+            <h3 class="text-2xl font-extrabold mb-6 text-center text-primary-900" data-gjs-type="text" data-gjs-name="video-title">Video Title</h3>
             <div class="relative w-full" style="padding-bottom: 56.25%;">
                 <iframe 
                     class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg border-4 border-accent"
                     src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                    data-gjs-name="video-src"
                     title="Video"
                     frameborder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

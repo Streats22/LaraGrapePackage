@@ -22,10 +22,6 @@
         </div>
     @endif
 
-    <template x-ref="fullscreenSource" class="laragrape-block-builder-preview-source">
-        {!! $fullscreenHtml !!}
-    </template>
-
     <div
         class="laragrape-block-builder-fs-overlay"
         data-laragrape-preview-chrome="{{ $previewId }}"
@@ -43,6 +39,7 @@
             </button>
         </div>
         <div class="laragrape-block-builder-fs-overlay__body">
+            <template class="laragrape-block-builder-preview-source">{!! $fullscreenHtml !!}</template>
             <div
                 class="laragrape-block-builder-preview-mount laragrape-block-builder-preview-mount--fullscreen"
                 data-laragrape-block-builder-preview

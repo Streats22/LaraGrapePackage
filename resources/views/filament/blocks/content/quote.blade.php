@@ -9,11 +9,11 @@
                     <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
                 </svg>
             </div>
-            <blockquote class="text-2xl font-medium text-primary-800 dark:text-primary-100 mb-6">
+            <blockquote class="text-2xl font-medium text-primary-800 dark:text-primary-100 mb-6" data-gjs-type="text" data-gjs-name="quote-text">
                 "This is an amazing quote that will inspire your visitors. Make it meaningful and impactful."
             </blockquote>
             <div class="quote-author">
-                <p class="text-lg font-semibold text-primary-700 dark:text-primary-200">Author Name</p>
+                <p class="text-lg font-semibold text-primary-700 dark:text-primary-200" data-gjs-type="text" data-gjs-name="quote-author">Author Name</p>
                 <p class="text-primary-600 dark:text-primary-200">Author Title</p>
             </div>
         </div>

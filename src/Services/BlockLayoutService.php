@@ -5,6 +5,7 @@ namespace LaraGrape\Services;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Support\Str;
+use LaraGrape\Support\BlockBuilderSchema;
 use LaraGrape\Support\TechStackRegistry;
 
 class BlockLayoutService
@@ -129,6 +130,10 @@ class BlockLayoutService
         $grapesjsInput = $this->compileToGrapesJsInput($blockLayout);
         $processedData = $this->converterService->processForSaving($grapesjsInput);
         $processedData['original_grapesjs'] = $grapesjsInput;
+        $processedData['block_dynamic_data'] = $this->mergeBlockLayoutDynamicData(
+            $blockLayout,
+            $processedData['block_dynamic_data'] ?? [],
+        );
 
         return [
             'grapesjs_data' => $processedData,
@@ -136,6 +141,47 @@ class BlockLayoutService
             'grapesjs_html' => $processedData['html'] ?? null,
             'grapesjs_css' => $processedData['css'] ?? null,
         ];
+    }
+
+    /**
+     * Prefer Block Builder form state over HTML extraction (editor preview HTML may still hold defaults).
+     *
+     * @param  list<array<string, mixed>>  $blockLayout
+     * @param  array<string, mixed>  $extracted
+     * @return array<string, mixed>
+     */
+    protected function mergeBlockLayoutDynamicData(array $blockLayout, array $extracted): array
+    {
+        $merged = $extracted;
+        $instanceCounters = [];
+
+        foreach ($blockLayout as $row) {
+            $blockId = trim((string) ($row['block_id'] ?? ''));
+            if ($blockId === '') {
+                continue;
+            }
+
+            $instanceIndex = $instanceCounters[$blockId] ?? 0;
+            $instanceCounters[$blockId] = $instanceIndex + 1;
+            $instanceKey = $row['instance_key'] ?? $this->buildInstanceKey($blockId, $instanceIndex);
+
+            $formData = is_array($row['dynamic_data'] ?? null) ? $row['dynamic_data'] : [];
+            $normalized = $this->normalizeDynamicData($blockId, $formData);
+            if ($normalized === []) {
+                continue;
+            }
+
+            $merged[$instanceKey] = array_replace_recursive(
+                is_array($merged[$instanceKey] ?? null) ? $merged[$instanceKey] : [],
+                $normalized,
+            );
+
+            if (! isset($merged[$blockId])) {
+                $merged[$blockId] = $merged[$instanceKey];
+            }
+        }
+
+        return $merged;
     }
 
     public function buildInstanceKey(string $blockId, int $instanceIndex): string
@@ -152,12 +198,11 @@ class BlockLayoutService
             return null;
         }
 
-        $dynamicData = is_array($row['dynamic_data'] ?? null) ? $row['dynamic_data'] : [];
-        $dynamicData = $this->normalizeDynamicData($blockId, $dynamicData);
-        $customHtml = trim((string) ($row['custom_html'] ?? ''));
+        $flatDynamicData = is_array($row['dynamic_data'] ?? null) ? $row['dynamic_data'] : [];
+        $customHtml = trim((string) ($row['custom_html'] ?? $flatDynamicData['custom_html'] ?? ''));
 
         $html = $this->blockService->renderBlockPreviewForBuilder($blockId, [
-            'dynamic_data' => $dynamicData,
+            'dynamic_data' => $flatDynamicData,
             'custom_html' => $customHtml,
             'is_block_builder_preview' => true,
         ]);
@@ -312,7 +357,7 @@ class BlockLayoutService
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    protected function normalizeDynamicData(string $blockId, array $data): array
+    public function normalizeDynamicData(string $blockId, array $data): array
     {
         if ($data === []) {
             return [];
@@ -351,7 +396,8 @@ class BlockLayoutService
             $items = is_array($data['items'] ?? null) ? $data['items'] : [];
             $techItems = [];
 
-            foreach ($items as $index => $item) {
+            $position = 0;
+            foreach ($items as $item) {
                 if (! is_array($item)) {
                     continue;
                 }
@@ -364,8 +410,9 @@ class BlockLayoutService
                     'name' => (string) ($item['label'] ?? $meta['label'] ?? $key),
                     'icon' => (string) ($meta['icon'] ?? '⚙️'),
                     'visible' => false,
-                    'delay' => $index * 100,
+                    'delay' => $position * 100,
                 ];
+                $position++;
             }
 
             return array_filter([
@@ -376,27 +423,8 @@ class BlockLayoutService
             ]);
         }
 
-        if (in_array($blockId, ['animated-pricing', 'animated-pricing-clean'], true) && isset($data['plans']) && is_array($data['plans'])) {
-            $plans = [];
-            foreach ($data['plans'] as $plan) {
-                if (! is_array($plan)) {
-                    continue;
-                }
-                $features = [];
-                foreach ($plan['features'] ?? [] as $feature) {
-                    if (is_array($feature)) {
-                        $text = trim((string) ($feature['text'] ?? ''));
-                        if ($text !== '') {
-                            $features[] = $text;
-                        }
-                    } elseif (is_string($feature) && trim($feature) !== '') {
-                        $features[] = trim($feature);
-                    }
-                }
-                $plan['features'] = $features;
-                $plans[] = $plan;
-            }
-            $data['plans'] = $plans;
+        if (in_array($blockId, ['animated-pricing', 'animated-pricing-clean'], true)) {
+            return BlockBuilderSchema::normalizePricingPlans($data);
         }
 
         return $data;

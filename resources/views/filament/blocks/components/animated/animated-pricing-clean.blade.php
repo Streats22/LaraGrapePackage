@@ -94,8 +94,12 @@
  </div>
 @else
 @php
-    // Ensure dynamicData is always an array
-    $dynamicData = $dynamicData ?? [];
+    use LaraGrape\Support\BlockBuilderSchema;
+
+    $dynamicData = BlockBuilderSchema::normalizeDynamicDataForLiveRender(
+        'animated-pricing-clean',
+        is_array($dynamicData ?? null) ? $dynamicData : [],
+    );
     
     // Default plans structure
     $defaultPlans = [
@@ -132,9 +136,11 @@
                 $defaultPlans[$index]['name'] = $dynamicPlan['name'] ?? $defaultPlans[$index]['name'];
                 $defaultPlans[$index]['price'] = $dynamicPlan['price'] ?? $defaultPlans[$index]['price'];
                 $defaultPlans[$index]['period'] = $dynamicPlan['period'] ?? $defaultPlans[$index]['period'];
-                if (isset($dynamicPlan['features']) && is_array($dynamicPlan['features']) && !empty($dynamicPlan['features'])) {
+                if (isset($dynamicPlan['features']) && is_array($dynamicPlan['features']) && $dynamicPlan['features'] !== []) {
                     $defaultPlans[$index]['features'] = $dynamicPlan['features'];
                 }
+                $defaultPlans[$index]['price'] = preg_replace('/[^0-9.]/', '', (string) $defaultPlans[$index]['price']) ?: $defaultPlans[$index]['price'];
+                $defaultPlans[$index]['period'] = ltrim((string) $defaultPlans[$index]['period'], '/');
                 $defaultPlans[$index]['popular'] = $dynamicPlan['popular'] ?? $defaultPlans[$index]['popular'];
             }
         }

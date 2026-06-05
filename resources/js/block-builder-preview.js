@@ -85,6 +85,10 @@ function measurePreviewContentHeight(doc, compact) {
     return Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight, 80);
 }
 
+function isPagePanelPreviewFrame(iframe) {
+    return Boolean(iframe?.closest('.laragrape-block-builder-preview-mount--page'));
+}
+
 function applyIframeScale(iframe, doc) {
     const scaler = iframe.parentElement;
     if (!scaler?.classList.contains('laragrape-block-builder-preview-scaler')) {
@@ -92,21 +96,30 @@ function applyIframeScale(iframe, doc) {
     }
 
     const isFullscreen = isFullscreenPreviewFrame(iframe);
-    const contentHeight = measurePreviewContentHeight(doc, !isFullscreen);
+    const isPagePanel = isPagePanelPreviewFrame(iframe);
+    const compact = !isFullscreen;
+    const contentHeight = measurePreviewContentHeight(doc, compact);
 
-    if (isFullscreen) {
-        const hostWidth = Math.min(
-            scaler.clientWidth || LARAGRAPE_PREVIEW_VIEWPORT_WIDTH,
-            LARAGRAPE_PREVIEW_VIEWPORT_WIDTH,
+    if (isFullscreen || isPagePanel) {
+        const hostWidth = Math.max(
+            scaler.clientWidth || 0,
+            iframe.closest('.laragrape-block-builder-fs-overlay__body')?.clientWidth || 0,
+            window.innerWidth || LARAGRAPE_PREVIEW_VIEWPORT_WIDTH,
         );
+
         iframe.style.width = `${hostWidth}px`;
         iframe.style.maxWidth = '100%';
         iframe.style.height = `${contentHeight}px`;
         iframe.style.transform = 'none';
         iframe.style.transformOrigin = 'top left';
+        scaler.style.width = '100%';
+        scaler.style.maxWidth = '100%';
         scaler.style.height = `${contentHeight}px`;
-        scaler.style.maxWidth = `${LARAGRAPE_PREVIEW_VIEWPORT_WIDTH}px`;
-        scaler.style.margin = '0 auto';
+        scaler.style.margin = '0';
+
+        if (isPagePanel && !isFullscreen) {
+            scaler.style.minHeight = '100%';
+        }
 
         return;
     }
@@ -154,16 +167,33 @@ function writeIframePreview(iframe, html, styles, compact = true) {
 }
 
 function previewHtmlFromHost(host) {
+    const mount = host.closest('.laragrape-block-builder-preview-mount');
+    if (mount) {
+        const mountTemplate = mount.querySelector('template.laragrape-block-builder-preview-source');
+        if (mountTemplate?.innerHTML?.trim()) {
+            return mountTemplate.innerHTML.trim();
+        }
+
+        const overlay = mount.closest('.laragrape-block-builder-fs-overlay');
+        const overlayTemplate = overlay?.querySelector('template.laragrape-block-builder-preview-source');
+        if (overlayTemplate?.innerHTML?.trim()) {
+            return overlayTemplate.innerHTML.trim();
+        }
+
+        const pageCanvas = mount.closest('.laragrape-block-layout-stack__page-canvas');
+        const pageTemplate = pageCanvas?.querySelector('template.laragrape-block-builder-preview-source');
+        if (pageTemplate?.innerHTML?.trim()) {
+            return pageTemplate.innerHTML.trim();
+        }
+    }
+
     const chrome = host.closest('.laragrape-block-builder-preview-chrome');
     const chromeTemplate = chrome?.querySelector('template.laragrape-block-builder-preview-source');
     if (chromeTemplate?.innerHTML?.trim()) {
         return chromeTemplate.innerHTML.trim();
     }
 
-    const mount = host.closest('.laragrape-block-builder-preview-mount');
-    const template = mount?.querySelector('template.laragrape-block-builder-preview-source');
-
-    return template?.innerHTML?.trim() || '';
+    return '';
 }
 
 function mountBlockBuilderPreviewHost(host) {
@@ -295,6 +325,12 @@ document.addEventListener('alpine:init', () => {
             document.body.classList.add('laragrape-block-builder-fs-active');
             this.$nextTick(() => {
                 this.teleportOverlayToBody();
+                const overlay = document.querySelector(
+                    `.laragrape-block-builder-fs-overlay[data-laragrape-preview-chrome="${this.previewId}"]`,
+                );
+                overlay
+                    ?.querySelector('[data-laragrape-block-builder-preview]')
+                    ?.removeAttribute('data-laragrape-last-html');
                 window.mountLaragrapeBlockBuilderPreviews?.();
             });
         },

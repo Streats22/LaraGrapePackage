@@ -19,6 +19,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -46,8 +47,29 @@ class LaraPageResource extends Resource
         return $schema
             ->schema([
                 Tabs::make('Page Content')
-                    ->tabs([
-                        Tab::make('Basic Information')
+                    ->tabs(static::pageFormTabs($blockOptions))
+                    ->columnSpanFull(),
+            ]);
+    }
+
+    /**
+     * @param  array<string, array<string, string>>  $blockOptions
+     * @return array<int, Tab>
+     */
+    protected static function pageFormTabs(array $blockOptions): array
+    {
+        return [
+            static::basicInformationTab(),
+            static::visualEditorTab(),
+            static::blockBuilderTab($blockOptions),
+            static::contentTab(),
+            static::seoTab(),
+        ];
+    }
+
+    protected static function basicInformationTab(): Tab
+    {
+        return Tab::make('Basic Information')
                             ->schema([
                                 Section::make('Page Details')
                                     ->schema([
@@ -111,27 +133,36 @@ class LaraPageResource extends Resource
                                             ->label('Publish Date')
                                             ->default(now()),
                                     ]),
-                            ]),
+                            ]);
+    }
 
-                        Tab::make('Visual Editor')
-                            ->schema([
-                                Section::make('Page Builder')
-                                    ->description('Use the visual editor to design your page')
-                                    ->schema([
-                                        GrapesJsEditor::make('grapesjs_data')
-                                            ->label('Page Content')
-                                            ->height('800px')
-                                            ->columnSpanFull(),
-                                    ]),
-                            ])
-                            ->visible(fn (Get $get): bool => static::shouldShowVisualEditorTab($get('editor_mode'))),
+    protected static function visualEditorTab(): Tab
+    {
+        return Tab::make('Visual Editor')
+            ->schema([
+                Section::make('Page Builder')
+                    ->description('Use the visual editor to design your page')
+                    ->schema([
+                        GrapesJsEditor::make('grapesjs_data')
+                            ->label('Page Content')
+                            ->height('800px')
+                            ->columnSpanFull(),
+                    ]),
+            ])
+            ->visible(fn (Get $get): bool => static::shouldShowVisualEditorTab($get('editor_mode')));
+    }
 
-                        Tab::make('Block Builder')
-                            ->schema([
-                                Section::make('Block layout')
-                                    ->description('Add and reorder blocks from the catalog. Edit each block\'s content below; preview uses the same Blade templates and CSS as the live site.')
-                                    ->schema([
-                                        Forms\Components\Repeater::make('block_layout')
+    /**
+     * @param  array<string, array<string, string>>  $blockOptions
+     */
+    protected static function blockBuilderTab(array $blockOptions): Tab
+    {
+        return Tab::make('Block Builder')
+            ->schema([
+                Section::make('Block layout')
+                    ->description('Add and reorder blocks from the catalog. Edit each block\'s content below; the page preview at the bottom shows the full composed page.')
+                    ->schema([
+                        Forms\Components\Repeater::make('block_layout')
                                             ->label('Blocks')
                                             ->schema([
                                                 Forms\Components\Select::make('block_id')
@@ -139,44 +170,73 @@ class LaraPageResource extends Resource
                                                     ->options($blockOptions)
                                                     ->searchable()
                                                     ->required()
-                                                    ->live(),
+                                                    ->live()
+                                                    ->afterStateUpdated(function (?string $state, Set $set, Get $get): void {
+                                                        if (! filled($state)) {
+                                                            return;
+                                                        }
+
+                                                        $current = $get('dynamic_data');
+                                                        $defaults = BlockBuilderSchema::defaultDynamicData($state);
+
+                                                        if ($defaults === []) {
+                                                            return;
+                                                        }
+
+                                                        $set(
+                                                            'dynamic_data',
+                                                            array_merge(
+                                                                $defaults,
+                                                                is_array($current) ? $current : [],
+                                                            ),
+                                                        );
+                                                    }),
                                                 Fieldset::make('Content')
-                                                    ->schema(fn (Get $get): array => BlockBuilderSchema::fieldsFor($get('block_id')))
+                                                    ->schema(function (Get $get): array {
+                                                        return BlockBuilderSchema::fieldsFor($get('block_id'));
+                                                    })
                                                     ->statePath('dynamic_data')
+                                                    ->key(fn (Get $get): string => 'block-content-'.($get('block_id') ?? 'none'))
                                                     ->visible(fn (Get $get): bool => filled($get('block_id')))
                                                     ->columns(1)
                                                     ->columnSpanFull(),
-                                                Forms\Components\Placeholder::make('block_preview')
-                                                    ->label('Preview')
-                                                    ->content(function (Get $get) use ($blockOptions): HtmlString {
-                                                        $blockId = $get('block_id');
-                                                        if (! filled($blockId)) {
-                                                            return new HtmlString(
-                                                                '<div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-600 px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Select a block to see its content.</div>',
-                                                            );
-                                                        }
+                                                Section::make('Component preview')
+                                                    ->collapsible()
+                                                    ->collapsed()
+                                                    ->schema([
+                                                        Forms\Components\Placeholder::make('block_preview')
+                                                            ->hiddenLabel()
+                                                            ->content(function (Get $get) use ($blockOptions): HtmlString {
+                                                                $blockId = $get('block_id');
+                                                                if (! filled($blockId)) {
+                                                                    return new HtmlString(
+                                                                        '<div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-600 px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Select a block to see its content.</div>',
+                                                                    );
+                                                                }
 
-                                                        $row = [
-                                                            'dynamic_data' => is_array($get('dynamic_data')) ? $get('dynamic_data') : [],
-                                                            'custom_html' => $get('custom_html') ?? '',
-                                                        ];
+                                                                $dynamicData = is_array($get('dynamic_data')) ? $get('dynamic_data') : [];
+                                                                $row = [
+                                                                    'dynamic_data' => $dynamicData,
+                                                                    'custom_html' => trim((string) ($dynamicData['custom_html'] ?? '')),
+                                                                ];
 
-                                                        $html = app(BlockLayoutService::class)->renderBlockPreviewHtml($blockId, $row);
+                                                                $html = app(BlockLayoutService::class)->renderBlockPreviewHtml($blockId, $row);
 
-                                                        if ($html === null) {
-                                                            return new HtmlString(
-                                                                '<div class="text-sm text-amber-600 dark:text-amber-400 px-2">Preview is not available for this block.</div>',
-                                                            );
-                                                        }
+                                                                if ($html === null) {
+                                                                    return new HtmlString(
+                                                                        '<div class="text-sm text-amber-600 dark:text-amber-400 px-2">Preview is not available for this block.</div>',
+                                                                    );
+                                                                }
 
-                                                        return new HtmlString(view('filament.forms.components.block-builder-item-preview', [
-                                                            'content' => $html,
-                                                            'label' => static::blockLabelForId($blockId, $blockOptions),
-                                                            'compact' => false,
-                                                            'fullWidth' => true,
-                                                        ])->render());
-                                                    })
-                                                    ->columnSpanFull(),
+                                                                return new HtmlString(view('filament.forms.components.block-builder-item-preview', [
+                                                                    'content' => $html,
+                                                                    'label' => static::blockLabelForId($blockId, $blockOptions),
+                                                                    'compact' => false,
+                                                                    'fullWidth' => true,
+                                                                ])->render());
+                                                            })
+                                                            ->columnSpanFull(),
+                                                    ]),
                                                 Forms\Components\Hidden::make('instance_key'),
                                             ])
                                             ->itemLabel(fn (array $state): ?string => static::blockRepeaterItemLabel($state, $blockOptions))
@@ -186,8 +246,16 @@ class LaraPageResource extends Resource
                                             ->defaultItems(0)
                                             ->columnSpanFull()
                                             ->columns(1),
+                                    ])
+                                    ->columnSpanFull(),
+                                Section::make('Page preview')
+                                    ->description('Full-width preview of all blocks in order. Use full screen for the entire viewport.')
+                                    ->collapsible()
+                                    ->collapsed(false)
+                                    ->extraAttributes(['class' => 'laragrape-page-preview-section'])
+                                    ->schema([
                                         Forms\Components\Placeholder::make('block_layout_stack_preview')
-                                            ->label('Page preview')
+                                            ->hiddenLabel()
                                             ->content(function (Get $get): HtmlString {
                                                 $layout = $get('block_layout');
                                                 if (! is_array($layout)) {
@@ -201,55 +269,44 @@ class LaraPageResource extends Resource
                                                 ])->render());
                                             })
                                             ->columnSpanFull(),
-                                    ]),
-                            ])
-                            ->visible(fn (Get $get): bool => static::shouldShowBlockBuilderTab($get('editor_mode'))),
-
-                        Tab::make('Content')
-                            ->schema([
-                                Section::make('Page Content')
-                                    ->schema([
-                                        Forms\Components\RichEditor::make('content')
-                                            ->label('Content (Fallback)')
-                                            ->columnSpanFull()
-                                            ->toolbarButtons([
-                                                'attachFiles',
-                                                'blockquote',
-                                                'bold',
-                                                'bulletList',
-                                                'codeBlock',
-                                                'h2',
-                                                'h3',
-                                                'italic',
-                                                'link',
-                                                'orderedList',
-                                                'redo',
-                                                'strike',
-                                                'underline',
-                                                'undo',
-                                            ]),
-                                    ]),
-                            ]),
-
-                        Tab::make('SEO')
-                            ->schema([
-                                Section::make('Search Engine Optimization')
-                                    ->schema([
-                                        Forms\Components\TextInput::make('meta_title')
-                                            ->maxLength(60)
-                                            ->helperText('Recommended: 50-60 characters'),
-
-                                        Forms\Components\Textarea::make('meta_description')
-                                            ->rows(3)
-                                            ->maxLength(160)
-                                            ->helperText('Recommended: 150-160 characters'),
-
-                                        Forms\Components\TextInput::make('meta_keywords')
-                                            ->helperText('Comma-separated keywords'),
-                                    ]),
-                            ]),
-                    ])
+                                    ])
                     ->columnSpanFull(),
+            ])
+            ->visible(fn (Get $get): bool => static::shouldShowBlockBuilderTab($get('editor_mode')));
+    }
+
+    protected static function contentTab(): Tab
+    {
+        return Tab::make('Content')
+            ->schema([
+                Section::make('Page Content')
+                    ->schema([
+                        Forms\Components\RichEditor::make('content')
+                            ->label('Content (Fallback)')
+                            ->columnSpanFull()
+                            ->toolbarButtons(static::fallbackRichEditorToolbarButtons()),
+                    ]),
+            ]);
+    }
+
+    protected static function seoTab(): Tab
+    {
+        return Tab::make('SEO')
+            ->schema([
+                Section::make('Search Engine Optimization')
+                    ->schema([
+                        Forms\Components\TextInput::make('meta_title')
+                            ->maxLength(60)
+                            ->helperText('Recommended: 50-60 characters'),
+
+                        Forms\Components\Textarea::make('meta_description')
+                            ->rows(3)
+                            ->maxLength(160)
+                            ->helperText('Recommended: 150-160 characters'),
+
+                        Forms\Components\TextInput::make('meta_keywords')
+                            ->helperText('Comma-separated keywords'),
+                    ]),
             ]);
     }
 
@@ -280,6 +337,29 @@ class LaraPageResource extends Resource
             EditorSettings::POLICY_BLOCK_ONLY,
             EditorSettings::POLICY_BLOCK,
         ], true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected static function fallbackRichEditorToolbarButtons(): array
+    {
+        return [
+            'attachFiles',
+            'blockquote',
+            'bold',
+            'bulletList',
+            'codeBlock',
+            'h2',
+            'h3',
+            'italic',
+            'link',
+            'orderedList',
+            'redo',
+            'strike',
+            'underline',
+            'undo',
+        ];
     }
 
     /**

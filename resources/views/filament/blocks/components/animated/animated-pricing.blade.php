@@ -94,8 +94,13 @@
  </div>
 @else
 @php
-    // Ensure dynamicData is always an array
-    $dynamicData = $dynamicData ?? [];
+    use LaraGrape\Support\BlockBuilderSchema;
+
+    // Ensure dynamicData is always an array (Filament uses {text: ...} features; Alpine needs strings)
+    $dynamicData = BlockBuilderSchema::normalizeDynamicDataForLiveRender(
+        'animated-pricing',
+        is_array($dynamicData ?? null) ? $dynamicData : [],
+    );
     
     // Debug logging
     \Log::info('[Animated Pricing] Template rendering', [
@@ -150,9 +155,11 @@
                 $defaultPlans[$index]['name'] = $dynamicPlan['name'] ?? $defaultPlans[$index]['name'];
                 $defaultPlans[$index]['price'] = $dynamicPlan['price'] ?? $defaultPlans[$index]['price'];
                 $defaultPlans[$index]['period'] = $dynamicPlan['period'] ?? $defaultPlans[$index]['period'];
-                if (isset($dynamicPlan['features']) && is_array($dynamicPlan['features']) && !empty($dynamicPlan['features'])) {
+                if (isset($dynamicPlan['features']) && is_array($dynamicPlan['features']) && $dynamicPlan['features'] !== []) {
                     $defaultPlans[$index]['features'] = $dynamicPlan['features'];
                 }
+                $defaultPlans[$index]['price'] = preg_replace('/[^0-9.]/', '', (string) $defaultPlans[$index]['price']) ?: $defaultPlans[$index]['price'];
+                $defaultPlans[$index]['period'] = ltrim((string) $defaultPlans[$index]['period'], '/');
                 $defaultPlans[$index]['popular'] = $dynamicPlan['popular'] ?? $defaultPlans[$index]['popular'];
                 // Merge button text
                 if (isset($dynamicPlan['buttonText']) && !empty($dynamicPlan['buttonText']) && $dynamicPlan['buttonText'] !== 'Get Started') {

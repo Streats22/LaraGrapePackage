@@ -3,6 +3,8 @@
 namespace LaraGrape\Services;
 
 use LaraGrape\Models\Page;
+use LaraGrape\Services\BlockLayoutService;
+use LaraGrape\Support\BlockBuilderSchema;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use LaraGrape\Models\Page as GrapePage;
@@ -22,7 +24,7 @@ class GrapesJsConverterService
         $html = $grapesjsData['html'] ?? '';
         $css = $grapesjsData['css'] ?? '';
         
-        \Log::info('Converting GrapesJS to HTML', [
+        Log::info('Converting GrapesJS to HTML', [
             'html_length' => strlen($html),
             'css_length' => strlen($css),
             'html_preview' => substr($html, 0, 500) . '...'
@@ -30,7 +32,7 @@ class GrapesJsConverterService
         
         $convertedHtml = $this->stripStaleCsrfTokensFromHtml($html);
         
-        \Log::info('GrapesJS conversion complete (no conversion applied)', [
+        Log::info('GrapesJS conversion complete (no conversion applied)', [
             'converted_html_length' => strlen($convertedHtml),
             'converted_html_preview' => substr($convertedHtml, 0, 500) . '...'
         ]);
@@ -51,7 +53,7 @@ class GrapesJsConverterService
         $html = $bladeData['html'] ?? '';
         $css = $bladeData['css'] ?? '';
         
-        \Log::info('Converting Blade to GrapesJS', [
+        Log::info('Converting Blade to GrapesJS', [
             'html_length' => strlen($html),
             'css_length' => strlen($css),
             'html_preview' => substr($html, 0, 200) . '...'
@@ -60,7 +62,7 @@ class GrapesJsConverterService
         // Convert Blade components back to GrapesJS format
         $convertedHtml = $this->parseBladeToGrapesJs($html);
         
-        \Log::info('Blade to GrapesJS conversion complete', [
+        Log::info('Blade to GrapesJS conversion complete', [
             'converted_html_length' => strlen($convertedHtml),
             'converted_html_preview' => substr($convertedHtml, 0, 200) . '...'
         ]);
@@ -77,7 +79,7 @@ class GrapesJsConverterService
      */
     protected function parseGrapesJsHtml(string $html): string
     {
-        \Log::info('Parsing GrapesJS HTML for conversion', [
+        Log::info('Parsing GrapesJS HTML for conversion', [
             'html_length' => strlen($html),
             'html_preview' => substr($html, 0, 300) . '...'
         ]);
@@ -90,7 +92,7 @@ class GrapesJsConverterService
             $blockMap[$block['id']] = $block;
         }
         
-        \Log::info('Available blocks for conversion', [
+        Log::info('Available blocks for conversion', [
             'block_count' => count($blocks),
             'block_ids' => array_keys($blockMap)
         ]);
@@ -119,7 +121,7 @@ class GrapesJsConverterService
         // Try to detect and convert blocks by content patterns
         $convertedHtml = $this->convertBlocksByContent($convertedHtml, $blockMap);
         
-        \Log::info('GrapesJS HTML parsing complete', [
+        Log::info('GrapesJS HTML parsing complete', [
             'converted_html_length' => strlen($convertedHtml),
             'converted_html_preview' => substr($convertedHtml, 0, 300) . '...'
         ]);
@@ -279,7 +281,7 @@ class GrapesJsConverterService
         
         // For now, let's just log what we find and return the original HTML
         // This is a placeholder for a more sophisticated content-based detection system
-        \Log::info('Content-based block detection', [
+        Log::info('Content-based block detection', [
             'html_length' => strlen($html),
             'block_map_keys' => array_keys($blockMap)
         ]);
@@ -561,7 +563,7 @@ class GrapesJsConverterService
      */
     public function processForEditing(array $savedData): array
     {
-        \Log::info('Processing data for editing', [
+        Log::info('Processing data for editing', [
             'savedData_keys' => array_keys($savedData),
             'has_original_grapesjs' => isset($savedData['original_grapesjs']),
             'has_html' => isset($savedData['html']),
@@ -570,12 +572,12 @@ class GrapesJsConverterService
         
         // If we have original GrapesJS data, use that for editing
         if (isset($savedData['original_grapesjs'])) {
-            \Log::info('Using original GrapesJS data for editing');
+            Log::info('Using original GrapesJS data for editing');
             return $savedData['original_grapesjs'];
         }
         
         // Otherwise, convert Blade components back to GrapesJS format
-        \Log::info('Converting Blade components back to GrapesJS format');
+        Log::info('Converting Blade components back to GrapesJS format');
         return $this->convertToGrapesJs($savedData);
     }
 
@@ -637,6 +639,9 @@ class GrapesJsConverterService
             $instanceCounters[$blockId] = $instanceIndex + 1;
             $instanceKey = $this->buildBlockInstanceKey($blockId, $instanceIndex);
             $dynamicData = $blockDynamicData[$instanceKey] ?? $blockDynamicData[$blockId] ?? [];
+            $dynamicData = is_array($dynamicData) ? $dynamicData : [];
+            $dynamicData = app(BlockLayoutService::class)->normalizeDynamicData($blockId, $dynamicData);
+            $dynamicData = BlockBuilderSchema::normalizeDynamicDataForLiveRender($blockId, $dynamicData);
             $dynamicPhp = var_export($dynamicData, true);
             $includeDirective = "@include('{$viewName}', ['isEditorPreview' => false, 'dynamicData' => {$dynamicPhp}])";
             $result .= substr($html, $offset, $matchStart - $offset).$includeDirective;

@@ -3,12 +3,14 @@
 namespace LaraGrape\Http\Controllers;
 
 use LaraGrape\Models\Page;
+use LaraGrape\Services\BlockLayoutService;
 use LaraGrape\Services\GrapesJsConverterService;
 use LaraGrape\Support\EditorSettings;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -16,6 +18,7 @@ class PageController extends Controller
 {
     public function __construct(
         protected GrapesJsConverterService $converterService,
+        protected BlockLayoutService $blockLayoutService,
     ) {}
 
     /**
@@ -157,6 +160,27 @@ class PageController extends Controller
      */
     private function renderGrapesJsContent(Page $page): string
     {
+        $bladeContent = $page->blade_content;
+        if (empty($bladeContent) && ! empty($page->block_layout) && is_array($page->block_layout)) {
+            try {
+                $bladeContent = $this->blockLayoutService
+                    ->processBlockLayoutForSave($page->block_layout)['blade_content'] ?? '';
+            } catch (Exception) {
+                $bladeContent = '';
+            }
+        }
+
+        if (! empty($bladeContent)) {
+            try {
+                return Blade::render($bladeContent, ['page' => $page]);
+            } catch (Exception $e) {
+                Log::warning('Failed to render page blade_content', [
+                    'page_id' => $page->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         if (empty($page->grapesjs_data)) {
             return $page->content ?? '';
         }
@@ -167,9 +191,10 @@ class PageController extends Controller
         // Prefer original GrapesJS HTML/CSS if available
         $html = $data['original_grapesjs']['html'] ?? ($data['html'] ?? '');
         $css = $data['original_grapesjs']['css'] ?? ($data['css'] ?? '');
-        if (!empty($css)) {
-            $html = "<style>{$css}</style>" . $html;
+        if (! empty($css)) {
+            $html = "<style>{$css}</style>".$html;
         }
+
         return $html;
     }
     

@@ -141,34 +141,90 @@
 
     .laragrape-block-builder-fs-overlay__body {
         flex: 1;
+        min-height: 0;
         overflow: auto;
-        padding: 1.5rem 1rem 2rem;
+        padding: 0;
         background: rgb(249 250 251);
+        display: flex;
+        flex-direction: column;
     }
 
     .laragrape-block-builder-preview-mount--fullscreen {
         width: 100%;
-        max-width: 1280px;
-        margin: 0 auto;
+        max-width: 100%;
+        min-height: 100%;
+        flex: 1;
+        margin: 0;
         background: #fff;
-        border-radius: 0.5rem;
-        box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-        overflow: hidden;
+        border-radius: 0;
+        box-shadow: none;
+        overflow: auto;
     }
 
     .laragrape-block-builder-preview-mount--fullscreen .laragrape-block-builder-preview-scaler {
         width: 100%;
-        max-width: 1280px;
-        margin: 0 auto;
+        max-width: 100%;
+        margin: 0;
     }
 
     .laragrape-block-builder-preview-mount--fullscreen .laragrape-block-builder-preview__frame {
         display: block;
-        margin: 0 auto;
+        width: 100%;
+        margin: 0;
     }
 
     .laragrape-block-layout-stack {
         width: 100%;
+    }
+
+    /* Page preview panel: full width + tall viewport in the admin form */
+    .laragrape-block-layout-stack--page-panel {
+        width: 100%;
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .laragrape-block-layout-stack--page-panel .laragrape-block-builder-preview-chrome__toolbar {
+        flex-shrink: 0;
+    }
+
+    .laragrape-block-layout-stack__page-canvas {
+        width: 100%;
+        min-height: min(75vh, 900px);
+        height: min(75vh, 900px);
+        overflow: auto;
+        background: #fff;
+        border: 1px solid rgb(229 231 235);
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    .dark .laragrape-block-layout-stack__page-canvas {
+        background: rgb(17 24 39);
+        border-color: rgb(55 65 81);
+    }
+
+    .laragrape-block-builder-preview-mount--page {
+        width: 100%;
+        min-height: 100%;
+    }
+
+    .laragrape-block-layout-stack__page-canvas .laragrape-block-builder-preview-scaler {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .laragrape-block-layout-stack__page-canvas .laragrape-block-builder-preview__frame {
+        width: 100%;
+    }
+
+    /* Filament section wrapper */
+    .laragrape-page-preview-section,
+    .laragrape-page-preview-section > .fi-section,
+    .laragrape-page-preview-section .fi-section-content-ctn {
+        width: 100%;
+        max-width: 100%;
     }
 
     .laragrape-block-layout-stack__empty {
